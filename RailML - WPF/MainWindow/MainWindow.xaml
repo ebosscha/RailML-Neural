@@ -1,0 +1,85 @@
+﻿<Window x:Class="RailML___WPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="RailML Interface" Height="720" Width="1280" 
+        WindowStartupLocation="CenterScreen" WindowState="Maximized"
+        >
+
+    <Grid Margin="0,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+
+
+        <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" LastChildFill="True">
+            <Menu DockPanel.Dock="Top" Height="20" Background="Transparent">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_New RailML" Click="NewButton_Click"/>
+                    <MenuItem Header="_Open Project" Click="LoadButton_Click"/>
+                    <MenuItem Header="_Open RailML" Click="LoadRailMLButton_Click"/>
+                    <MenuItem Header="_Save Project" Click="SaveButton_Click"/>
+                    <MenuItem Header="_Save RailML" Click="SaveRailMLButton_Click"/>
+                    <MenuItem Header="_Load Partial RailML">
+                        <MenuItem Header="_Infrastructure" Click="LoadInfrastructure_Click"/>
+                        <MenuItem Header="_Rolling Stock" Click="LoadRollingStock_Click"/>
+                        <MenuItem Header="_Timetable" Click="LoadTimetable_Click"/>
+
+
+                    </MenuItem>
+                    <MenuItem Header="_Close" Click="CloseButton_Click"/>
+                    <MenuItem Header="_Test" Click="TestButton_Click"/>
+                </MenuItem>
+                <MenuItem Header="Data">
+                    <MenuItem Header="Infrastructure">
+                        <MenuItem Header="Import Excel Dataset" Click="ImportExcel_Click"/>
+                        <MenuItem Header="Add from Excel">
+                            <MenuItem Header="Add Switches from Excel" Click="ExcelSwitches_Click"/>
+                            <MenuItem Header="Add Bridges from Excel" Click="ExcelBridges_Click"/>
+                            <MenuItem Header="Add Buffer Stops from Excel" Click="ExcelBufferStops_Click"/>
+                            <MenuItem Header="Add Tunnels from Excel" Click="ExcelTunnels_Click"/>
+                            <MenuItem Header="Add Level Crossings from Excel" Click="ExcelLevelCrossings_Click"/>
+                        </MenuItem>
+                        <MenuItem Header="Add OCPs from API" Click="OCPAPI_Click"/>
+  
+                    </MenuItem>
+                    <MenuItem Header="Rolling Stock">
+                            
+                    </MenuItem>
+                    <MenuItem Header="Timetable">
+                        <MenuItem Header="_Import Timetable CSV" Click="ImportTimetableCSV_Click"/>
+                        
+                    </MenuItem>
+                </MenuItem>
+                <MenuItem Header="Neural Network">
+                    <MenuItem Header="_Data">
+                        <MenuItem Header="_Import Delays" Click="ImportDelays_Click"/>
+                        <MenuItem Header="_Set Timetable File" Click="SetTimetableFile_Click"/>
+                        <MenuItem Header="_Set Reports File" Click="SetReportsFile_Click"/>
+                    </MenuItem>
+                </MenuItem>
+                
+            
+                <MenuItem Header="View">
+                    <MenuItem Header="RailML View" Click="RailMLView_Click"/>
+                    <MenuItem Header="Neural Network View" Click="NeuralNetworkView_Click"/>
+                </MenuItem>
+                
+                          
+            </Menu>
+            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+             </StackPanel>
+            <StatusBar Name="Statusbar" Height="20" DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
+                <StatusBarItem>
+                    <TextBlock Name="StatusbarText" Text="{Binding statusbartext}" HorizontalAlignment="Left"/>
+                </StatusBarItem>
+            </StatusBar>
+                
+            <ContentControl Name="MainViewContentControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+            
+                
+            
+        </DockPanel>
+        
+
+
+    </Grid>
+
+</Window>

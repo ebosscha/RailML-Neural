@@ -1,0 +1,29 @@
+﻿<UserControl x:Class="RailML___WPF.RailMLViewer.Views.OcpView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:RailML___WPF.RailMLViewer.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <ResourceDictionary Source="RailMLViewerResources.xaml"/>
+    </UserControl.Resources>
+    <Grid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="500"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <DataGrid Grid.Column="0" Name="OcpGrid" ItemsSource="{Binding Path=ocplist}" SelectedItem="{Binding selecteditem}" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="Auto" Width="Auto"
+                  AutoGenerateColumns="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Ocp Name" Width="Auto" MinWidth="40" Binding="{Binding name}" />
+                    <DataGridTextColumn Header="ID" Width="Auto" MinWidth="40" Binding="{Binding id}" />
+                    <DataGridTextColumn Header="Description" Width="Auto" MinWidth="40" Binding="{Binding description}" />
+                </DataGrid.Columns>
+            </DataGrid>
+            <GridSplitter Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="1" Background="Black"/>
+        </Grid>
+    </Grid>
+</UserControl>

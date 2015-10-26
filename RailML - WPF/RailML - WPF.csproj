@@ -1,0 +1,216 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5EB32E50-3AF2-4675-94CD-FDE943915E36}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RailML___WPF</RootNamespace>
+    <AssemblyName>RailML - WPF</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="encog-core-cs">
+      <HintPath>..\packages\encog-dotnet-core.3.3.0\lib\net35\encog-core-cs.dll</HintPath>
+    </Reference>
+    <Reference Include="Excel">
+      <HintPath>..\packages\ExcelDataReader.2.1.2.3\lib\net45\Excel.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="LumenWorks.Framework.IO">
+      <HintPath>..\..\..\C#\Libraries\CSV reader\LumenWorks.Framework.IO.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ProjNet">
+      <HintPath>..\..\..\Irish Grid Conversion\ProjNet.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="Data\CsvFiles.cs" />
+    <Compile Include="Data\DataContainer.cs" />
+    <Compile Include="Data\Editor.cs" />
+    <Compile Include="Data\ImportInfrastructure.cs" />
+    <Compile Include="Data\ImportTimetable.cs" />
+    <Compile Include="Data\NeuralNetwork.cs" />
+    <Compile Include="Data\RailML Schema.cs" />
+    <Compile Include="Data\ShortestPath.cs" />
+    <Compile Include="MainWindow\MainWindowViewModel.cs" />
+    <Compile Include="NeuralNetwork\Algorithms\PerLine.cs" />
+    <Compile Include="NeuralNetwork\PreProcessing\Import.cs" />
+    <Compile Include="NeuralNetwork\PreProcessing\PreProcesser.cs" />
+    <Compile Include="NeuralNetwork\ViewModels\BaseNeuralNetworkViewModel.cs" />
+    <Compile Include="NeuralNetwork\ViewModels\ParameterViewModel.cs" />
+    <Compile Include="NeuralNetwork\Views\BaseNeuralNetworkView.xaml.cs">
+      <DependentUpon>BaseNeuralNetworkView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NeuralNetwork\Views\ParameterView.xaml.cs">
+      <DependentUpon>ParameterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RailMLViewer\ViewModels\BaseViewModel.cs" />
+    <Compile Include="RailMLViewer\ViewModels\NetworkDrawingViewModel.cs" />
+    <Compile Include="RailMLViewer\ViewModels\OcpViewModel.cs" />
+    <Compile Include="RailMLViewer\ViewModels\PropertiesPresenterViewModel.cs" />
+    <Compile Include="RailMLViewer\ViewModels\SelectedPropertiesViewModel.cs" />
+    <Compile Include="RailMLViewer\ViewModels\TracksViewModel.cs" />
+    <Compile Include="RailMLViewer\Views\BaseRailMLView.xaml.cs">
+      <DependentUpon>BaseRailMLView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RailMLViewer\Views\NetworkDrawingView.xaml.cs">
+      <DependentUpon>NetworkDrawingView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RailMLViewer\Views\OcpView.xaml.cs">
+      <DependentUpon>OcpView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RailMLViewer\Views\PropertiesPresenter.xaml.cs">
+      <DependentUpon>PropertiesPresenter.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RailMLViewer\Views\SelectedProperties.xaml.cs">
+      <DependentUpon>SelectedProperties.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RailMLViewer\Views\TracksView.xaml.cs">
+      <DependentUpon>TracksView.xaml</DependentUpon>
+    </Compile>
+    <Page Include="MainWindow\MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data\XML.cs" />
+    <Compile Include="MainWindow\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="NeuralNetwork\Views\BaseNeuralNetworkView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NeuralNetwork\Views\NeuralNetworkResources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NeuralNetwork\Views\ParameterView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RailMLViewer\Views\BaseRailMLView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RailMLViewer\Views\PropertiesPresenter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RailMLViewer\Views\RailMLViewerResources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="StyleDictionary.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RailMLViewer\Views\NetworkDrawingView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RailMLViewer\Views\OcpView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RailMLViewer\Views\SelectedProperties.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RailMLViewer\Views\TracksView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

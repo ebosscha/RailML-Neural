@@ -1,0 +1,45 @@
+﻿<UserControl x:Class="RailML___WPF.RailMLViewer.Views.BaseRailMLView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <ResourceDictionary Source="RailMLViewerResources.xaml" />
+    </UserControl.Resources>
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <TabControl Margin="5,5,5,5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <TabItem Header="Infrastructure">
+                <TabControl Margin="0,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <TabItem TabItem.Header =" Tracks">
+                        <ContentControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="TracksContentControl" Margin="0,0,0,0"/>
+                    </TabItem>
+                    <TabItem TabItem.Header =" Operation Control Points">
+                        <ContentControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="OcpContentControl" Margin="0,0,0,0"/>
+                    </TabItem>
+                    <TabItem TabItem.Header="Network Visualization">
+                        <ContentControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="NetworkDrawingContentControl" Margin="0,0,0,0"
+                                HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+                    </TabItem>
+                </TabControl>
+            </TabItem>
+            
+            <TabItem Header="Rolling Stock">
+                <TabControl>
+                    <TabItem Header="Trains">
+                        
+                    </TabItem>
+                </TabControl>
+            </TabItem>
+            <TabItem Header="Timetable">
+                <TabControl>
+                    <TabItem Header="Trains">
+
+                    </TabItem>
+                </TabControl>
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</UserControl>

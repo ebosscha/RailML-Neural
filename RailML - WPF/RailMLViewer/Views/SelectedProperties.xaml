@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="RailML___WPF.RailMLViewer.Views.SelectedProperties"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300"
+             Background="White">
+    <Border BorderBrush="RoyalBlue" BorderThickness="2,2,2,2">
+        <DockPanel>
+            <Grid DockPanel.Dock="Top" Height="25" Background="RoyalBlue">
+                <Label Content="Properties" FontWeight="Bold" Foreground="White"/>
+            </Grid>
+            <ScrollViewer Name="PropViewer">
+                <DockPanel Name="PropertiesDock"/>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</UserControl>
