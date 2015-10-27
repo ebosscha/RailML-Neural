@@ -8827,9 +8827,17 @@ namespace RailML___WPF.Data
 
         private bool _shouldSerializetype;
 
+        private bool _shouldSerializestartDate;
+
+        private bool _shouldSerializeendDate;
+
         private tSpecialServiceType _type;
 
         private System.Nullable<System.DateTime> _singleDate;
+
+        private Nullable<DateTime> _startDate;
+
+        private Nullable<DateTime> _endDate;
 
         private static XmlSerializer serializer;
 
@@ -8865,6 +8873,48 @@ namespace RailML___WPF.Data
             {
                 this._singleDate = value;
                 _shouldSerializesingleDate = true;
+            }
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "date")]
+        public System.DateTime startDate
+        {
+            get
+            {
+                if (this._startDate.HasValue)
+                {
+                    return this._startDate.Value;
+                }
+                else
+                {
+                    return default(System.DateTime);
+                }
+            }
+            set
+            {
+                this._startDate = value;
+                _shouldSerializestartDate = true;
+            }
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "date")]
+        public System.DateTime endDate
+        {
+            get
+            {
+                if (this._endDate.HasValue)
+                {
+                    return this._endDate.Value;
+                }
+                else
+                {
+                    return default(System.DateTime);
+                }
+            }
+            set
+            {
+                this._endDate = value;
+                _shouldSerializeendDate = true;
             }
         }
 
@@ -8919,6 +8969,31 @@ namespace RailML___WPF.Data
             }
             return (_singleDate != default(System.DateTime));
         }
+
+        /// <summary>
+        /// Test whether singleDate should be serialized
+        /// </summary>
+        public virtual bool ShouldSerializestartDate()
+        {
+            if (_shouldSerializestartDate)
+            {
+                return true;
+            }
+            return (_startDate != default(System.DateTime));
+        }
+
+        /// <summary>
+        /// Test whether singleDate should be serialized
+        /// </summary>
+        public virtual bool ShouldSerializeendDate()
+        {
+            if (_shouldSerializeendDate)
+            {
+                return true;
+            }
+            return (_endDate != default(System.DateTime));
+        }
+
 
         #region Serialize/Deserialize
         /// <summary>
@@ -23766,9 +23841,9 @@ namespace RailML___WPF.Data
     public partial class tArrivalDepartureTimes : ParentContainer
     {
 
-        private bool _shouldSerializedeparture;
+        private bool _shouldSerializedepartureserialize;
 
-        private bool _shouldSerializearrival;
+        private bool _shouldSerializearrivalserialize;
 
         private string _scope;
 
@@ -23804,7 +23879,8 @@ namespace RailML___WPF.Data
             }
         }
 
-        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "time")]
+        [System.Xml.Serialization.XmlIgnore()]
+        //[System.Xml.Serialization.XmlAttributeAttribute(DataType = "time")]
         public System.DateTime arrival
         {
             get
@@ -23821,8 +23897,15 @@ namespace RailML___WPF.Data
             set
             {
                 this._arrival = value;
-                _shouldSerializearrival = true;
+                _shouldSerializearrivalserialize = true;
             }
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute("arrival")]
+        public string arrivalserialize
+        {
+            get { return arrival.ToString("hh:mm:ss"); }
+            set { }
         }
 
         [System.Xml.Serialization.XmlIgnoreAttribute()]
@@ -23855,7 +23938,8 @@ namespace RailML___WPF.Data
             }
         }
 
-        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "time")]
+        [System.Xml.Serialization.XmlIgnore]
+        //[System.Xml.Serialization.XmlAttributeAttribute(DataType = "time")]
         public System.DateTime departure
         {
             get
@@ -23872,8 +23956,14 @@ namespace RailML___WPF.Data
             set
             {
                 this._departure = value;
-                _shouldSerializedeparture = true;
+                _shouldSerializedepartureserialize = true;
             }
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute("departure")]
+        public string departureserialize
+        {
+            get { return departure.ToString("hh:mm:ss"); }
         }
 
         [System.Xml.Serialization.XmlIgnoreAttribute()]
@@ -23942,9 +24032,9 @@ namespace RailML___WPF.Data
         /// <summary>
         /// Test whether arrival should be serialized
         /// </summary>
-        public virtual bool ShouldSerializearrival()
+        public virtual bool ShouldSerializearrivalserialize()
         {
-            if (_shouldSerializearrival)
+            if (_shouldSerializearrivalserialize)
             {
                 return true;
             }
@@ -23954,9 +24044,9 @@ namespace RailML___WPF.Data
         /// <summary>
         /// Test whether departure should be serialized
         /// </summary>
-        public virtual bool ShouldSerializedeparture()
+        public virtual bool ShouldSerializedepartureserialize()
         {
-            if (_shouldSerializedeparture)
+            if (_shouldSerializedepartureserialize)
             {
                 return true;
             }
@@ -31803,6 +31893,15 @@ namespace RailML___WPF.Data
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://www.railml.org/schemas/2013")]
     public partial class eOperatingPeriod : tOperatingPeriod
     {
+        private string _bitMask;
+
+        private System.Nullable<System.DateTime> _startDate;
+
+        private System.Nullable<System.DateTime> _endDate;
+
+        private bool _shouldSerializeendDate;
+
+        private bool _shouldSerializestartDate;
 
         private List<eOperatingDay> _operatingDay;
 
@@ -31814,6 +31913,86 @@ namespace RailML___WPF.Data
         {
             this._specialService = new List<tSpecialService>();
             this._operatingDay = new List<eOperatingDay>();
+        }
+
+        public string bitMask
+        {
+            get { return _bitMask; }
+            set { _bitMask = value; }
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "date")]
+        public System.DateTime startDate
+        {
+            get
+            {
+                if (this._startDate.HasValue)
+                {
+                    return this._startDate.Value;
+                }
+                else
+                {
+                    return default(System.DateTime);
+                }
+            }
+            set
+            {
+                this._startDate = value;
+                _shouldSerializestartDate = true;
+            }
+        }
+
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool startDateSpecified
+        {
+            get
+            {
+                return this._startDate.HasValue;
+            }
+            set
+            {
+                if (value == false)
+                {
+                    this._startDate = null;
+                }
+            }
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "date")]
+        public System.DateTime endDate
+        {
+            get
+            {
+                if (this._endDate.HasValue)
+                {
+                    return this._endDate.Value;
+                }
+                else
+                {
+                    return default(System.DateTime);
+                }
+            }
+            set
+            {
+                this._endDate = value;
+                _shouldSerializeendDate = true;
+            }
+        }
+
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool endDateSpecified
+        {
+            get
+            {
+                return this._endDate.HasValue;
+            }
+            set
+            {
+                if (value == false)
+                {
+                    this._endDate = null;
+                }
+            }
         }
 
         public List<eOperatingDay> operatingDay
@@ -31858,6 +32037,27 @@ namespace RailML___WPF.Data
         public virtual bool ShouldSerializeoperatingDay()
         {
             return operatingDay != null && operatingDay.Count > 0;
+        }
+
+        public virtual bool ShouldSerializestartDate()
+        {
+            if (_shouldSerializestartDate)
+            {
+                return true;
+            }
+            return (_startDate != default(System.DateTime));
+        }
+
+        /// <summary>
+        /// Test whether endDate should be serialized
+        /// </summary>
+        public virtual bool ShouldSerializeendDate()
+        {
+            if (_shouldSerializeendDate)
+            {
+                return true;
+            }
+            return (_endDate != default(System.DateTime));
         }
 
         /// <summary>
@@ -32058,6 +32258,14 @@ namespace RailML___WPF.Data
     public partial class eOperatingDay : tOperatingDay
     {
 
+        private System.Nullable<System.DateTime> _startDate;
+
+        private System.Nullable<System.DateTime> _endDate;
+
+        private bool _shouldSerializestartDate;
+
+        private bool _shouldSerializeendDate;
+
         private List<tOperatingDayDeviance> _operatingDayDeviance;
 
         private static XmlSerializer serializer;
@@ -32065,6 +32273,80 @@ namespace RailML___WPF.Data
         public eOperatingDay()
         {
             this._operatingDayDeviance = new List<tOperatingDayDeviance>();
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "date")]
+        public System.DateTime startDate
+        {
+            get
+            {
+                if (this._startDate.HasValue)
+                {
+                    return this._startDate.Value;
+                }
+                else
+                {
+                    return default(System.DateTime);
+                }
+            }
+            set
+            {
+                this._startDate = value;
+                _shouldSerializestartDate = true;
+            }
+        }
+
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool startDateSpecified
+        {
+            get
+            {
+                return this._startDate.HasValue;
+            }
+            set
+            {
+                if (value == false)
+                {
+                    this._startDate = null;
+                }
+            }
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "date")]
+        public System.DateTime endDate
+        {
+            get
+            {
+                if (this._endDate.HasValue)
+                {
+                    return this._endDate.Value;
+                }
+                else
+                {
+                    return default(System.DateTime);
+                }
+            }
+            set
+            {
+                this._endDate = value;
+                _shouldSerializeendDate = true;
+            }
+        }
+
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool endDateSpecified
+        {
+            get
+            {
+                return this._endDate.HasValue;
+            }
+            set
+            {
+                if (value == false)
+                {
+                    this._endDate = null;
+                }
+            }
         }
 
         [System.Xml.Serialization.XmlElementAttribute("operatingDayDeviance")]

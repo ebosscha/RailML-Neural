@@ -65,17 +65,23 @@ namespace RailML___WPF.Data
 
                 if (entry.LocationType == "O") { rep.departuretime = default(DateTime).Add(entry.ScheduledDeparture.TimeOfDay); }
                 else if (entry.LocationType == "D") { rep.arrivaltime = default(DateTime).Add(entry.ScheduledArrival.TimeOfDay); }
+                else if (entry.LocationType == "S") 
+                {
+                    Stop stop = new Stop() { location = entry.LocationCode, arrival = entry.ScheduledArrival, departure = entry.ScheduledDeparture};
+                    rep.stops.Add(stop);
+                }
 
 
 
 
 
-                //if (count > 3000000) { break; }
+                if (count > 300000) { break; }
                 count++;
                 
             }
 
-            CreateGeneralTimetable();
+            ProcessTimetableVariations();
+
         }
 
 
@@ -85,11 +91,99 @@ namespace RailML___WPF.Data
             {
                 eTrain train = new eTrain();
                 train.id = variations.traincode;
+                train.scope = tTrainScope.primary;
+                List<eTrainPart> trainparts = new List<eTrainPart>();
+                for(int i = 0; i < variations.dates.Count; i++)
+                {
+                    eTrainPart trainpart = new eTrainPart() { id = train.id + "-" + i.ToString() };
+                    
+                    var operatingperiod = CreateOperatingPeriod(variations.dates[i]);
+                    trainpart.operatingPeriodRef = new eOperatingPeriodRef() {@ref = operatingperiod.id };
+                    DataContainer.model.timetable.operatingPeriods.Add(operatingperiod);
+                    eOcpTT departure = new eOcpTT() { ocpRef = variations.reps[i].origin };
+                    departure.times.Add(new eArrivalDepartureTimes(){ departure = variations.reps[i].departuretime, scope = "scheduled"});
+                    trainpart.ocpsTT.Add(departure); 
+                    foreach(Stop stop in variations.reps[i].stops)
+                    {
+                        eOcpTT ocp = new eOcpTT() { ocpRef = stop.location };
+                        ocp.times.Add(new eArrivalDepartureTimes() { arrival = stop.arrival, departure = stop.departure, scope = "scheduled" });
+                        trainpart.ocpsTT.Add(ocp);
+                    }
+                    eOcpTT arrival = new eOcpTT(){ocpRef = variations.reps[i].destination};
+                    arrival.times.Add(new eArrivalDepartureTimes(){arrival = variations.reps[i].arrivaltime, scope = "scheduled"});
+                    trainpart.ocpsTT.Add(arrival);
+                    trainparts.Add(trainpart);
+                }
+
+                for(int i = 0; i < trainparts.Count; i++)
+                {
+                    eTrainPartSequence seq = new eTrainPartSequence(){sequence = i.ToString()};
+                    seq.trainPartRef.Add(new tTrainPartRef(){@ref = trainparts[i].id });
+                    train.trainPartSequence.Add(seq);
+                }
+                DataContainer.model.timetable.trains.Add(train);
+                DataContainer.model.timetable.trainParts.AddRange(trainparts);
 
             }
         }
 
-        public static void CreateGeneralTimetable()
+       
+        // TODO ! Bitmaps for operating periods.
+        private static eOperatingPeriod CreateOperatingPeriod(List<DateTime> dates)
+        {
+            eOperatingPeriod opperiod = new eOperatingPeriod();
+            DataContainer.IDGenerator(opperiod);
+            DateTime startdate = DateTime.MaxValue;
+            DateTime enddate = DateTime.MinValue;
+            List<DayOfWeek> dayindex = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().ToList();
+            int[] days = new int[7] { 0, 0, 0, 0, 0, 0, 0 };
+            foreach (DateTime date in dates)
+            {
+                if (date < startdate) { startdate = date; }
+                if (date > enddate) { enddate = date; }
+                //days[dayindex.IndexOf(date.DayOfWeek)]++;
+            }
+            //var missing = startdate.Range(enddate).Except(dates);
+            //var exclude = new List<DateTime>();
+            //foreach (DateTime missingdate in missing)
+            //{
+            //    if (days[dayindex.IndexOf(missingdate.DayOfWeek)] == 0)
+            //    {
+            //        exclude.Add(missingdate);
+            //    }
+            //}
+            //missing = missing.Except(exclude);
+            //string operatingcode = "";
+            //foreach (int c in days)
+            //{
+            //    if (c > 0) { operatingcode += "1"; }
+            //    else { operatingcode += "0"; }
+            //}
+            //eOperatingDay opday = new eOperatingDay() { startDate = startdate, endDate = enddate, operatingCode = operatingcode };
+            //opperiod.operatingDay.Add(opday);
+            //foreach (DateTime missingdate in missing)
+            //{
+            //    tSpecialService specialservice = new tSpecialService() { type = tSpecialServiceType.exclude, singleDate = missingdate };
+            //    opperiod.specialService.Add(specialservice);
+            //}
+            DateTime tempdate = startdate;
+            int j = 0;
+            string bitmask = "";
+            for (int i = 0; i < ((enddate - startdate).TotalDays + 1); i++ )
+            {
+                if (dates[j] == tempdate) { bitmask += "1"; j++;  }
+                else {bitmask += "0";}
+                tempdate = tempdate.AddDays(1);
+            }
+            opperiod.bitMask = bitmask;
+            opperiod.startDate = startdate;
+            opperiod.endDate = enddate;
+
+            return opperiod;
+        }
+
+
+        public static Dictionary<DateTime, TimetableDay> CreateTimetableDict()
         {
             Dictionary<DateTime, TimetableDay> timetabledict = new Dictionary<DateTime,TimetableDay>();
 
@@ -114,56 +208,23 @@ namespace RailML___WPF.Data
                     }
                 }
             }
+            return timetabledict;
+        }
 
+        private void TimetableGrouping(Dictionary<DateTime, TimetableDay> timetabledict)
+        {
             IEnumerable<IGrouping<TimetableDay, DateTime>> grouping = timetabledict.Values.GroupBy(e => e, e => e.date);
             foreach(IGrouping<TimetableDay, DateTime> group in grouping.Where(e => e.Count() > 50))
             {
-                DateTime startdate = DateTime.MaxValue;
-                DateTime enddate = DateTime.MinValue;
-                List<DayOfWeek> dayindex = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().ToList();
-                int[] days = new int[7] {0,0,0,0,0,0,0};
-                foreach(DateTime date in group )
-                {
-                    if (date < startdate) { startdate = date; }
-                    if (date > enddate) { enddate = date; }
-                    days[dayindex.IndexOf(date.DayOfWeek)]++;
-                }
-                var missing = startdate.Range(enddate).Except(group);
-                var exclude = new List<DateTime>();
-                foreach(DateTime missingdate in missing)
-                {
-                    if(days[dayindex.IndexOf(missingdate.DayOfWeek)] == 0)
-                    {
-                        exclude.Add(missingdate);
-                    }
-                }
-                missing = missing.Except(exclude);
-                eTimetablePeriod ttperiod = new eTimetablePeriod();
-                DataContainer.IDGenerator(ttperiod);
-                eOperatingPeriod opperiod = new eOperatingPeriod();
-                DataContainer.IDGenerator(opperiod);
-                opperiod.timetablePeriodRef = ttperiod.id;
-                string operatingcode = "";
-                foreach(int c in days)
-                {
-                    if (c > 0) { operatingcode += "1"; }
-                    else { operatingcode += "0"; }
-                }
-                eOperatingDay opday = new eOperatingDay() { startDate = startdate, endDate = enddate, operatingCode = operatingcode };
-                opperiod.operatingDay.Add(opday);
-                foreach(DateTime missingdate in missing)
-                {
-                    tSpecialService specialservice = new tSpecialService(){type = tSpecialServiceType.exclude, singleDate = missingdate};
-                    opperiod.specialService.Add(specialservice);
-                }
-                DataContainer.model.timetable.timetablePeriods.Add(ttperiod);
+                var opperiod = CreateOperatingPeriod(group.ToList<DateTime>());
                 DataContainer.model.timetable.operatingPeriods.Add(opperiod);
             }
 
+        }
 
-            
+        private void CreateTimeTable(Dictionary<DateTime, TimetableDay> timetabledict)
+        {
 
-            
         }
        
     }
@@ -175,7 +236,12 @@ namespace RailML___WPF.Data
         public string origin { get; set; }
         public string destination { get; set; }
         public string traincode { get; set; }
-
+        public List<Stop> stops { get; set; }
+        
+        public RuntimeRep()
+        {
+            stops = new List<Stop>();
+        }
         public bool Equals(RuntimeRep other)
         {
             return this.traincode == other.traincode &&
@@ -185,6 +251,13 @@ namespace RailML___WPF.Data
                 this.traincode == other.traincode;
         }
 
+    }
+
+    class Stop
+    {
+        public string location { get; set; }
+        public DateTime arrival { get; set; }
+        public DateTime departure { get; set; }
     }
 
     class TimetableDay : IEquatable<TimetableDay>
