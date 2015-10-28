@@ -81,6 +81,7 @@
     <Compile Include="Data\ImportTimetable.cs" />
     <Compile Include="Data\NeuralNetwork.cs" />
     <Compile Include="Data\RailML Schema.cs" />
+    <Compile Include="Data\SaveLoad.cs" />
     <Compile Include="Data\ShortestPath.cs" />
     <Compile Include="MainWindow\MainWindowViewModel.cs" />
     <Compile Include="NeuralNetwork\Algorithms\PerLine.cs" />

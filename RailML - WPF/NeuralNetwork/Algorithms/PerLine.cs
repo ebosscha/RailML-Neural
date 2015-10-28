@@ -31,8 +31,8 @@ namespace RailML___WPF.NeuralNetwork.Algorithms
             while (true)
             {
                 endoffile = false;
-                reportcsv = new CsvFileReader<Record>(Data.NeuralNetwork.reportsfile, def);
-                timetablecsv = new CsvFileReader<TimetableEntry>(Data.NeuralNetwork.timetablefile, def);
+                reportcsv = new CsvFileReader<Record>(DataContainer.NeuralNetwork.reportsfile, def);
+                timetablecsv = new CsvFileReader<TimetableEntry>(DataContainer.NeuralNetwork.timetablefile, def);
                 while (!endoffile)
                 {
                     INeuralDataSet data = pproc.CreateDayDataSet(GetDayData());

@@ -33,15 +33,92 @@ namespace RailML___WPF
         }
 
         #region Filemenu
+        #region LoadButton
         public void LoadButton_Click(object sender,EventArgs e)
         {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            //dlg.FileName = "Document"; // Default file name
+            dlg.Filter = "RailML NN Documents (.railNN)|*.railNN"; // Filter files by extension
 
+            // Show load file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Process load file dialog box results
+            if (result == true)
+            {
+                // Load document
+                string filename = dlg.FileName;
+                BackgroundWorker worker = new BackgroundWorker();
+                worker.WorkerReportsProgress = true;
+                SaveLoad.LoadFile(worker, new DoWorkEventArgs(filename));
+                worker.ProgressChanged += new ProgressChangedEventHandler(LoadButton_ProgressChanged);
+                worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(LoadButton_Completed);
+                worker.DoWork += new DoWorkEventHandler(SaveLoad.LoadFile);
+                worker.RunWorkerAsync(filename);
+                this.IsHitTestVisible = false;
+                Mouse.OverrideCursor = Cursors.AppStarting;
+
+
+                
+            }
         }
 
+        private void LoadButton_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            StatusbarText.Text = "Percentage Loaded : " + e.UserState.ToString();
+        }
+
+        private void LoadButton_Completed(object sender, RunWorkerCompletedEventArgs e)
+        {
+            this.IsHitTestVisible = true;
+            Mouse.OverrideCursor = null;
+            StatusbarText.Text = null;
+            this.MainViewContentControl.Content = new RailMLViewer.Views.BaseRailMLView();
+        }
+
+        #endregion LoadButton
+
+        #region SaveButton
         public void SaveButton_Click(object sender, EventArgs e)
         {
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "Document"; // Default file name
+            dlg.AddExtension = true;
+            dlg.DefaultExt = ".railNN";
+            dlg.Filter = "RailML Documents (.railNN.)|*.railNN"; // Filter files by extension
 
+            // Show save file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                // Save document
+                string filename = dlg.FileName;
+                BackgroundWorker worker = new BackgroundWorker();
+                worker.WorkerReportsProgress = true;
+                worker.ProgressChanged += new ProgressChangedEventHandler(SaveButton_ProgressChanged);
+                worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(SaveButton_Completed);
+                worker.DoWork += new DoWorkEventHandler(SaveLoad.SaveToFile);
+                worker.RunWorkerAsync(filename);
+                this.IsHitTestVisible = false;
+                Mouse.OverrideCursor = Cursors.AppStarting;
+            }
         }
+
+        private void SaveButton_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            StatusbarText.Text = "Bytes Saved : " + e.UserState.ToString();
+        }
+
+        private void SaveButton_Completed(object sender, RunWorkerCompletedEventArgs e)
+        {
+            this.IsHitTestVisible = true;
+            Mouse.OverrideCursor = null;
+            StatusbarText.Text = null;
+        }
+
+        #endregion SaveButton
 
         public void LoadRailMLButton_Click(object sender, EventArgs e)
         {
@@ -160,7 +237,7 @@ namespace RailML___WPF
             DataContainer.IDGenerator(track1);
             track1.trackTopology.trackBegin.geoCoord.coord.Add(0); track1.trackTopology.trackBegin.geoCoord.coord.Add(0);
             track1.trackTopology.trackEnd.geoCoord.coord.Add(600); track1.trackTopology.trackEnd.geoCoord.coord.Add(0);
-            tCommonSwitchAndCrossingData sw1 = new tCommonSwitchAndCrossingData() { id = "sw1" };
+            eSwitch sw1 = new eSwitch() { id = "sw1" };
             sw1.geoCoord.coord.AddRange(new double[] { 300, 0 });
             track1.trackTopology.connections.Add(sw1);
             
@@ -328,7 +405,7 @@ namespace RailML___WPF
 
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
-                //ImportTimetable.TimetableFromCsv(worker, new DoWorkEventArgs(filename));
+                ImportTimetable.TimetableFromCsv(worker, new DoWorkEventArgs(filename));
                 worker.DoWork += new DoWorkEventHandler(ImportTimetable.TimetableFromCsv);
                 worker.ProgressChanged += new ProgressChangedEventHandler(ImportTimetable_Progress);
                 worker.RunWorkerAsync(filename);
@@ -413,7 +490,7 @@ namespace RailML___WPF
             if (result == true)
             {
                 // Load document
-                Data.NeuralNetwork.timetablefile = dlg.FileName;
+                DataContainer.NeuralNetwork.timetablefile = dlg.FileName;
             }
         }
 
@@ -429,7 +506,7 @@ namespace RailML___WPF
             if (result == true)
             {
                 // Load document
-                Data.NeuralNetwork.reportsfile = dlg.FileName;
+                DataContainer.NeuralNetwork.reportsfile = dlg.FileName;
             }
         }
         #endregion

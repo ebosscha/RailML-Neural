@@ -11,15 +11,27 @@ using System.Reflection;
 
 namespace RailML___WPF.Data
 {
+    [Serializable]
     static class DataContainer
     {
         private static railml _model;
+        private static NeuralNetwork _neuralnetwork;
         private static Hashtable _idlist = new Hashtable();
 
         public static railml model
         {
             get { return _model; }
             set { _model = value; PrepareData(); }
+        }
+
+        public static NeuralNetwork NeuralNetwork
+        {
+            get 
+            {
+                if (_neuralnetwork == null) { _neuralnetwork = new NeuralNetwork(); }
+                    return _neuralnetwork; 
+            }
+            set { _neuralnetwork = value; }
         }
 
         public static Hashtable IDList { get { return _idlist; } }

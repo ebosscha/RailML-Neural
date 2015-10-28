@@ -23,18 +23,18 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
         {
             string filename = e.Argument as string;
             BackgroundWorker worker = sender as BackgroundWorker;
-            Data.NeuralNetwork.DelayCombinations = new Data.DelayCombinationCollection();
+            DataContainer.NeuralNetwork.DelayCombinations = new Data.DelayCombinationCollection();
 
             CsvDefinition def = new CsvDefinition() { FieldSeparator = ',' };
             CsvFileReader<Record> reader = new CsvFileReader<Record>(filename, def);
             DateTime date = new DateTime();
             DelayDay day = new DelayDay();
             int count = 0;
-            foreach(Record record in reader)
+            foreach (Record record in reader)
             {
                 if (record.trainDate != date)
                 {
-                    Data.NeuralNetwork.DelayCombinations.list.AddRange(day.FormCombinations());
+                    DataContainer.NeuralNetwork.DelayCombinations.list.AddRange(day.FormCombinations());
                     date = record.trainDate;
                     day = new DelayDay();
                     worker.ReportProgress(0, new string[] { record.trainDate.ToString(), count.ToString() });
@@ -50,44 +50,12 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
                     else { delay.origindelay = record.difference; }
 
                     if (day.delays.ContainsKey(delay.traincode)) { ((Delay)day.delays[delay.traincode]).destinationdelay = delay.destinationdelay; }
-                    else { day.delays.Add(delay.traincode,delay); }
+                    else { day.delays.Add(delay.traincode, delay); }
 
                 }
                 count++;
-                
+
             }
-        }
-
-        public static void ImportTimeTable(object sender, DoWorkEventArgs e)
-        {
-            Hashtable categories = new Hashtable();
-            string filename = e.Argument as string;
-            BackgroundWorker worker = sender as BackgroundWorker;
-
-            CsvDefinition def = new CsvDefinition() { FieldSeparator = ',' };
-            CsvFileReader<TimetableEntry> reader = new CsvFileReader<TimetableEntry>(filename, def);
-            DateTime date = new DateTime();
-            int count = 0;
-            foreach(TimetableEntry entry in reader)
-            {
-                string category = entry.TrainOrigin + "to" + entry.TrainDestination;
-                if (categories.ContainsKey(category))
-                {
-                    categories[category] = (int)categories[category] + 1;
-                }
-                else { 
-                    categories.Add(category, 1); 
-                    eCategory cat = new eCategory();
-                    cat.id = category;
-                    cat.name = category;
-                    DataContainer.model.timetable.categories.Add(cat);
-                }
-
-                
-                count++;
-                worker.ReportProgress(0, new string[] { entry.TrainDate.ToString(), count.ToString() });
-            }
-
         }
 
     }
@@ -108,6 +76,7 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
         public string comments { get; set; }
     }
 
+    [Serializable]
     public class DelayCombination
     {
         public List<Delay> primarydelays { get; set; }
@@ -119,8 +88,31 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
             secondarydelays = new List<Delay>();
         }
 
+        public DateTime GetDate()
+        {
+            return primarydelays[0].date;
+        }
+
+        public bool HasTrain(string traincode)
+        {
+            foreach(Delay d in primarydelays.Where(d => d.traincode == traincode))
+            {return true;}
+            foreach (Delay d in secondarydelays.Where(d => d.traincode == traincode))
+            {return true;}
+            return false;
+        }
+
+        public void AddStopDelays(List<StopDelay> stopdelays, string traincode)
+        {
+            foreach(Delay d in primarydelays.Where(d => d.traincode == traincode))
+            { d.stopdelays = stopdelays; return; }
+            foreach (Delay d in secondarydelays.Where(d => d.traincode == traincode))
+            { d.stopdelays = stopdelays; return; }
+        }
+
     }
 
+    [Serializable]
     public class Delay
     {
         public string traincode { get; set; }
@@ -130,10 +122,12 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
         public string delaycode { get; set; }
         public string WLCheader { get; set; }
         public List<Delay> secondary { get; set; }
+        public List<StopDelay> stopdelays { get; set; }
 
         public Delay()
         {
             secondary = new List<Delay>();
+            stopdelays = new List<StopDelay>();
         }
 
         public List<Delay> GetSecondaries()
@@ -143,13 +137,17 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
             {
                 result.Add(d);
                 result.AddRange(d.GetSecondaries());
-
             }
-
             return result;
-        }
+        }       
+    }
 
-            
+    [Serializable]
+    public class StopDelay // Class defining the delay at an intemediary stop of a train.
+    {
+        public string location { get; set; } // OCP name of the location
+        public double arrivaldelay { get; set; } // Arrivaldelay in seconds 
+        public double departuredelay { get; set; } // Departuredelay in seconds
     }
 
     class DelayDay

@@ -13,20 +13,22 @@ using RailML___WPF.NeuralNetwork.PreProcessing;
 
 namespace RailML___WPF.Data
 {
-    public static class NeuralNetwork
+    [Serializable]
+    public class NeuralNetwork
     {
-        private static Settings _settings = new Settings { LearningRate = 0.1, Momentum = 0 };
-        public static Settings Settings
+        private Settings _settings = new Settings { LearningRate = 0.1, Momentum = 0 };
+        public Settings Settings
         {
             get{ return _settings;}
             set{ _settings = value;}
         }
-        public static BasicNetwork Network { get; set; }
-        public static INeuralDataSet Data { get; set; }
-        public static ResilientPropagation Training { get; set; }
-        public static DelayCombinationCollection DelayCombinations { get; set; }
-        public static string timetablefile { get; set; }
-        public static string reportsfile { get; set; }
+        public BasicNetwork Network { get; set; }
+        public INeuralDataSet Data { get; set; }
+        [NonSerialized]
+        public ResilientPropagation Training;
+        public DelayCombinationCollection DelayCombinations { get; set; }
+        public string timetablefile { get; set; }
+        public string reportsfile { get; set; }
 
     
 
@@ -34,6 +36,7 @@ namespace RailML___WPF.Data
 
     }
 
+    [Serializable]
     public class Settings
     {
         public double LearningRate { get; set; }
@@ -42,6 +45,7 @@ namespace RailML___WPF.Data
 
     }
 
+    [Serializable]
     public class DelayCombinationCollection
     {
         public List<DelayCombination> list { get; set; }

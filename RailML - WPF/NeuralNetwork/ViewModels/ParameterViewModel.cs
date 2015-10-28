@@ -18,7 +18,7 @@ namespace RailML___WPF.NeuralNetwork.ViewModels
         public ParameterViewModel()
         {
             coll = new CompositeCollection();
-            settings = Data.NeuralNetwork.Settings;
+            settings = DataContainer.NeuralNetwork.Settings;
             PropertyInfo[] props = settings.GetType().GetProperties();
             foreach(PropertyInfo prop in props)
             {

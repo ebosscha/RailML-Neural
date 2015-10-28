@@ -27,6 +27,7 @@ namespace RailML___WPF.Data
             CsvFileReader<TimetableEntry> reader = new CsvFileReader<TimetableEntry>(filename, def);
             int count = 0;
             RuntimeRep rep = new RuntimeRep();
+            List<StopDelay> stopdelays = new List<StopDelay>();
             string traincode = "";
             foreach (TimetableEntry entry in reader)
             {
@@ -46,6 +47,8 @@ namespace RailML___WPF.Data
 
                 if(entry.TrainDate != date || entry.TrainCode != traincode)
                 {
+                    AddStopDelays(stopdelays, traincode, date);
+                    stopdelays = new List<StopDelay>();
                     if(rep.traincode != null){trainvariations.AddRep(rep, date);}
                     if (entry.TrainCode != traincode) 
                     {
@@ -55,6 +58,7 @@ namespace RailML___WPF.Data
                         worker.ReportProgress(0, new string[] { traincode, count.ToString() });
                         traincode = entry.TrainCode;
                     }
+                    
                     rep = new RuntimeRep();
                     date = entry.TrainDate;
                     rep.traincode = entry.TrainCode;
@@ -69,12 +73,16 @@ namespace RailML___WPF.Data
                 {
                     Stop stop = new Stop() { location = entry.LocationCode, arrival = entry.ScheduledArrival, departure = entry.ScheduledDeparture};
                     rep.stops.Add(stop);
+                    if(entry.Arrival != default(DateTime) && entry.Departure != default(DateTime))
+                    {
+                        StopDelay delay = new StopDelay() { location = entry.LocationCode, departuredelay = (entry.Departure - entry.ScheduledDeparture).TotalSeconds, arrivaldelay = (entry.Arrival - entry.ExpectedArrival).TotalSeconds };
+                        stopdelays.Add(delay);
+                    }
                 }
-
-
-
-
-
+                if (count == 100000)
+                {
+                    int q = 1;
+                }
                 if (count > 300000) { break; }
                 count++;
                 
@@ -84,8 +92,16 @@ namespace RailML___WPF.Data
 
         }
 
+        private static void AddStopDelays(List<StopDelay> stopdelays, string traincode, DateTime date)
+        {
+            foreach(DelayCombination comb in DataContainer.NeuralNetwork.DelayCombinations.list.Where(e => e.GetDate() == date && e.HasTrain(traincode)))
+            {
+                comb.AddStopDelays(stopdelays, traincode);
+            }
+        }
 
-        public static void ProcessTimetableVariations()
+
+        private static void ProcessTimetableVariations()
         {
             foreach(TrainVariations variations in totalvariations)
             {
@@ -125,10 +141,11 @@ namespace RailML___WPF.Data
                 DataContainer.model.timetable.trainParts.AddRange(trainparts);
 
             }
+
+
         }
 
        
-        // TODO ! Bitmaps for operating periods.
         private static eOperatingPeriod CreateOperatingPeriod(List<DateTime> dates)
         {
             eOperatingPeriod opperiod = new eOperatingPeriod();
@@ -183,7 +200,7 @@ namespace RailML___WPF.Data
         }
 
 
-        public static Dictionary<DateTime, TimetableDay> CreateTimetableDict()
+        private static Dictionary<DateTime, TimetableDay> CreateTimetableDict()
         {
             Dictionary<DateTime, TimetableDay> timetabledict = new Dictionary<DateTime,TimetableDay>();
 

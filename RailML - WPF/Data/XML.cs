@@ -76,11 +76,20 @@ namespace RailML___WPF.Data
             {
                 using (TextWriter streamWriter = new StreamWriter(memoryStream))
                 {
-                    var xmlSerializer = new XmlSerializer(typeof(T));
-                    xmlSerializer.Serialize(streamWriter, obj);
-                    XElement elem = XElement.Parse(Encoding.ASCII.GetString(memoryStream.ToArray()));
-                    elem = CleanXML(elem);
-                    return elem;
+                    try
+                    {
+                        var xmlSerializer = new XmlSerializer(typeof(T));
+                        xmlSerializer.Serialize(streamWriter, obj);
+                        XElement elem = XElement.Parse(Encoding.ASCII.GetString(memoryStream.ToArray()));
+                        elem = CleanXML(elem);
+                        return elem;
+                    }
+                    catch(Exception ex)
+                    {
+                        Exception e = ex.InnerException;
+                        int q = 1;
+                        return null;
+                    }
                 }
             }
         }
