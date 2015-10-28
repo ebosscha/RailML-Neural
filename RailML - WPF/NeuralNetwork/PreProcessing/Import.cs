@@ -13,6 +13,7 @@ using LumenWorks.Framework.IO.Csv;
 using System.ComponentModel;
 using CsvFiles;
 using RailML___WPF.Data;
+using ProtoBuf;
 
 namespace RailML___WPF.NeuralNetwork.PreProcessing
 {
@@ -77,9 +78,12 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
     }
 
     [Serializable]
+    [ProtoContract]
     public class DelayCombination
     {
+        [ProtoMember(1)]
         public List<Delay> primarydelays { get; set; }
+        [ProtoMember(2)]
         public List<Delay> secondarydelays { get; set; }
 
         public DelayCombination()
@@ -113,15 +117,24 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
     }
 
     [Serializable]
+    [ProtoContract]
     public class Delay
     {
+        [ProtoMember(1)]
         public string traincode { get; set; }
+        [ProtoMember(2)]
         public DateTime date { get; set; }
+        [ProtoMember(3)]
         public double destinationdelay { get; set; }
+        [ProtoMember(4)]
         public double origindelay { get; set; }
+        [ProtoMember(5)]
         public string delaycode { get; set; }
+        [ProtoMember(6)]
         public string WLCheader { get; set; }
+        [ProtoMember(7)]
         public List<Delay> secondary { get; set; }
+        [ProtoMember(8)]
         public List<StopDelay> stopdelays { get; set; }
 
         public Delay()
@@ -143,10 +156,14 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
     }
 
     [Serializable]
+    [ProtoContract]
     public class StopDelay // Class defining the delay at an intemediary stop of a train.
     {
+        [ProtoMember(1)]
         public string location { get; set; } // OCP name of the location
+        [ProtoMember(2)]
         public double arrivaldelay { get; set; } // Arrivaldelay in seconds 
+        [ProtoMember(3)]
         public double departuredelay { get; set; } // Departuredelay in seconds
     }
 

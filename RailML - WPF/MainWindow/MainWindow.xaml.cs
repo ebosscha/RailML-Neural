@@ -50,10 +50,10 @@ namespace RailML___WPF
                 string filename = dlg.FileName;
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
-                SaveLoad.LoadFile(worker, new DoWorkEventArgs(filename));
+                //SaveLoad.ProtoLoadFile(worker, new DoWorkEventArgs(filename));
                 worker.ProgressChanged += new ProgressChangedEventHandler(LoadButton_ProgressChanged);
                 worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(LoadButton_Completed);
-                worker.DoWork += new DoWorkEventHandler(SaveLoad.LoadFile);
+                worker.DoWork += new DoWorkEventHandler(SaveLoad.ProtoLoadFile);
                 worker.RunWorkerAsync(filename);
                 this.IsHitTestVisible = false;
                 Mouse.OverrideCursor = Cursors.AppStarting;
@@ -97,9 +97,10 @@ namespace RailML___WPF
                 string filename = dlg.FileName;
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
+                //SaveLoad.ProtoSaveToFile(worker, new DoWorkEventArgs(filename));
                 worker.ProgressChanged += new ProgressChangedEventHandler(SaveButton_ProgressChanged);
                 worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(SaveButton_Completed);
-                worker.DoWork += new DoWorkEventHandler(SaveLoad.SaveToFile);
+                worker.DoWork += new DoWorkEventHandler(SaveLoad.ProtoSaveToFile);
                 worker.RunWorkerAsync(filename);
                 this.IsHitTestVisible = false;
                 Mouse.OverrideCursor = Cursors.AppStarting;
@@ -108,7 +109,11 @@ namespace RailML___WPF
 
         private void SaveButton_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            StatusbarText.Text = "Bytes Saved : " + e.UserState.ToString();
+            if (e.ProgressPercentage == 0)
+            {
+                StatusbarText.Text = "Bytes Saved : " + e.UserState.ToString();
+            }
+            else { MessageBox.Show(e.UserState.ToString()); }
         }
 
         private void SaveButton_Completed(object sender, RunWorkerCompletedEventArgs e)
