@@ -46,8 +46,8 @@ namespace RailML___WPF.Data
                 SaveLoadData data = new SaveLoadData();
                 data.railml = XML.ToXElement<railml>(Data.DataContainer.model).ToString();
                 data.NN = DataContainer.NeuralNetwork;
-                data.network = SerializeNetwork();
-                data.trainingset = SerializeDataSet();
+                if (DataContainer.NeuralNetwork.Network != null) { data.network = SerializeNetwork(); }
+                if (DataContainer.NeuralNetwork.Data != null) { data.trainingset = SerializeDataSet(); }
                 MyStream stream = new MyStream(filename, FileMode.Create, FileAccess.Write);
                 stream.ProgressChanged += new ProgressChangedEventHandler(Save_ProgressChanged);
                 Serializer.Serialize(stream, data);
@@ -91,8 +91,8 @@ namespace RailML___WPF.Data
             XElement elem = XElement.Parse(data.railml);
             DataContainer.model = XML.FromXElement<railml>(elem);
             DataContainer.NeuralNetwork = data.NN;
-            DataContainer.NeuralNetwork.Data = DeserializeDataSet(data.trainingset);
-            DataContainer.NeuralNetwork.Network = DeserializeNetwork(data.network);
+            if (data.trainingset != null) { DataContainer.NeuralNetwork.Data = DeserializeDataSet(data.trainingset); }
+            if (data.network != null) { DataContainer.NeuralNetwork.Network = DeserializeNetwork(data.network); }
             stream.Close();
         }
         

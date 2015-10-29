@@ -17,6 +17,7 @@ namespace RailML___WPF.Data
         private static railml _model;
         private static NeuralNetwork _neuralnetwork;
         private static Hashtable _idlist = new Hashtable();
+        private static PathContainer _pathcontainer;
 
         public static railml model
         {
@@ -35,6 +36,17 @@ namespace RailML___WPF.Data
         }
 
         public static Hashtable IDList { get { return _idlist; } }
+
+        public static PathContainer PathContainer
+        {
+            get 
+            {
+                if (_pathcontainer == null)
+                { _pathcontainer = new PathContainer(); }
+                return _pathcontainer; 
+            }
+            set { _pathcontainer = value; }
+        }
 
         public static void PrepareData()
         {

@@ -12,11 +12,13 @@ namespace RailML___WPF.Data
 {
     class ImportTimetable
     {
-        static List<TrainVariations> totalvariations = new List<TrainVariations>();
+        static int unhandled = 0;
+        //static List<TrainVariations> totalvariations = new List<TrainVariations>();
         static TrainVariations trainvariations;
         static DateTime date = new DateTime();
         public static void TimetableFromCsv(object sender, DoWorkEventArgs e)
         {
+            DateTime ThresholdDate = new DateTime(2010, 1, 1);
             if (DataContainer.model == null) { DataContainer.model = new railml(); }
             DataContainer.model.timetable = new timetable();
             Dictionary<string, int> categories = new Dictionary<string, int>();
@@ -31,6 +33,11 @@ namespace RailML___WPF.Data
             string traincode = "";
             foreach (TimetableEntry entry in reader)
             {
+                if (entry.TrainDate < ThresholdDate) { count++; continue; }
+
+
+
+
                 string category = entry.TrainOrigin + "to" + entry.TrainDestination;
                 if (categories.ContainsKey(category))
                 {
@@ -61,7 +68,6 @@ namespace RailML___WPF.Data
                             string cat = categories.FirstOrDefault(x => x.Value == categories.Values.Max()).Key;
                             trainvariations.category = cat;
                             categories = new Dictionary<string, int>();
-                            totalvariations.Add(trainvariations);
                             if(!DataContainer.model.timetable.rosterings.Any(x => x.name == cat))
                             {
                                 eRostering roster = new eRostering()
@@ -73,6 +79,7 @@ namespace RailML___WPF.Data
                                 DataContainer.model.timetable.rosterings.Add(roster);
 
                             }
+                            ProcessTimetableVariations(trainvariations);
                         }
                         trainvariations = new TrainVariations();
                         trainvariations.traincode = entry.TrainCode;
@@ -111,7 +118,7 @@ namespace RailML___WPF.Data
                 string cat = categories.FirstOrDefault(x => x.Value == categories.Values.Max()).Key;
                 trainvariations.category = cat;
                 categories = new Dictionary<string, int>();
-                totalvariations.Add(trainvariations);
+                ProcessTimetableVariations(trainvariations);
                 if (!DataContainer.model.timetable.rosterings.Any(x => x.name == cat))
                 {
                     eRostering roster = new eRostering()
@@ -125,8 +132,10 @@ namespace RailML___WPF.Data
                 }
             }
 
+            e.Result = unhandled;
 
-            ProcessTimetableVariations();
+
+
 
         }
 
@@ -142,35 +151,33 @@ namespace RailML___WPF.Data
         }
 
 
-        private static void ProcessTimetableVariations()
+        private static void ProcessTimetableVariations(TrainVariations variations)
         {
-            foreach(TrainVariations variations in totalvariations)
-            {
-                eTrain train = new eTrain();
-                train.id = variations.traincode;
-                train.scope = tTrainScope.primary;
-                List<eTrainPart> trainparts = new List<eTrainPart>();
+            eTrain train = new eTrain();
+            train.id = variations.traincode;
+            train.scope = tTrainScope.primary;
+            List<eTrainPart> trainparts = new List<eTrainPart>();
 
-                for(int i = 0; i < variations.dates.Count; i++)
+            for(int i = 0; i < variations.dates.Count; i++)
+            {
+                try
                 {
                     eTrainPart trainpart = new eTrainPart() { id = train.id + "-" + i.ToString() };
-                    
+
                     var operatingperiod = CreateOperatingPeriod(variations.dates[i]);
-                    trainpart.operatingPeriodRef = new eOperatingPeriodRef() {@ref = operatingperiod.id };
+                    trainpart.operatingPeriodRef = new eOperatingPeriodRef() { @ref = operatingperiod.id };
                     DataContainer.model.timetable.operatingPeriods.Add(operatingperiod);
-                    eOcpTT departure = new eOcpTT()
-                    { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == variations.reps[i].origin).id };
-                    departure.times.Add(new eArrivalDepartureTimes(){ departure = variations.reps[i].departuretime, scope = "scheduled"});
-                    trainpart.ocpsTT.Add(departure); 
-                    foreach(Stop stop in variations.reps[i].stops)
+                    eOcpTT departure = new eOcpTT() { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == variations.reps[i].origin).id };
+                    departure.times.Add(new eArrivalDepartureTimes() { departure = variations.reps[i].departuretime, scope = "scheduled" });
+                    trainpart.ocpsTT.Add(departure);
+                    foreach (Stop stop in variations.reps[i].stops)
                     {
                         eOcpTT ocp = new eOcpTT() { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == stop.location).id };
                         ocp.times.Add(new eArrivalDepartureTimes() { arrival = stop.arrival, departure = stop.departure, scope = "scheduled" });
                         trainpart.ocpsTT.Add(ocp);
                     }
-                    eOcpTT arrival = new eOcpTT() 
-                    { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == variations.reps[i].destination).id };
-                    arrival.times.Add(new eArrivalDepartureTimes(){arrival = variations.reps[i].arrivaltime, scope = "scheduled"});
+                    eOcpTT arrival = new eOcpTT() { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == variations.reps[i].destination).id };
+                    arrival.times.Add(new eArrivalDepartureTimes() { arrival = variations.reps[i].arrivaltime, scope = "scheduled" });
                     trainpart.ocpsTT.Add(arrival);
                     trainparts.Add(trainpart);
 
@@ -200,25 +207,30 @@ namespace RailML___WPF.Data
                         blockRef = block.id
                     };
                     roster.circulations.Add(circ);
-
-                    
-                    
-
                 }
-
-                for(int i = 0; i < trainparts.Count; i++)
+                catch
                 {
-                    eTrainPartSequence seq = new eTrainPartSequence(){sequence = i.ToString()};
-                    seq.trainPartRef.Add(new tTrainPartRef(){@ref = trainparts[i].id });
-                    train.trainPartSequence.Add(seq);
+                    unhandled++;
                 }
-                DataContainer.model.timetable.trains.Add(train);
-                DataContainer.model.timetable.trainParts.AddRange(trainparts);
+
+                    
+                    
 
             }
 
+            for(int i = 0; i < trainparts.Count; i++)
+            {
+                eTrainPartSequence seq = new eTrainPartSequence(){sequence = i.ToString()};
+                seq.trainPartRef.Add(new tTrainPartRef(){@ref = trainparts[i].id });
+                train.trainPartSequence.Add(seq);
+            }
+            DataContainer.model.timetable.trains.Add(train);
+            DataContainer.model.timetable.trainParts.AddRange(trainparts);
 
         }
+
+
+        
 
        
         private static eOperatingPeriod CreateOperatingPeriod(List<DateTime> dates)
@@ -275,33 +287,33 @@ namespace RailML___WPF.Data
         }
 
 
-        private static Dictionary<DateTime, TimetableDay> CreateTimetableDict()
-        {
-            Dictionary<DateTime, TimetableDay> timetabledict = new Dictionary<DateTime,TimetableDay>();
+        //private static Dictionary<DateTime, TimetableDay> CreateTimetableDict()
+        //{
+        //    Dictionary<DateTime, TimetableDay> timetabledict = new Dictionary<DateTime,TimetableDay>();
 
-            foreach(TrainVariations vars in totalvariations)
-            {
-                for(int i = 0; i < vars.dates.Count; i++)
-                {
-                    RuntimeRep rep = vars.reps[i];
-                    for(int j = 0; j < vars.dates[i].Count; j++)
-                    {
-                        if(!timetabledict.ContainsKey(vars.dates[i][j]))
-                        {
-                            TimetableDay ttday = new TimetableDay();
-                            ttday.date = vars.dates[i][j];
-                            ttday.runtimes.Add(rep);
-                            timetabledict.Add(vars.dates[i][j], ttday);
-                        }
-                        else
-                        {
-                            timetabledict[vars.dates[i][j]].runtimes.Add(rep);
-                        }
-                    }
-                }
-            }
-            return timetabledict;
-        }
+        //    foreach(TrainVariations vars in totalvariations)
+        //    {
+        //        for(int i = 0; i < vars.dates.Count; i++)
+        //        {
+        //            RuntimeRep rep = vars.reps[i];
+        //            for(int j = 0; j < vars.dates[i].Count; j++)
+        //            {
+        //                if(!timetabledict.ContainsKey(vars.dates[i][j]))
+        //                {
+        //                    TimetableDay ttday = new TimetableDay();
+        //                    ttday.date = vars.dates[i][j];
+        //                    ttday.runtimes.Add(rep);
+        //                    timetabledict.Add(vars.dates[i][j], ttday);
+        //                }
+        //                else
+        //                {
+        //                    timetabledict[vars.dates[i][j]].runtimes.Add(rep);
+        //                }
+        //            }
+        //        }
+        //    }
+        //    return timetabledict;
+        //}
 
         private void TimetableGrouping(Dictionary<DateTime, TimetableDay> timetabledict)
         {
@@ -311,11 +323,6 @@ namespace RailML___WPF.Data
                 var opperiod = CreateOperatingPeriod(group.ToList<DateTime>());
                 DataContainer.model.timetable.operatingPeriods.Add(opperiod);
             }
-
-        }
-
-        private void CreateTimeTable(Dictionary<DateTime, TimetableDay> timetabledict)
-        {
 
         }
        

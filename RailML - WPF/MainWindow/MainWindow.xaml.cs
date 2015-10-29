@@ -435,10 +435,23 @@ namespace RailML___WPF
 
         private void ImportTimetable_Finished(object sender, RunWorkerCompletedEventArgs e)
         {
-            this.IsHitTestVisible = true;
-            Mouse.OverrideCursor = null;
-            StatusbarText.Text = null;
-            MainViewContentControl.Content = new BaseRailMLView();
+            if (e.Error == null)
+            {
+                MessageBox.Show("Number of unhandled lines: " + e.Result.ToString());
+                this.IsHitTestVisible = true;
+                Mouse.OverrideCursor = null;
+                StatusbarText.Text = null;
+                MainViewContentControl.Content = new BaseRailMLView();
+            }
+            else
+            {
+                string message = e.Error.Message;
+                if (e.Error.InnerException != null)
+                { message += "    Inner Exception : " + e.Error.InnerException.Message; }
+                MessageBox.Show(message + " Error Line: " + e.Error.TargetSite.ToString());
+                
+                
+            }
         }
         
 
