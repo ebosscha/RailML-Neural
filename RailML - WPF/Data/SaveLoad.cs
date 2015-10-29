@@ -12,6 +12,10 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using ProtoBuf;
 using System.Windows;
+using Encog;
+using Encog.Persist;
+using Encog.Neural.Networks;
+using Encog.Neural.NeuralData;
 
 namespace RailML___WPF.Data
 {
@@ -42,6 +46,8 @@ namespace RailML___WPF.Data
                 SaveLoadData data = new SaveLoadData();
                 data.railml = XML.ToXElement<railml>(Data.DataContainer.model).ToString();
                 data.NN = DataContainer.NeuralNetwork;
+                data.network = SerializeNetwork();
+                data.trainingset = SerializeDataSet();
                 MyStream stream = new MyStream(filename, FileMode.Create, FileAccess.Write);
                 stream.ProgressChanged += new ProgressChangedEventHandler(Save_ProgressChanged);
                 Serializer.Serialize(stream, data);
@@ -85,6 +91,8 @@ namespace RailML___WPF.Data
             XElement elem = XElement.Parse(data.railml);
             DataContainer.model = XML.FromXElement<railml>(elem);
             DataContainer.NeuralNetwork = data.NN;
+            DataContainer.NeuralNetwork.Data = DeserializeDataSet(data.trainingset);
+            DataContainer.NeuralNetwork.Network = DeserializeNetwork(data.network);
             stream.Close();
         }
         
@@ -94,6 +102,40 @@ namespace RailML___WPF.Data
             MyStream stream = sender as MyStream;
             long percentage = ((long)e.UserState)*100 / stream.Length;
             worker.ReportProgress(0,percentage);
+        }
+
+        private static string SerializeNetwork()
+        {
+            IFormatter formatter = new BinaryFormatter();
+            MemoryStream stream = new MemoryStream();
+            formatter.Serialize(stream, DataContainer.NeuralNetwork.Network);
+            byte[] b = stream.ToArray();
+            return System.Text.Encoding.UTF8.GetString(b);
+        }
+
+        private static BasicNetwork DeserializeNetwork(string input)
+        {
+            IFormatter formatter = new BinaryFormatter();
+            byte[] b = System.Text.Encoding.UTF8.GetBytes(input);
+            MemoryStream stream = new MemoryStream(b);
+            return formatter.Deserialize(stream) as BasicNetwork;
+        }
+    
+        private static string SerializeDataSet()
+        {
+            IFormatter formatter = new BinaryFormatter();
+            MemoryStream stream = new MemoryStream();
+            formatter.Serialize(stream, DataContainer.NeuralNetwork.Data);
+            byte[] b = stream.ToArray();
+            return System.Text.Encoding.UTF8.GetString(b);
+        }
+
+        private static INeuralDataSet DeserializeDataSet(string input)
+        {
+            IFormatter formatter = new BinaryFormatter();
+            byte[] b = System.Text.Encoding.UTF8.GetBytes(input);
+            MemoryStream stream = new MemoryStream(b);
+            return formatter.Deserialize(stream) as INeuralDataSet;
         }
 
         
@@ -107,6 +149,10 @@ namespace RailML___WPF.Data
         public string railml { get; set; }
         [ProtoMember(2)]
         public NeuralNetwork NN { get; set; }
+        [ProtoMember(3)]
+        public string network { get; set; }
+        [ProtoMember(4)]
+        public string trainingset { get; set; }
     }
 
     class MyStream : FileStream

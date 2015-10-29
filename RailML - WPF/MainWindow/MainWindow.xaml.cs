@@ -416,7 +416,7 @@ namespace RailML___WPF
 
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
-                ImportTimetable.TimetableFromCsv(worker, new DoWorkEventArgs(filename));
+                //ImportTimetable.TimetableFromCsv(worker, new DoWorkEventArgs(filename));
                 worker.DoWork += new DoWorkEventHandler(ImportTimetable.TimetableFromCsv);
                 worker.ProgressChanged += new ProgressChangedEventHandler(ImportTimetable_Progress);
                 worker.RunWorkerAsync(filename);
