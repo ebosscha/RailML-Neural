@@ -8,58 +8,70 @@ namespace RailML___WPF.Data
 {
     static class ShortestPath
     {
-        public  static Route FindRoute(dynamic origin, dynamic destination)
-        {
-            eTrack starttrack;
-            Route route = new Route();
-            if(origin.GetType == typeof(eTrack))
-            {
-                starttrack = origin;
-            }
-
-            
-
-
-            return route;
-        }
-
-        private static List<dynamic> GetConnections(eTrack track, double pos)
-        {
-            List<dynamic> list = new List<dynamic>();
-            if (track.trackTopology.trackBegin.Item != null && track.trackTopology.trackBegin.Item is tConnectionData  )
-            {
-                list.Add(DataContainer.GetItem(((tConnectionData)track.trackTopology.trackBegin.Item).@ref).FindParent(typeof(eTrack)));
-            }
-            if (track.trackTopology.trackBegin.Item != null && track.trackTopology.trackEnd.Item is tConnectionData)
-            {
-                list.Add(DataContainer.GetItem(((tConnectionData)track.trackTopology.trackEnd.Item).@ref).FindParent(typeof(eTrack)));
-            }
-            foreach(eSwitch sw in track.trackTopology.connections)
-            {
-                foreach(tSwitchConnectionData conn in sw.connection)
-                {
-                    
-                }
-            }
-
-                return list;
-
-        }
-
-
-    
-        
     }
 
-    public class Route
+    class PathContainer
     {
-        public List<eTrack> tracks {get; set;}
-        public double distance {get;set;}
-
-
-        public Route()
+        private Dictionary<string, Dictionary<string, Route>> dict;
+        public PathContainer()
         {
-            tracks = new List<eTrack>();
+            Recalculate();
+        }
+
+        public void Recalculate()
+        {
+            dict = new Dictionary<string, Dictionary<string, Route>>();
+            foreach (eOcp ocp in DataContainer.model.infrastructure.operationControlPoints)
+            {
+                Dictionary<string, Route> tempdict = new Dictionary<string, Route>();
+                foreach (eOcp other in DataContainer.model.infrastructure.operationControlPoints.Where(e => e.id != ocp.id))
+                {
+                    tempdict.Add(other.id, new Route(ocp, other));
+                }
+                dict.Add(ocp.id, tempdict);
+            }
+        }
+
+        public Route GetRoute(eOcp origin, eOcp destination)
+        {
+            return GetRoute(origin.id, destination.id);
+        }
+
+        public Route GetRoute(string originid, string destinationid)
+        {
+            return dict[originid][destinationid];
         }
     }
+
+    class Route
+    {
+        private List<eTrack> unvisited;
+        private List<double> distances;
+
+        private infrastructure inf;
+        public eOcp origin;
+        public eOcp destination;
+        public List<RoutePart> route;
+        public Route(eOcp o, eOcp d)
+        {
+            origin = o; destination = d;
+            inf = DataContainer.model.infrastructure;
+            CalculateRoute();
+        }
+
+        private void CalculateRoute()
+        {
+            unvisited = inf.tracks;
+            distances = Enumerable.Repeat(9999999999999999.0, unvisited.Count).ToList();
+
+        }
+    }
+
+    class RoutePart
+    {
+        public eTrack track;
+        public decimal begin;
+        public decimal end;
+    }
+
 }
