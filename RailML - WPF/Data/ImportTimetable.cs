@@ -101,7 +101,7 @@ namespace RailML___WPF.Data
                     }
                 }
                 
-                //if (count > 300000) { break; }
+                if (count > 300000) { break; }
                 count++;
                 
             }

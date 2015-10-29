@@ -404,6 +404,7 @@ namespace RailML___WPF.Data
 
         public static void OCPfromAPI()
         {
+            DataContainer.model.infrastructure.operationControlPoints.Clear();
             CoordinateSystemFactory c = new CoordinateSystemFactory();
             StreamReader stream = new StreamReader("C:/Users/Edwin/OneDrive/Afstuderen/Irish Grid Conversion/Irish Grid WTK.txt");
             string wtk = stream.ReadLine();
@@ -420,9 +421,9 @@ namespace RailML___WPF.Data
             foreach(XElement station in stationdoc.Root.Elements(ns+"objStation"))
             {
                 eOcp tempocp = new eOcp();
-                tempocp.id = station.Element(ns+"StationId").Value;
-                tempocp.name = station.Element(ns+"StationDesc").Value;
-                tempocp.code = station.Element(ns+"StationCode").Value;
+                tempocp.id = station.Element(ns+"StationId").Value.Trim();
+                tempocp.name = station.Element(ns+"StationDesc").Value.Trim();
+                tempocp.code = station.Element(ns+"StationCode").Value.Trim();
                 tempocp.propOperational.operationalType = "station";
                 double[] coord = new double[] {double.Parse(station.Element(ns+"StationLongitude").Value,CultureInfo.InvariantCulture), double.Parse(station.Element(ns+"StationLatitude").Value,CultureInfo.InvariantCulture)};
                 double[] irishgridcoord = tr.MathTransform.Transform(coord);

@@ -14,7 +14,14 @@
     <DataTemplate DataType="{x:Type vm:SelectedPropertiesViewModel}">
         <vw:SelectedProperties/>
     </DataTemplate>
-    
+    <DataTemplate DataType="{x:Type vm:GraphViewModel}">
+        <vw:GraphView/>
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:TabularTimetableViewModel}">
+        <vw:TabularTimetableView/>
+    </DataTemplate>
+
+
 
 
 

@@ -34,8 +34,11 @@
             </TabItem>
             <TabItem Header="Timetable">
                 <TabControl>
-                    <TabItem Header="Trains">
-
+                    <TabItem Header="Tabular View">
+                        <ContentControl Name="TabularViewContentControl"/>
+                    </TabItem>
+                    <TabItem Header="Graph View">
+                        <ContentControl Name="GraphViewContentControl"/>
                     </TabItem>
                 </TabControl>
             </TabItem>

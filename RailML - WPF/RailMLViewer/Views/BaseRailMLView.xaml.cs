@@ -27,6 +27,8 @@ namespace RailML___WPF.RailMLViewer.Views
             this.TracksContentControl.Content = new TracksViewModel();
             this.OcpContentControl.Content = new OcpViewModel();
             this.NetworkDrawingContentControl.Content = new NetworkDrawingViewModel();
+            this.GraphViewContentControl.Content = new GraphViewModel();
+            this.TabularViewContentControl.Content = new TabularTimetableViewModel();
         }
     }
 }

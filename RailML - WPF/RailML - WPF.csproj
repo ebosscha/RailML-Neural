@@ -99,13 +99,21 @@
       <DependentUpon>ParameterView.xaml</DependentUpon>
     </Compile>
     <Compile Include="RailMLViewer\ViewModels\BaseViewModel.cs" />
+    <Compile Include="RailMLViewer\ViewModels\GraphViewModel.cs" />
     <Compile Include="RailMLViewer\ViewModels\NetworkDrawingViewModel.cs" />
     <Compile Include="RailMLViewer\ViewModels\OcpViewModel.cs" />
     <Compile Include="RailMLViewer\ViewModels\PropertiesPresenterViewModel.cs" />
     <Compile Include="RailMLViewer\ViewModels\SelectedPropertiesViewModel.cs" />
+    <Compile Include="RailMLViewer\ViewModels\TabularTimetableViewModel.cs" />
     <Compile Include="RailMLViewer\ViewModels\TracksViewModel.cs" />
     <Compile Include="RailMLViewer\Views\BaseRailMLView.xaml.cs">
       <DependentUpon>BaseRailMLView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RailMLViewer\Views\GraphEngine.xaml.cs">
+      <DependentUpon>GraphEngine.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RailMLViewer\Views\GraphView.xaml.cs">
+      <DependentUpon>GraphView.xaml</DependentUpon>
     </Compile>
     <Compile Include="RailMLViewer\Views\NetworkDrawingView.xaml.cs">
       <DependentUpon>NetworkDrawingView.xaml</DependentUpon>
@@ -118,6 +126,9 @@
     </Compile>
     <Compile Include="RailMLViewer\Views\SelectedProperties.xaml.cs">
       <DependentUpon>SelectedProperties.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RailMLViewer\Views\TabularTimetableView.xaml.cs">
+      <DependentUpon>TabularTimetableView.xaml</DependentUpon>
     </Compile>
     <Compile Include="RailMLViewer\Views\TracksView.xaml.cs">
       <DependentUpon>TracksView.xaml</DependentUpon>
@@ -151,11 +162,23 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="RailMLViewer\Views\GraphEngine.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RailMLViewer\Views\GraphView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="RailMLViewer\Views\PropertiesPresenter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="RailMLViewer\Views\RailMLViewerResources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RailMLViewer\Views\TabularTimetableView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
