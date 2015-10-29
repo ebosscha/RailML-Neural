@@ -62,12 +62,13 @@ namespace RailML___WPF.Data
     public class DelayCombinationCollection
     {
         [ProtoMember(1)]
-        public List<DelayCombination> list { get; set; }
+        public Dictionary<DateTime, List<DelayCombination>> dict;
         
         public DelayCombinationCollection()
         {
-            list = new List<DelayCombination>();
+            dict = new Dictionary<DateTime, List<DelayCombination>>();
         }
+
     }
 
 }

@@ -433,6 +433,61 @@ namespace RailML___WPF.Data
             }
         }
 
+        public static void OCPfromExcel()
+        {
+            FileStream stream;
+        Loop:
+            try { stream = File.Open("C:/Users/Edwin/OneDrive/Afstuderen/IrishRail Data/ReferenceData.xlsx", FileMode.Open, FileAccess.Read); }
+            catch
+            {
+                MessageBoxResult result = MessageBox.Show("Error. Please close the excel document. Retry?", "Error", MessageBoxButton.OKCancel);
+                if (result == MessageBoxResult.OK) { goto Loop; }
+                else { return; }
+            }
+            CoordinateSystemFactory c = new CoordinateSystemFactory();
+            StreamReader coordstream = new StreamReader("C:/Users/Edwin/OneDrive/Afstuderen/Irish Grid Conversion/Irish Grid WTK.txt");
+            string wtk = coordstream.ReadLine();
+            ICoordinateSystem target = c.CreateFromWkt(wtk);
+
+            IExcelDataReader excelreader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+            excelreader.IsFirstRowAsColumnNames = true;
+            ICoordinateSystem source = c.CreateFromWkt(coordstream.ReadLine());
+       
+            CoordinateTransformationFactory trf = new CoordinateTransformationFactory();
+            ICoordinateTransformation tr = trf.CreateFromCoordinateSystems(source, target);
+
+
+            _dataset = excelreader.AsDataSet();
+            _maintable = _dataset.Tables["tbl_rtStations"];
+
+            foreach(DataRow row in _maintable.Rows)
+            {
+                eOcp ocp = new eOcp();
+                ocp.id = (row["StationID"] as string ?? string.Empty).Trim();
+                ocp.name = (row["Station_Desc"] as string ?? string.Empty).Trim();
+                ocp.code = (row["SEMA_Name"] as string ?? string.Empty).Trim();
+                if(DataContainer.model.infrastructure.operationControlPoints.Any(x => x.name == ocp.name))
+                {
+                    continue;
+                }
+                if(row["Latitude"] != DBNull.Value && row["Longitude"] != DBNull.Value)
+                {
+                    double[] coord = new double[] { (row["Longitude"] as double?) ?? 0, (row["Latitude"] as double?) ?? 0};
+                    double[] irishgridcoord = tr.MathTransform.Transform(coord);
+                    ocp.geoCoord.coord.Add(irishgridcoord[0]);
+                    ocp.geoCoord.coord.Add(irishgridcoord[1]);
+                    AddOCPToTracks(ocp);
+                }
+                if (((row["suburban"] as int?) ?? 0) != 0 && ((row["mainline_station"] as int?) ?? 0) != 0 && ((row["DART_STATION"] as int?) ?? 0) != 0)
+                {
+                    ocp.propOperational.operationalType = "station";
+                }
+
+                DataContainer.model.infrastructure.operationControlPoints.Add(ocp);
+
+            }
+        }
+
         private static void AddOCPToTracks(eOcp ocp)
         {
             double margin = 100;

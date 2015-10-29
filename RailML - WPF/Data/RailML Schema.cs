@@ -1584,9 +1584,9 @@ namespace RailML___WPF.Data
 
         private bool _shouldSerializefixed;
 
-        private bool _shouldSerializeend;
+        private bool _shouldSerializeendserialize;
 
-        private bool _shouldSerializebegin;
+        private bool _shouldSerializebeginserialize;
 
         private System.Nullable<System.DateTime> _begin;
 
@@ -1622,7 +1622,7 @@ namespace RailML___WPF.Data
             this._endDay = "0";
         }
 
-        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "time")]
+        [XmlIgnore]
         public System.DateTime begin
         {
             get
@@ -1639,8 +1639,14 @@ namespace RailML___WPF.Data
             set
             {
                 this._begin = value;
-                _shouldSerializebegin = true;
+                _shouldSerializebeginserialize = true;
             }
+        }
+
+        [XmlAttributeAttribute("begin")]
+        public string beginserialize
+        {
+            get { return begin.ToString("hh:mm:ss");}
         }
 
         [System.Xml.Serialization.XmlIgnoreAttribute()]
@@ -1673,7 +1679,7 @@ namespace RailML___WPF.Data
             }
         }
 
-        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "time")]
+        [XmlIgnore]
         public System.DateTime end
         {
             get
@@ -1690,10 +1696,15 @@ namespace RailML___WPF.Data
             set
             {
                 this._end = value;
-                _shouldSerializeend = true;
+                _shouldSerializeendserialize = true;
             }
         }
 
+        [XmlAttributeAttribute("end")]
+        public string endserialize
+        {
+            get { return end.ToString("hh:mm:ss"); }
+        }
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool endSpecified
         {
@@ -1904,9 +1915,9 @@ namespace RailML___WPF.Data
         /// <summary>
         /// Test whether begin should be serialized
         /// </summary>
-        public virtual bool ShouldSerializebegin()
+        public virtual bool ShouldSerializebeginserialize()
         {
-            if (_shouldSerializebegin)
+            if (_shouldSerializebeginserialize)
             {
                 return true;
             }
@@ -1916,9 +1927,9 @@ namespace RailML___WPF.Data
         /// <summary>
         /// Test whether end should be serialized
         /// </summary>
-        public virtual bool ShouldSerializeend()
+        public virtual bool ShouldSerializeendserialize()
         {
-            if (_shouldSerializeend)
+            if (_shouldSerializeendserialize)
             {
                 return true;
             }

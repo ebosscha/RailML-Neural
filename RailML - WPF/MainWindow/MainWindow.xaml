@@ -37,6 +37,7 @@
                             <MenuItem Header="Add Level Crossings from Excel" Click="ExcelLevelCrossings_Click"/>
                         </MenuItem>
                         <MenuItem Header="Add OCPs from API" Click="OCPAPI_Click"/>
+                        <MenuItem Header="Add OCPs from Excel" Click="OCPExcel_Click"/>
   
                     </MenuItem>
                     <MenuItem Header="Rolling Stock">

@@ -35,7 +35,14 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
             {
                 if (record.trainDate != date)
                 {
-                    DataContainer.NeuralNetwork.DelayCombinations.list.AddRange(day.FormCombinations());
+                    if (DataContainer.NeuralNetwork.DelayCombinations.dict.ContainsKey(date))
+                    {
+                        DataContainer.NeuralNetwork.DelayCombinations.dict[date].AddRange(day.FormCombinations());
+                    }
+                    else
+                    {
+                        DataContainer.NeuralNetwork.DelayCombinations.dict.Add(date, day.FormCombinations());
+                    }
                     date = record.trainDate;
                     day = new DelayDay();
                     worker.ReportProgress(0, new string[] { record.trainDate.ToString(), count.ToString() });

@@ -19,7 +19,7 @@ namespace RailML___WPF.Data
         {
             if (DataContainer.model == null) { DataContainer.model = new railml(); }
             DataContainer.model.timetable = new timetable();
-            Hashtable categories = new Hashtable();
+            Dictionary<string, int> categories = new Dictionary<string, int>();
             string filename = e.Argument as string;
             BackgroundWorker worker = sender as BackgroundWorker;
 
@@ -39,10 +39,14 @@ namespace RailML___WPF.Data
                 else
                 {
                     categories.Add(category, 1);
-                    eCategory cat = new eCategory();
-                    cat.id = category;
-                    cat.name = category;
-                    DataContainer.model.timetable.categories.Add(cat);
+                    //eCategory cat = new eCategory();
+                    //cat.id = category;
+                    //cat.name = category;
+                    //DataContainer.model.timetable.categories.Add(cat);
+                    //eRostering roster = new eRostering();
+                    //DataContainer.IDGenerator(roster);
+                    //roster.name = category;
+                    //DataContainer.model.timetable.rosterings.Add(roster);
                 }
 
                 if(entry.TrainDate != date || entry.TrainCode != traincode)
@@ -52,7 +56,24 @@ namespace RailML___WPF.Data
                     if(rep.traincode != null){trainvariations.AddRep(rep, date);}
                     if (entry.TrainCode != traincode) 
                     {
-                        if(trainvariations != null){totalvariations.Add(trainvariations);}
+                        if(trainvariations != null)
+                        {
+                            string cat = categories.FirstOrDefault(x => x.Value == categories.Values.Max()).Key;
+                            trainvariations.category = cat;
+                            categories = new Dictionary<string, int>();
+                            totalvariations.Add(trainvariations);
+                            if(!DataContainer.model.timetable.rosterings.Any(x => x.name == cat))
+                            {
+                                eRostering roster = new eRostering()
+                                {
+                                    name = cat,
+                                    scope = "scheduled"
+                                };
+                                DataContainer.IDGenerator(roster);
+                                DataContainer.model.timetable.rosterings.Add(roster);
+
+                            }
+                        }
                         trainvariations = new TrainVariations();
                         trainvariations.traincode = entry.TrainCode;
                         worker.ReportProgress(0, new string[] { traincode, count.ToString() });
@@ -79,14 +100,31 @@ namespace RailML___WPF.Data
                         stopdelays.Add(delay);
                     }
                 }
-                if (count == 100000)
-                {
-                    int q = 1;
-                }
-                if (count > 300000) { break; }
+                
+                //if (count > 300000) { break; }
                 count++;
                 
             }
+            // Append the last trainvariation to the totalvariations list
+            if (trainvariations != null)
+            {
+                string cat = categories.FirstOrDefault(x => x.Value == categories.Values.Max()).Key;
+                trainvariations.category = cat;
+                categories = new Dictionary<string, int>();
+                totalvariations.Add(trainvariations);
+                if (!DataContainer.model.timetable.rosterings.Any(x => x.name == cat))
+                {
+                    eRostering roster = new eRostering()
+                    {
+                        name = cat,
+                        scope = "scheduled"
+                    };
+                    DataContainer.IDGenerator(roster);
+                    DataContainer.model.timetable.rosterings.Add(roster);
+
+                }
+            }
+
 
             ProcessTimetableVariations();
 
@@ -94,9 +132,12 @@ namespace RailML___WPF.Data
 
         private static void AddStopDelays(List<StopDelay> stopdelays, string traincode, DateTime date)
         {
-            foreach(DelayCombination comb in DataContainer.NeuralNetwork.DelayCombinations.list.Where(e => e.GetDate() == date && e.HasTrain(traincode)))
+            if (stopdelays.Count > 0 && DataContainer.NeuralNetwork.DelayCombinations.dict.ContainsKey(date) && DataContainer.NeuralNetwork.DelayCombinations.dict[date].Count != 0)
             {
-                comb.AddStopDelays(stopdelays, traincode);
+                foreach (DelayCombination comb in DataContainer.NeuralNetwork.DelayCombinations.dict[date].Where(e => e.GetDate() == date && e.HasTrain(traincode)))
+                {
+                    comb.AddStopDelays(stopdelays, traincode);
+                }
             }
         }
 
@@ -109,6 +150,7 @@ namespace RailML___WPF.Data
                 train.id = variations.traincode;
                 train.scope = tTrainScope.primary;
                 List<eTrainPart> trainparts = new List<eTrainPart>();
+
                 for(int i = 0; i < variations.dates.Count; i++)
                 {
                     eTrainPart trainpart = new eTrainPart() { id = train.id + "-" + i.ToString() };
@@ -116,19 +158,52 @@ namespace RailML___WPF.Data
                     var operatingperiod = CreateOperatingPeriod(variations.dates[i]);
                     trainpart.operatingPeriodRef = new eOperatingPeriodRef() {@ref = operatingperiod.id };
                     DataContainer.model.timetable.operatingPeriods.Add(operatingperiod);
-                    eOcpTT departure = new eOcpTT() { ocpRef = variations.reps[i].origin };
+                    eOcpTT departure = new eOcpTT()
+                    { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == variations.reps[i].origin).id };
                     departure.times.Add(new eArrivalDepartureTimes(){ departure = variations.reps[i].departuretime, scope = "scheduled"});
                     trainpart.ocpsTT.Add(departure); 
                     foreach(Stop stop in variations.reps[i].stops)
                     {
-                        eOcpTT ocp = new eOcpTT() { ocpRef = stop.location };
+                        eOcpTT ocp = new eOcpTT() { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == stop.location).id };
                         ocp.times.Add(new eArrivalDepartureTimes() { arrival = stop.arrival, departure = stop.departure, scope = "scheduled" });
                         trainpart.ocpsTT.Add(ocp);
                     }
-                    eOcpTT arrival = new eOcpTT(){ocpRef = variations.reps[i].destination};
+                    eOcpTT arrival = new eOcpTT() 
+                    { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == variations.reps[i].destination).id };
                     arrival.times.Add(new eArrivalDepartureTimes(){arrival = variations.reps[i].arrivaltime, scope = "scheduled"});
                     trainpart.ocpsTT.Add(arrival);
                     trainparts.Add(trainpart);
+
+                    tBlockPart blockpart = new tBlockPart()
+                    {
+                        trainPartRef = trainpart.id,
+                        startOcpRef = variations.reps[i].origin,
+                        endOcpRef = variations.reps[i].destination,
+                        operatingPeriodRef = operatingperiod.id,
+                        begin = variations.reps[i].departuretime,
+                        end = variations.reps[i].arrivaltime
+                    };
+                    DataContainer.IDGenerator(blockpart);
+                    eRostering roster = DataContainer.model.timetable.rosterings.Single(e => e.name == variations.category);
+                    roster.blockParts.blockPart.Add(blockpart);
+                    eBlock block = new eBlock() { code = train.id };
+                    DataContainer.IDGenerator(block);
+                    eBlockPartSequence seq = new eBlockPartSequence() { sequence = "1" };
+                    seq.blockPartRef.Add(new tBlockPartRef() { @ref = blockpart.id });
+                    block.blockPartSequence.Add(seq);
+                    roster.blocks.Add(block);
+                    tCirculation circ = new tCirculation()
+                    {
+                        startDate = operatingperiod.startDate,
+                        endDate = operatingperiod.endDate,
+                        operatingPeriodRef = operatingperiod.id,
+                        blockRef = block.id
+                    };
+                    roster.circulations.Add(circ);
+
+                    
+                    
+
                 }
 
                 for(int i = 0; i < trainparts.Count; i++)
@@ -308,6 +383,7 @@ namespace RailML___WPF.Data
         public List<RuntimeRep> reps {get; set;}
         public List<List<DateTime>> dates { get; set; }
         public string traincode { get; set; }
+        public string category { get; set; }
 
         public TrainVariations()
         {

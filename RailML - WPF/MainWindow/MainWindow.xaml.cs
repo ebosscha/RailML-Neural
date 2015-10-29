@@ -391,6 +391,12 @@ namespace RailML___WPF
             Data.ImportInfrastructure.OCPfromAPI();
             MainViewContentControl.Content = new RailMLViewer.Views.BaseRailMLView();
         }
+
+        public void OCPExcel_Click(object sender, EventArgs e)
+        {
+            Data.ImportInfrastructure.OCPfromExcel();
+            MainViewContentControl.Content = new RailMLViewer.Views.BaseRailMLView();
+        }
         #endregion
 
         #region Timetable Imports
@@ -410,7 +416,7 @@ namespace RailML___WPF
 
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
-                ImportTimetable.TimetableFromCsv(worker, new DoWorkEventArgs(filename));
+                //ImportTimetable.TimetableFromCsv(worker, new DoWorkEventArgs(filename));
                 worker.DoWork += new DoWorkEventHandler(ImportTimetable.TimetableFromCsv);
                 worker.ProgressChanged += new ProgressChangedEventHandler(ImportTimetable_Progress);
                 worker.RunWorkerAsync(filename);
@@ -457,12 +463,13 @@ namespace RailML___WPF
 
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
+                //NeuralNetwork.PreProcessing.Import.ImportDelayCombinations(worker, new DoWorkEventArgs(filename));
                 worker.DoWork += new DoWorkEventHandler(NeuralNetwork.PreProcessing.Import.ImportDelayCombinations);
                 worker.ProgressChanged += new ProgressChangedEventHandler(ImportDelays_Progress);
                 worker.RunWorkerAsync(filename);
                 worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(ImportDelays_Finished);
 
-                //NeuralNetwork.PreProcessing.Import.ImportDelayCombinations(filename);
+                
 
                 this.IsHitTestVisible = false;
                 Mouse.OverrideCursor = Cursors.AppStarting;
