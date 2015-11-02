@@ -47,8 +47,8 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
                     day = new DelayDay();
                     worker.ReportProgress(0, new string[] { record.trainDate.ToString(), count.ToString() });
                 }
-                if (record.delayCode != string.Empty)// || record.difference > 120)
-                {
+                //if (record.delayCode != string.Empty)// || record.difference > 120)
+                //{
                     Delay delay = new Delay();
                     delay.traincode = record.trainCode;
                     delay.WLCheader = record.WLCTrainCode;
@@ -60,7 +60,7 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
                     if (day.delays.ContainsKey(delay.traincode)) { ((Delay)day.delays[delay.traincode]).destinationdelay = delay.destinationdelay; }
                     else { day.delays.Add(delay.traincode, delay); }
 
-                }
+                //}
                 count++;
 
             }
@@ -244,7 +244,7 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
 
             foreach(Delay delay in delays.Values)
             {
-                if(delay.WLCheader == String.Empty)
+                if(delay.WLCheader == String.Empty &&(delay.delaycode != null || delay.secondary.Count != 0))
                 {
                     DelayCombination combination = new DelayCombination();
                     combination.primarydelays.Add(delay);
