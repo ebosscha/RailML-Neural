@@ -27,6 +27,10 @@
         <Button Grid.Row="1" Height="20" Width="100" HorizontalAlignment="Right" Click="CreateNetwork_Click">
             Create Network
         </Button>
+        <Grid VerticalAlignment="Bottom" Height="25">
+            <TextBlock Name="StatusText"/>
+        </Grid>
+
 
 
     </Grid>

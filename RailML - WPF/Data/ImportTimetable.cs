@@ -155,6 +155,7 @@ namespace RailML___WPF.Data
         {
             eTrain train = new eTrain();
             train.id = variations.traincode;
+            train.description = variations.category;
             train.scope = tTrainScope.primary;
             List<eTrainPart> trainparts = new List<eTrainPart>();
 

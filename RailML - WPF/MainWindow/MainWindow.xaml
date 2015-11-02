@@ -51,8 +51,7 @@
                 <MenuItem Header="Neural Network">
                     <MenuItem Header="_Data">
                         <MenuItem Header="_Import Delays" Click="ImportDelays_Click"/>
-                        <MenuItem Header="_Set Timetable File" Click="SetTimetableFile_Click"/>
-                        <MenuItem Header="_Set Reports File" Click="SetReportsFile_Click"/>
+                        <MenuItem Header="_Import Header History" Click="ImportHeaderHistory_Click"/>
                     </MenuItem>
                 </MenuItem>
                 

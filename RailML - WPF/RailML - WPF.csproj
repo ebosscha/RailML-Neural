@@ -87,7 +87,7 @@
     <Compile Include="Data\SaveLoad.cs" />
     <Compile Include="Data\ShortestPath.cs" />
     <Compile Include="MainWindow\MainWindowViewModel.cs" />
-    <Compile Include="NeuralNetwork\Algorithms\PerLine.cs" />
+    <Compile Include="NeuralNetwork\Algorithms\PerLineClassification.cs" />
     <Compile Include="NeuralNetwork\PreProcessing\Import.cs" />
     <Compile Include="NeuralNetwork\PreProcessing\PreProcesser.cs" />
     <Compile Include="NeuralNetwork\ViewModels\BaseNeuralNetworkViewModel.cs" />
@@ -98,6 +98,12 @@
     <Compile Include="NeuralNetwork\Views\ParameterView.xaml.cs">
       <DependentUpon>ParameterView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="RailMLViewer\Render\TrackRender.cs" />
+    <Compile Include="RailMLViewer\Render\TrackRenderEngine.xaml.cs">
+      <DependentUpon>TrackRenderEngine.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RailMLViewer\Render\TrackRenderEngineViewModel.cs" />
+    <Compile Include="RailMLViewer\Render\VisualHost.cs" />
     <Compile Include="RailMLViewer\ViewModels\BaseViewModel.cs" />
     <Compile Include="RailMLViewer\ViewModels\GraphViewModel.cs" />
     <Compile Include="RailMLViewer\ViewModels\NetworkDrawingViewModel.cs" />
@@ -155,6 +161,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="NeuralNetwork\Views\ParameterView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RailMLViewer\Render\TrackRenderEngine.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

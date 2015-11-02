@@ -47,7 +47,7 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
                     day = new DelayDay();
                     worker.ReportProgress(0, new string[] { record.trainDate.ToString(), count.ToString() });
                 }
-                if (record.delayCode != string.Empty || record.difference > 120)
+                if (record.delayCode != string.Empty)// || record.difference > 120)
                 {
                     Delay delay = new Delay();
                     delay.traincode = record.trainCode;
@@ -65,7 +65,31 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
 
             }
         }
+        public static void ImportHeaderHistory(object sender, DoWorkEventArgs e)
+        {
+            string filename = e.Argument as string;
+            BackgroundWorker worker = sender as BackgroundWorker;
+            Dictionary<string, Dictionary<DateTime, string>> HeaderRoutes = new Dictionary<string,Dictionary<DateTime,string>>();
 
+            CsvDefinition def = new CsvDefinition() { FieldSeparator = ',' };
+            CsvFileReader<HeaderHistory> reader = new CsvFileReader<HeaderHistory>(filename, def);
+            string traincode = "";
+            int count = 0;
+            foreach(HeaderHistory hh in reader)
+            {
+                if(hh.trainDate < new DateTime(2010,1,1)){count++; continue;}
+                if (hh.trainCode != traincode)
+                {
+                    worker.ReportProgress(0, "Processing... HeaderCode : " + hh.trainCode + "     Lines Processed : " + count.ToString());
+                    HeaderRoutes.Add(hh.trainCode, new Dictionary<DateTime, string>());
+                    traincode = hh.trainCode;
+                }
+                HeaderRoutes[traincode].Add(hh.trainDate, hh.trainRoute);
+            }
+
+            DataContainer.NeuralNetwork.HeaderRoutes = HeaderRoutes;
+
+        }
     }
 
     public class Record
@@ -83,6 +107,25 @@ namespace RailML___WPF.NeuralNetwork.PreProcessing
         public string WLCTrainCode { get; set; }
         public string comments { get; set; }
     }
+
+    public class HeaderHistory
+    {
+        public string trainCode { get; set; }
+        public DateTime trainDate { get; set; }
+        public string trainOrigin { get; set; }
+        public string trainRoute { get; set; }
+
+
+
+
+
+
+
+
+
+
+    }
+    
 
     [Serializable]
     [ProtoContract]

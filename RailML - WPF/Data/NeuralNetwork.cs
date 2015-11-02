@@ -35,8 +35,10 @@ namespace RailML___WPF.Data
         [ProtoMember(2)]
         public DelayCombinationCollection DelayCombinations { get; set; }
         [ProtoMember(3)]
-        public string timetablefile { get; set; }
+        public Dictionary<string, Dictionary<DateTime, string>> HeaderRoutes { get; set; }
         [ProtoMember(4)]
+        public string timetablefile { get; set; }
+        [ProtoMember(5)]
         public string reportsfile { get; set; }
 
     

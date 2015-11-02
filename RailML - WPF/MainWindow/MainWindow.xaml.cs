@@ -482,8 +482,6 @@ namespace RailML___WPF
                 worker.RunWorkerAsync(filename);
                 worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(ImportDelays_Finished);
 
-                
-
                 this.IsHitTestVisible = false;
                 Mouse.OverrideCursor = Cursors.AppStarting;
             }
@@ -496,6 +494,46 @@ namespace RailML___WPF
         }
 
         private void ImportDelays_Finished(object sender, RunWorkerCompletedEventArgs e)
+        {
+            this.IsHitTestVisible = true;
+            Mouse.OverrideCursor = null;
+            StatusbarText.Text = null;
+            MainViewContentControl.Content = new NeuralNetwork.Views.BaseNeuralNetworkView();
+        }
+
+        private void ImportHeaderHistory_Click(object sender, EventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.Filter = "Text Documents (.txt)|*.txt"; // Filter files by extension
+
+            // Show load file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Process load file dialog box results
+            if (result == true)
+            {
+                // Load document
+                string filename = dlg.FileName;
+
+                BackgroundWorker worker = new BackgroundWorker();
+                worker.WorkerReportsProgress = true;
+                //NeuralNetwork.PreProcessing.Import.ImportHeaderHistory(worker, new DoWorkEventArgs(filename));
+                worker.DoWork += new DoWorkEventHandler(NeuralNetwork.PreProcessing.Import.ImportHeaderHistory);
+                worker.ProgressChanged += new ProgressChangedEventHandler(ImportHeaderHistory_Progress);
+                worker.RunWorkerAsync(filename);
+                worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(ImportHeaderHistory_Finished);
+
+                this.IsHitTestVisible = false;
+                Mouse.OverrideCursor = Cursors.AppStarting;
+            }
+        }
+
+        private void ImportHeaderHistory_Progress(object sender, ProgressChangedEventArgs e)
+        {
+            StatusbarText.Text = e.UserState as string;
+        }
+
+        private void ImportHeaderHistory_Finished(object sender, RunWorkerCompletedEventArgs e)
         {
             this.IsHitTestVisible = true;
             Mouse.OverrideCursor = null;
