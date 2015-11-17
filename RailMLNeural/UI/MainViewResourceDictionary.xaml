@@ -1,0 +1,20 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:railmlvw="clr-namespace:RailMLNeural.UI.RailML.Views"
+                    xmlns:railmlvm="clr-namespace:RailMLNeural.UI.RailML.ViewModel"
+                    xmlns:vm="clr-namespace:RailMLNeural.UI.ViewModel"
+                    xmlns:neuralvw="clr-namespace:RailMLNeural.UI.Neural.Views"
+                    xmlns:neuralvm="clr-namespace:RailMLNeural.UI.Neural.ViewModel">
+    <vm:ViewModelLocator x:Key="Locator" />
+    <DataTemplate DataType="{x:Type railmlvm:MainRailMLViewModel}" >
+        <railmlvw:MainRailMLView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type neuralvm:MainNeuralViewModel}" >
+        <neuralvw:MainNeuralView />
+    </DataTemplate>
+                  
+    
+    
+    
+    
+</ResourceDictionary>

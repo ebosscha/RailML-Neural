@@ -1,0 +1,54 @@
+﻿<UserControl x:Class="RailMLNeural.UI.RailML.Views.MainRailMLView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ignore="http://www.galasoft.ch/ignore"
+        xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
+        xmlns:vm="clr-namespace:RailMLNeural.UI.RailML.ViewModel" 
+        xmlns:vw="clr-namespace:RailMLNeural.UI.RailML.Views"
+        mc:Ignorable="d ignore"
+        DataContext="{Binding MainRailML, Source={StaticResource Locator}}">
+
+    <Grid>
+        <avalonDock:DockingManager x:Name="dockingManager" >
+            
+            <avalonDock:LayoutRoot>
+                <avalonDock:LayoutPanel Orientation="Horizontal">
+                    <avalonDock:LayoutDocumentPaneGroup>
+                        <avalonDock:LayoutDocumentPane>
+                            <avalonDock:LayoutDocument Title="Track Table">
+                                <ContentControl Name="Tracktable" Content="{Binding TrackTable}"/>
+                                <!--<vw:TrackTableView/>-->
+                            </avalonDock:LayoutDocument>
+                            <avalonDock:LayoutDocument Title="OCP Table">
+                                
+                                <ContentControl Content="{Binding OCPTable}"/>
+                            </avalonDock:LayoutDocument>
+                            <avalonDock:LayoutDocument Title="Visualization">
+                                <ContentControl Content="{Binding Visualization}"/>
+                            </avalonDock:LayoutDocument>
+                        </avalonDock:LayoutDocumentPane>
+                        
+                    </avalonDock:LayoutDocumentPaneGroup>
+                    <avalonDock:LayoutAnchorablePane DockWidth="200">
+                        <avalonDock:LayoutAnchorable Title="Properties">
+                            <ContentControl Content="{Binding Properties}"/>
+                        </avalonDock:LayoutAnchorable>
+                        
+                    </avalonDock:LayoutAnchorablePane>
+                    
+                </avalonDock:LayoutPanel>
+                <avalonDock:LayoutRoot.LeftSide>
+                    <avalonDock:LayoutAnchorSide>
+                        <avalonDock:LayoutAnchorGroup>
+                            
+                            
+                        </avalonDock:LayoutAnchorGroup>
+                    </avalonDock:LayoutAnchorSide>
+                </avalonDock:LayoutRoot.LeftSide>
+            </avalonDock:LayoutRoot>
+            
+        </avalonDock:DockingManager>
+    </Grid>
+</UserControl>

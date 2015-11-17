@@ -1,0 +1,63 @@
+﻿<UserControl x:Class="RailMLNeural.UI.RailML.Views.NetworkRenderView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ignore="http://www.galasoft.ch/ignore"
+        xmlns:vm="clr-namespace:RailMLNeural.UI.RailML.ViewModel"
+        mc:Ignorable="d ignore"
+        DataContext="{Binding NetworkRenderVM, Source={StaticResource Locator}}"
+        ClipToBounds="False">
+
+    <Grid>
+        <ItemsControl Name="itemscontrol1" ItemsSource="{Binding rendercoll}" 
+                  Background="Transparent" Loaded="view_Loaded"
+                      ClipToBounds="False">
+
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas
+                        Background="Transparent"
+                        ClipToBounds="False"
+                        Loaded="Canvas_Loaded"
+                        MouseWheel="canvas_MouseWheel"
+                        MouseLeftButtonDown="canvas_MouseLeftButtonDown"
+                        MouseLeftButtonUp="canvas_LeftMouseButtonUp"
+                        MouseMove="canvas_MouseMove"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+            <ItemsControl.Resources>
+                <DataTemplate DataType="{x:Type vm:Track}">
+
+
+                    <Polyline Points="{Binding points}" Stroke="Black" 
+                              StrokeThickness="{Binding thickness}" Tag="{Binding track}" MouseDown="line_MouseDown"
+                              ClipToBounds="False" SnapsToDevicePixels="True" Cursor="Hand"
+                              >
+                    </Polyline>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:OCP}">
+                    <Ellipse Height="{Binding diameter}" Width="{Binding diameter}" 
+                             StrokeThickness="5" MouseDown="Node_MouseDown" Cursor="Hand"
+                             Fill="Blue" ClipToBounds="False" Tag="{Binding ocp}">
+                        <Ellipse.RenderTransform>
+                            <TranslateTransform X="{Binding X}" Y="{Binding Y}"/>
+                        </Ellipse.RenderTransform>
+                    </Ellipse>
+
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:Switch}">
+                    <Rectangle Height="5" Width="5" StrokeThickness="1" MouseDown="Switch_MouseDown"
+                               Cursor="Hand" Fill="Red" Tag="{Binding element}">
+                        <Rectangle.RenderTransform>
+                            <TranslateTransform X="{Binding X}" Y="{Binding Y}"/>
+                        </Rectangle.RenderTransform>
+                    </Rectangle>
+                </DataTemplate>
+
+
+            </ItemsControl.Resources>
+        </ItemsControl>
+    </Grid>
+</UserControl>
