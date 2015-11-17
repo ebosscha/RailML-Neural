@@ -1,4 +1,5 @@
 ﻿using GalaSoft.MvvmLight;
+using RailMLNeural.Data;
 
 namespace RailMLNeural.UI.Dialog.ViewModel
 {
@@ -10,11 +11,24 @@ namespace RailMLNeural.UI.Dialog.ViewModel
     /// </summary>
     public class ProjectOptionsViewModel : ViewModelBase
     {
+        private Settings _settings;
+
+        public Settings Settings
+        {
+            get { return _settings; }
+            set {
+                if (_settings == value) { return; }
+                _settings = value;
+                RaisePropertyChanged("Settings");
+            }
+        }
+
         /// <summary>
         /// Initializes a new instance of the ProjectOptionsViewModel class.
         /// </summary>
         public ProjectOptionsViewModel()
         {
+            Settings = DataContainer.Settings;
         }
     }
 }

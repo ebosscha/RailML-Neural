@@ -50,6 +50,10 @@ namespace RailMLNeural.UI.ViewModel
             SimpleIoc.Default.Register<VisualizationViewModel>();
             SimpleIoc.Default.Register<NetworkRenderViewModel>();
             SimpleIoc.Default.Register<ProjectOptionsViewModel>();
+            SimpleIoc.Default.Register<NeuralCollectionViewModel>();
+            SimpleIoc.Default.Register<NeuralPropertiesViewModel>();
+            SimpleIoc.Default.Register<NeuralResultsViewModel>();
+            SimpleIoc.Default.Register<NeuralRunManagerViewModel>();
         }
 
         /// <summary>
@@ -129,6 +133,36 @@ namespace RailMLNeural.UI.ViewModel
                 return ServiceLocator.Current.GetInstance<ProjectOptionsViewModel>();
             }
         }
+
+        public NeuralCollectionViewModel NeuralCollectionVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<NeuralCollectionViewModel>();
+            }
+        }
+        public NeuralPropertiesViewModel NeuralPropertiesVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<NeuralPropertiesViewModel>();
+            }
+        }
+        public NeuralResultsViewModel NeuralResultsVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<NeuralResultsViewModel>();
+            }
+        }
+        public NeuralRunManagerViewModel NeuralRunManagerVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<NeuralRunManagerViewModel>();
+            }
+        }
+
     
 
         /// <summary>

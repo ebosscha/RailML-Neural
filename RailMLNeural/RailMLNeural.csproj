@@ -128,9 +128,25 @@
     <Compile Include="UI\Model\DataService.cs" />
     <Compile Include="UI\Model\IDataService.cs" />
     <Compile Include="UI\Neural\ViewModel\MainNeuralViewModel.cs" />
-    <Compile Include="UI\Neural\ViewModel\NeuralViewModelLocator1.cs" />
+    <Compile Include="UI\Neural\ViewModel\Messages.cs" />
+    <Compile Include="UI\Neural\ViewModel\NeuralCollectionViewModel.cs" />
+    <Compile Include="UI\Neural\ViewModel\NeuralPropertiesViewModel.cs" />
+    <Compile Include="UI\Neural\ViewModel\NeuralResultsViewModel.cs" />
+    <Compile Include="UI\Neural\ViewModel\NeuralRunManagerViewModel.cs" />
     <Compile Include="UI\Neural\Views\MainNeuralView.xaml.cs">
       <DependentUpon>MainNeuralView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Neural\Views\NeuralCollectionView.xaml.cs">
+      <DependentUpon>NeuralCollectionView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Neural\Views\NeuralPropertiesView.xaml.cs">
+      <DependentUpon>NeuralPropertiesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Neural\Views\NeuralResultsView.xaml.cs">
+      <DependentUpon>NeuralResultsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Neural\Views\NeuralRunManagerView.xaml.cs">
+      <DependentUpon>NeuralRunManagerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\RailML\Render\ArithmeticConverter.cs" />
     <Compile Include="UI\RailML\Render\LinkedListExtensions.cs" />
@@ -197,6 +213,22 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="UI\Neural\Views\MainNeuralView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Neural\Views\NeuralCollectionView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Neural\Views\NeuralPropertiesView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Neural\Views\NeuralResultsView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Neural\Views\NeuralRunManagerView.xaml">
       <SubType>Form</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

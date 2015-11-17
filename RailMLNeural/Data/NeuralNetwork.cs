@@ -27,14 +27,13 @@ namespace RailMLNeural.Data
         [ProtoIgnore]
         public ResilientPropagation Training;
         [ProtoMember(2)]
-        public DelayCombinationCollection DelayCombinations { get; set; }
-        [ProtoMember(3)]
-        public Dictionary<string, Dictionary<DateTime, string>> HeaderRoutes { get; set; }
-        [ProtoMember(4)]
+        
         public string timetablefile { get; set; }
         [ProtoMember(5)]
         public string reportsfile { get; set; }
-
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string Type { get; set; }
 
 
 

@@ -47,7 +47,8 @@
                 </MenuItem>
                 <MenuItem Header="_Project">
                     <MenuItem Header="_Project Options" Command="{Binding ProjectOptionsCommand}"/>
-                          
+                </MenuItem>
+
                 <MenuItem Header="Data">
                     <MenuItem Header="Infrastructure">
                         <MenuItem Header="Import Excel Dataset" Command="{Binding ExcelTracksCommand}"/>

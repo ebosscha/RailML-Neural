@@ -8,12 +8,14 @@ using ProtoBuf;
 namespace RailMLNeural.Data
 {
     [ProtoContract]
-    class Settings
+    public class Settings
     {   
         [ProtoMember(1)]
         private DateTime _dataStartDate;
         [ProtoMember(2)]
         private DateTime _dataEndDate;
+        [ProtoMember(3)]
+        private bool _useDateFilter;
 
         public DateTime DataStartDate
         {
@@ -27,5 +29,16 @@ namespace RailMLNeural.Data
             set { _dataEndDate = value; }
         }
 
+        public bool UseDateFilter
+        {
+            get { return _useDateFilter; }
+            set { _useDateFilter = value; }
+        }
+
+        public Settings()
+        {
+            DataStartDate = DateTime.Now;
+            DataEndDate = DateTime.Now;
+        }
     }
 }

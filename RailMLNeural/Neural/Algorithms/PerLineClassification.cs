@@ -11,6 +11,7 @@ namespace RailMLNeural.Neural.Algorithms
 {
     class PerLineClassification
     {
+        private NeuralNetwork NetworkSettings{get; set;}
         private BackgroundWorker worker;
         private bool completed = false;
 
@@ -43,14 +44,14 @@ namespace RailMLNeural.Neural.Algorithms
         {
             worker.ReportProgress(0, "Creating Network...");
             BasicNetwork Network = new BasicNetwork();
-            Network.AddLayer(new BasicLayer(new ActivationSigmoid(), true, DataContainer.NeuralNetwork.Data.InputSize));
+            Network.AddLayer(new BasicLayer(new ActivationSigmoid(), true, NetworkSettings.Data.InputSize));
             Network.AddLayer(new BasicLayer(new ActivationSigmoid(), true, 50));
-            Network.AddLayer(new BasicLayer(new ActivationSigmoid(), true, DataContainer.NeuralNetwork.Data.IdealSize));
+            Network.AddLayer(new BasicLayer(new ActivationSigmoid(), true, NetworkSettings.Data.IdealSize));
             Network.Structure.FinalizeStructure();
             Network.Reset();
-            DataContainer.NeuralNetwork.Network = Network;
+            NetworkSettings.Network = Network;
 
-            ResilientPropagation training = new ResilientPropagation(DataContainer.NeuralNetwork.Network, DataContainer.NeuralNetwork.Data);
+            ResilientPropagation training = new ResilientPropagation(NetworkSettings.Network, NetworkSettings.Data);
             worker.ReportProgress(0, "Running Training: Epoch 0");
             for (int i = 0; i < 200; i++)
             {

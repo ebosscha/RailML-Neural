@@ -3,6 +3,7 @@ using Encog.Neural.NeuralData;
 using ProtoBuf;
 using RailMLNeural.RailML;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.Serialization;
@@ -24,10 +25,10 @@ namespace RailMLNeural.Data
                 string filename = e.Argument as string;
                 SaveLoadData data = new SaveLoadData();
                 data.railml = XML.ToXElement<railml>(Data.DataContainer.model).ToString();
-                data.NN = DataContainer.NeuralNetwork;
+                data.NN = SerializeNetwork();
                 data.settings = DataContainer.Settings;
-                if (DataContainer.NeuralNetwork.Network != null) { data.network = SerializeNetwork(); }
-                if (DataContainer.NeuralNetwork.Data != null) { data.trainingset = SerializeDataSet(); }
+                data.DelayCombinations = DataContainer.DelayCombinations;
+                data.HeaderRoutes = DataContainer.HeaderRoutes;
                 MyStream stream = new MyStream(filename, FileMode.Create, FileAccess.Write);
                 stream.ProgressChanged += new ProgressChangedEventHandler(Save_ProgressChanged);
                 Serializer.Serialize(stream, data);
@@ -56,10 +57,11 @@ namespace RailMLNeural.Data
             SaveLoadData data = Serializer.Deserialize<SaveLoadData>(stream);
             XElement elem = XElement.Parse(data.railml);
             DataContainer.model = XML.FromXElement<railml>(elem);
-            DataContainer.NeuralNetwork = data.NN;
+            DataContainer.NeuralNetworks = DeserializeNetwork(data.NN);
             DataContainer.Settings = data.settings;
-            if (data.trainingset != null) { DataContainer.NeuralNetwork.Data = DeserializeDataSet(data.trainingset); }
-            if (data.network != null) { DataContainer.NeuralNetwork.Network = DeserializeNetwork(data.network); }
+            DataContainer.HeaderRoutes = data.HeaderRoutes;
+            DataContainer.DelayCombinations = data.DelayCombinations;
+            
             stream.Close();
         }
 
@@ -75,34 +77,17 @@ namespace RailMLNeural.Data
         {
             IFormatter formatter = new BinaryFormatter();
             MemoryStream stream = new MemoryStream();
-            formatter.Serialize(stream, DataContainer.NeuralNetwork.Network);
+            formatter.Serialize(stream, DataContainer.NeuralNetworks);
             byte[] b = stream.ToArray();
             return System.Text.Encoding.UTF8.GetString(b);
         }
 
-        private static BasicNetwork DeserializeNetwork(string input)
+        private static List<NeuralNetwork> DeserializeNetwork(string input)
         {
             IFormatter formatter = new BinaryFormatter();
             byte[] b = System.Text.Encoding.UTF8.GetBytes(input);
             MemoryStream stream = new MemoryStream(b);
-            return formatter.Deserialize(stream) as BasicNetwork;
-        }
-
-        private static string SerializeDataSet()
-        {
-            IFormatter formatter = new BinaryFormatter();
-            MemoryStream stream = new MemoryStream();
-            formatter.Serialize(stream, DataContainer.NeuralNetwork.Data);
-            byte[] b = stream.ToArray();
-            return System.Text.Encoding.UTF8.GetString(b);
-        }
-
-        private static INeuralDataSet DeserializeDataSet(string input)
-        {
-            IFormatter formatter = new BinaryFormatter();
-            byte[] b = System.Text.Encoding.UTF8.GetBytes(input);
-            MemoryStream stream = new MemoryStream(b);
-            return formatter.Deserialize(stream) as INeuralDataSet;
+            return formatter.Deserialize(stream) as List<NeuralNetwork>;
         }
 
 
@@ -115,13 +100,18 @@ namespace RailMLNeural.Data
         [ProtoMember(1)]
         public string railml { get; set; }
         [ProtoMember(2)]
-        public NeuralNetwork NN { get; set; }
+        public string NN { get; set; }
         [ProtoMember(3)]
         public string network { get; set; }
         [ProtoMember(4)]
         public string trainingset { get; set; }
         [ProtoMember(5)]
         public Settings settings { get; set; }
+        [ProtoMember(6)]
+        public DelayCombinationCollection DelayCombinations { get; set; }
+        [ProtoMember(7)]
+        public Dictionary<string, Dictionary<DateTime, string>> HeaderRoutes { get; set; }
+
     }
 
     class MyStream : FileStream

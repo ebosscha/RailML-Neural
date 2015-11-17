@@ -1,6 +1,7 @@
 ﻿using Encog.Neural.Data.Basic;
 using Encog.Neural.NeuralData;
 using RailMLNeural.Data;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace RailMLNeural.Neural.PreProcessing
 {
     class PreProcesser
     {
+        private NeuralNetwork NetworkSettings { get; set; }
         private double[] inputtemplate { get; set; }
         private double[] idealtemplate { get; set; }
         private BackgroundWorker worker;
@@ -52,11 +54,19 @@ namespace RailMLNeural.Neural.PreProcessing
             inputtemplate = new double[inputmap.Count];
             idealtemplate = new double[inputmap.Count * 4];
 
+            DateTime ThresholdDateLower = new DateTime(2010,1,1);
+            DateTime ThresholdDateUpper = DateTime.Now;
+            if(DataContainer.Settings.UseDateFilter)
+            {
+                ThresholdDateLower = DataContainer.Settings.DataStartDate;
+                ThresholdDateUpper = DataContainer.Settings.DataEndDate;
+            }
+
             List<double[]> inputlist = new List<double[]>();
             List<double[]> outputlist = new List<double[]>();
-            foreach (List<DelayCombination> day in DataContainer.NeuralNetwork.DelayCombinations.dict.Values.Where(x => x != null))
+            foreach (KeyValuePair<DateTime, List<DelayCombination>> c in DataContainer.DelayCombinations.dict.Where(x => x.Value != null && x.Key > ThresholdDateLower && x.Key < ThresholdDateUpper))
             {
-
+                List<DelayCombination> day = c.Value;
                 foreach (DelayCombination delaycombination in day)
                 {
                     worker.ReportProgress(0, "Preprocessing Data... Date : " + delaycombination.primarydelays[0].date.ToString("dd/MM/yyyy"));
@@ -110,7 +120,7 @@ namespace RailMLNeural.Neural.PreProcessing
             double[][] input = inputlist.ToArray();
             double[][] output = outputlist.ToArray();
             INeuralDataSet dataset = new BasicNeuralDataSet(input, output);
-            DataContainer.NeuralNetwork.Data = dataset;
+            NetworkSettings.Data = dataset;
 
 
         }
@@ -120,7 +130,7 @@ namespace RailMLNeural.Neural.PreProcessing
             string route;
             try
             {
-                route = DataContainer.NeuralNetwork.HeaderRoutes[d.traincode][d.date];
+                route = DataContainer.HeaderRoutes[d.traincode][d.date];
             }
             catch { return "None"; }
             switch (route)

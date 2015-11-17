@@ -16,7 +16,19 @@ namespace RailMLNeural.Data
         static DateTime date = new DateTime();
         public static void TimetableFromCsv(object sender, DoWorkEventArgs e)
         {
-            DateTime ThresholdDate = new DateTime(2010, 1, 1);
+            DateTime ThresholdDateLower;
+            DateTime ThresholdDateUpper;
+
+            if (DataContainer.Settings.UseDateFilter)
+            {
+                ThresholdDateLower = DataContainer.Settings.DataStartDate;
+                ThresholdDateUpper = DataContainer.Settings.DataEndDate;
+            }
+            else
+            {
+                ThresholdDateLower = new DateTime(2010, 1, 1);
+                ThresholdDateUpper = DateTime.Now;
+            }
             if (DataContainer.model == null) { DataContainer.model = new railml(); }
             DataContainer.model.timetable = new timetable();
             Dictionary<string, int> categories = new Dictionary<string, int>();
@@ -31,7 +43,7 @@ namespace RailMLNeural.Data
             string traincode = "";
             foreach (TimetableEntry entry in reader)
             {
-                if (entry.TrainDate < ThresholdDate) { count++; continue; }
+                if (entry.TrainDate < ThresholdDateLower || entry.TrainDate > ThresholdDateUpper ) { count++; continue; }
 
 
 
@@ -131,9 +143,9 @@ namespace RailMLNeural.Data
 
         private static void AddStopDelays(List<StopDelay> stopdelays, string traincode, DateTime date)
         {
-            if (stopdelays.Count > 0 && DataContainer.NeuralNetwork.DelayCombinations.dict.ContainsKey(date) && DataContainer.NeuralNetwork.DelayCombinations.dict[date].Count != 0)
+            if (stopdelays.Count > 0 && DataContainer.DelayCombinations.dict.ContainsKey(date) && DataContainer.DelayCombinations.dict[date].Count != 0)
             {
-                foreach (DelayCombination comb in DataContainer.NeuralNetwork.DelayCombinations.dict[date].Where(e => e.GetDate() == date && e.HasTrain(traincode)))
+                foreach (DelayCombination comb in DataContainer.DelayCombinations.dict[date].Where(e => e.GetDate() == date && e.HasTrain(traincode)))
                 {
                     comb.AddStopDelays(stopdelays, traincode);
                 }

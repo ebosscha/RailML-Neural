@@ -11,10 +11,12 @@ namespace RailMLNeural.Data
     static class DataContainer
     {
         private static railml _model;
-        private static NeuralNetwork _neuralnetwork;
+        private static List<NeuralNetwork> _neuralnetworks;
         private static Hashtable _idlist = new Hashtable();
         private static PathContainer _pathcontainer;
-        private static Settings _settings;
+        private static Settings _settings = new Settings();
+        public static DelayCombinationCollection DelayCombinations { get; set; }
+        public static Dictionary<string, Dictionary<DateTime, string>> HeaderRoutes { get; set; }
         static public event EventHandler ModelChanged;
 
         public static railml model
@@ -29,14 +31,14 @@ namespace RailMLNeural.Data
             set { _settings = value; }
         }
 
-        public static NeuralNetwork NeuralNetwork
+        public static List<NeuralNetwork> NeuralNetworks
         {
             get
             {
-                if (_neuralnetwork == null) { _neuralnetwork = new NeuralNetwork(); }
-                return _neuralnetwork;
+                if (_neuralnetworks == null) { _neuralnetworks = new List<NeuralNetwork>(); }
+                return _neuralnetworks;
             }
-            set { _neuralnetwork = value; }
+            set { _neuralnetworks = value; }
         }
 
         public static Hashtable IDList { get { return _idlist; } }

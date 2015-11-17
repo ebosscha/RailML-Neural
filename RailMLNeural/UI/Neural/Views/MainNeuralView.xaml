@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="RailMLNeural.UI.Neural.Views.MainNeuralView"
+﻿<UserControl xmlns:xcad="http://schemas.xceed.com/wpf/xaml/avalondock"  x:Class="RailMLNeural.UI.Neural.Views.MainNeuralView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -8,5 +8,39 @@
         DataContext="{Binding MainNeural, Source={StaticResource Locator}}">
 
     <Grid>
+        <xcad:DockingManager>
+            <xcad:LayoutRoot>
+                <xcad:LayoutPanel>
+                    <xcad:LayoutAnchorablePaneGroup DockWidth="Auto">
+                        <xcad:LayoutAnchorablePane>
+                            <xcad:LayoutAnchorable 
+                                Title="Neural Network Configurations">
+                                <ContentControl 
+                                    Content="{Binding NeuralCollection}"/>
+                            </xcad:LayoutAnchorable>
+                        </xcad:LayoutAnchorablePane>
+                    </xcad:LayoutAnchorablePaneGroup>
+                        <xcad:LayoutDocumentPane>
+                            <xcad:LayoutDocument Title="Run Manager">
+                                <ContentControl
+                                    Content="{Binding NeuralRunManager}"/>
+                            </xcad:LayoutDocument>
+                        <xcad:LayoutDocument Title="Result Manager">
+                            <ContentControl 
+                                Content="{Binding NeuralResults}"/>
+                        </xcad:LayoutDocument>
+                        </xcad:LayoutDocumentPane>
+                    <xcad:LayoutAnchorablePaneGroup DockWidth="Auto">
+                        <xcad:LayoutAnchorablePane>
+                            <xcad:LayoutAnchorable
+                                Title="Neural Network Properties">
+                                <ContentControl 
+                                    Content="{Binding NeuralProperties}"/>
+                            </xcad:LayoutAnchorable>
+                        </xcad:LayoutAnchorablePane>
+                    </xcad:LayoutAnchorablePaneGroup>
+                </xcad:LayoutPanel>
+            </xcad:LayoutRoot>
+        </xcad:DockingManager>
     </Grid>
 </UserControl>

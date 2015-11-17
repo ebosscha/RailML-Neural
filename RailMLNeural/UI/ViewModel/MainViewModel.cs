@@ -8,6 +8,7 @@ using RailMLNeural.UI.Neural.Views;
 using RailMLNeural.UI.RailML.ViewModel;
 using RailMLNeural.UI.RailML.Views;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -71,6 +72,7 @@ namespace RailMLNeural.UI.ViewModel
                     }
                 });
             InitializeFileMenuCommands();
+            InitializeProjectMenuCommands();
             InitializeDataMenuCommands();
             InitializeNeuralNetworkCommands();
             InitializeViewCommands();
@@ -107,8 +109,10 @@ namespace RailMLNeural.UI.ViewModel
         private void ExecuteNewProject()
         {
             DataContainer.model = new railml();
-            DataContainer.NeuralNetwork = new NeuralNetwork();
+            DataContainer.NeuralNetworks = new List<NeuralNetwork>();
             DataContainer.PathContainer = new PathContainer();
+            DataContainer.DelayCombinations = new DelayCombinationCollection();
+            DataContainer.HeaderRoutes = new Dictionary<string, Dictionary<DateTime, string>>();
         }
 
         #region LoadButton
@@ -345,17 +349,17 @@ namespace RailMLNeural.UI.ViewModel
         #endregion FileMenuCommands
 
         #region ProjectMenuCommands
-        public ICommand ProjectSettingsCommand { get; private set; }
+        public ICommand ProjectOptionsCommand { get; private set; }
 
         private void InitializeProjectMenuCommands()
         {
-            ProjectSettingsCommand = new RelayCommand(ExecuteProjectSettings);
+            ProjectOptionsCommand = new RelayCommand(ExecuteProjectOptions);
         }
 
-        private void ExecuteProjectSettings()
+        private void ExecuteProjectOptions()
         {
             var settingsdialog = new Dialog.View.ProjectOptionsView();
-            settingsdialog.Show();
+            settingsdialog.ShowDialog();
 
         }
         #endregion ProjectMenuCommands

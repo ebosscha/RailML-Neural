@@ -16,24 +16,32 @@ namespace RailMLNeural.Neural.PreProcessing
         {
             string filename = e.Argument as string;
             BackgroundWorker worker = sender as BackgroundWorker;
-            DataContainer.NeuralNetwork.DelayCombinations = new Data.DelayCombinationCollection();
+            DataContainer.DelayCombinations = new Data.DelayCombinationCollection();
 
             CsvDefinition def = new CsvDefinition() { FieldSeparator = ',' };
             CsvFileReader<Record> reader = new CsvFileReader<Record>(filename, def);
             DateTime date = new DateTime();
             DelayDay day = new DelayDay();
             int count = 0;
+            DateTime ThresholdDateLower = new DateTime(2010, 1, 1);
+            DateTime ThresholdDateUpper = DateTime.Now;
+            if(DataContainer.Settings.UseDateFilter)
+            {
+                ThresholdDateLower = DataContainer.Settings.DataStartDate;
+                ThresholdDateUpper = DataContainer.Settings.DataEndDate;
+            }
             foreach (Record record in reader)
             {
+                if (record.trainDate < ThresholdDateLower || record.trainDate > ThresholdDateUpper) { count++; continue; }
                 if (record.trainDate != date)
                 {
-                    if (DataContainer.NeuralNetwork.DelayCombinations.dict.ContainsKey(date))
+                    if (DataContainer.DelayCombinations.dict.ContainsKey(date))
                     {
-                        DataContainer.NeuralNetwork.DelayCombinations.dict[date].AddRange(day.FormCombinations());
+                        DataContainer.DelayCombinations.dict[date].AddRange(day.FormCombinations());
                     }
                     else
                     {
-                        DataContainer.NeuralNetwork.DelayCombinations.dict.Add(date, day.FormCombinations());
+                        DataContainer.DelayCombinations.dict.Add(date, day.FormCombinations());
                     }
                     date = record.trainDate;
                     day = new DelayDay();
@@ -80,7 +88,7 @@ namespace RailMLNeural.Neural.PreProcessing
                 HeaderRoutes[traincode].Add(hh.trainDate, hh.trainRoute);
             }
 
-            DataContainer.NeuralNetwork.HeaderRoutes = HeaderRoutes;
+            DataContainer.HeaderRoutes = HeaderRoutes;
             reader.Dispose();
         }
     }
