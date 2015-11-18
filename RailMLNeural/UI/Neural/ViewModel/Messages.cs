@@ -16,4 +16,14 @@ namespace RailMLNeural.UI.Neural.ViewModel
             set { _network = value; }
         }
     }
+
+    public class AddNeuralNetworkMessage
+    {
+        private NeuralNetwork _network;
+        public NeuralNetwork NeuralNetwork
+        {
+            get { return _network; }
+            set { _network = value; }
+        }
+    }
 }

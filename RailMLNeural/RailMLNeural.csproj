@@ -116,6 +116,7 @@
     <Compile Include="Data\ShortestPath.cs" />
     <Compile Include="Data\XML.cs" />
     <Compile Include="Neural\Algorithms\PerLineClassification.cs" />
+    <Compile Include="Neural\AlgorithmEnum.cs" />
     <Compile Include="Neural\PreProcessing\Import.cs" />
     <Compile Include="Neural\PreProcessing\PreProcesser.cs" />
     <Compile Include="RailML\schema.cs" />
@@ -127,12 +128,16 @@
     <Compile Include="UI\Model\DataItem.cs" />
     <Compile Include="UI\Model\DataService.cs" />
     <Compile Include="UI\Model\IDataService.cs" />
+    <Compile Include="UI\Neural\ViewModel\CreateNeuralViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\MainNeuralViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\Messages.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralCollectionViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralPropertiesViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralResultsViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralRunManagerViewModel.cs" />
+    <Compile Include="UI\Neural\Views\CreateNeuralView.xaml.cs">
+      <DependentUpon>CreateNeuralView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\Neural\Views\MainNeuralView.xaml.cs">
       <DependentUpon>MainNeuralView.xaml</DependentUpon>
     </Compile>
@@ -212,6 +217,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="UI\Neural\Views\CreateNeuralView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\Neural\Views\MainNeuralView.xaml">
       <SubType>Form</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -260,7 +269,35 @@
       <SubType>Form</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="UI\Skins\BureauBlack.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\Skins\BureauBlue.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\Skins\ExpressionDark.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\Skins\ExpressionLight.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="UI\Skins\MainSkin.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\Skins\ShinyBlue.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\Skins\ShinyRed.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\Skins\WhistlerBlue.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

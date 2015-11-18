@@ -195,11 +195,17 @@ namespace RailMLNeural.Data
 
                 else if ((string)row["Type"] == "Fixed Diamond") { FixedDiamond(row); }
                 else if ((string)row["Type"] == "Switch Diamond") { SwitchDiamond(row); }
-                else if ((string)row["Type"] == "Double Slip") { SingleSlip(row); }
-                else if ((string)row["Type"] == "Switch Diamond") { DoubleSlip(row); }
+                else if ((string)row["Type"] == "Single Slip") { SingleSlip(row); }
+                else if ((string)row["Type"] == "Double Slip") { DoubleSlip(row); }
 
             }
         }
+
+        /// <summary>
+        /// Method to find connections for an existing switch. Does so based on geocoord of tracknodes.
+        /// </summary>
+        /// <param name="tempswitch"></param>
+        /// <returns></returns>
 
         private static eSwitch FindConnections(eSwitch tempswitch)
         {
@@ -279,6 +285,12 @@ namespace RailMLNeural.Data
             return Math.Sqrt((a - p).LengthSquared);
         }
 
+        /// <summary>
+        /// Method to create a fixed diamond crossing and append it to two hostlines.
+        /// Assumes Tracks are not broken by fixeddiamond unit. 
+        /// Might need manual checking.
+        /// </summary>
+        /// <param name="row"></param>
         private static void FixedDiamond(DataRow row)
         {
             eCrossing crossing = new eCrossing();
@@ -296,7 +308,7 @@ namespace RailMLNeural.Data
 
         private static void SwitchDiamond(DataRow row)
         {
-
+            FixedDiamond(row);
         }
 
         private static void SingleSlip(DataRow row)
@@ -319,6 +331,10 @@ namespace RailMLNeural.Data
 
         }
 
+        /// <summary>
+        /// Adds bufferstops from Excel file. Appends bufferstop to the nearest tracknode based on location.
+        /// </summary>
+        /// <param name="filepath"></param>
         public static void AddBufferStopsFromExcel(string filepath)
         {
             FileStream stream;
@@ -369,6 +385,11 @@ namespace RailMLNeural.Data
 
         }
 
+        /// <summary>
+        /// Adds level crossings from excel file. Currently relies on Findhostline method and needs improving to contain more hostlines.
+        /// Most Level crossings exist on multiple tracks. Need to create multiple levelcrossings to avoid ID related issues.
+        /// </summary>
+        /// <param name="filepath"></param>
         public static void AddLevelCrossingsFromExcel(string filepath)
         {
             FileStream stream;
@@ -402,6 +423,9 @@ namespace RailMLNeural.Data
             }
         }
 
+        /// <summary>
+        /// Imports OCP's from XML recieved from the API. Should be avoided as API does not return all older stations.
+        /// </summary>
         public static void OCPfromAPI()
         {
             DataContainer.model.infrastructure.operationControlPoints.Clear();
@@ -434,6 +458,11 @@ namespace RailMLNeural.Data
             }
         }
 
+
+        /// <summary>
+        /// Imports all OCP's from a set Excel file with all OCP references
+        /// Relies on Coordinate transformation to transform to Irish National Grid.
+        /// </summary>
         public static void OCPfromExcel()
         {
             FileStream stream;
@@ -485,10 +514,14 @@ namespace RailMLNeural.Data
                 }
 
                 DataContainer.model.infrastructure.operationControlPoints.Add(ocp);
-
             }
         }
 
+        /// <summary>
+        /// Adds OCP to every track within the margin range. Margin currently set to 100. Affects every type of track.
+        /// Improvement might be to filter on just mainlines.
+        /// </summary>
+        /// <param name="ocp"></param>
         private static void AddOCPToTracks(eOcp ocp)
         {
             double margin = 100;
@@ -531,15 +564,18 @@ namespace RailMLNeural.Data
                         Data.DataContainer.IDGenerator(crosssection);
                         crosssection.pos = track.trackTopology.trackBegin.pos + (decimal)(pos * 0.000621371);
                         track.trackTopology.crossSections.Add(crosssection);
-
-
                     }
                 }
-
-
             }
         }
 
+        /// <summary>
+        /// Method to find the host track for an element such as a switch, bufferstop or something else.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="n"></param>
+        /// <returns></returns>
         private static List<eTrack> FindHostLines(double x, double y, int n)
         {
             List<eTrack> tracks = new List<eTrack>();
@@ -588,6 +624,11 @@ namespace RailMLNeural.Data
             return tracks;
         }
 
+        /// <summary>
+        /// Generates a nodelist for a track. Used for defining closes neighbouring tracks.
+        /// </summary>
+        /// <param name="track"></param>
+        /// <returns></returns>
         private static List<Point> NodeList(eTrack track)
         {
             List<Point> list = new List<Point>();
@@ -603,7 +644,14 @@ namespace RailMLNeural.Data
 
         }
 
-        //returns orientation and coarse
+        /// <summary>
+        /// returns orientation and coarse of a switch intersection. Used for defining the trackcontinuecourse.
+        /// </summary>
+        /// <param name="maintrack"></param>
+        /// <param name="sidetrack"></param>
+        /// <param name="sw"></param>
+        /// <returns></returns>
+
         private static string[] GetOrientation(eTrack maintrack, eTrack sidetrack, eSwitch sw)
         {
             string[] result = new string[2];
@@ -647,22 +695,98 @@ namespace RailMLNeural.Data
             else { result[1] = "left"; }
 
             return result;
-
-
-
-
-
-
-
-
         }
 
-        //TODO
+        /// <summary>
+        /// Connects all unassigned trackend connections to another unassigned trackend collection
+        /// Only do after adding bufferstops and all switch types. 
+        /// Might need heavy data checking for correctness.
+        /// 
+        /// Works by iterating all tracks with an empty Item variable in the trackbegin or trackend tracknodes. 
+        /// Traces minimum distance to other tracks, forms connection with those. 
+        /// </summary>
         private static void ConnectTracks()
         {
             foreach (eTrack track in _model.infrastructure.tracks)
             {
+                if(track.trackTopology.trackBegin.Item == null)
+                {
+                    Point tracknodelocation = new Point(track.trackTopology.trackBegin.geoCoord.coord[0], track.trackTopology.trackBegin.geoCoord.coord[1]);
+                    double lowestdist = double.PositiveInfinity;
+                    eTrackNode bestnode = null;
+                    foreach(eTrack othertrack in _model.infrastructure.tracks.Where(x => x != track 
+                        && ( x.trackTopology.trackBegin.Item == null || x.trackTopology.trackEnd == null)))
+                    {
+                        if(othertrack.trackTopology.trackBegin.Item == null)
+                        {
+                            Point p = new Point(othertrack.trackTopology.trackBegin.geoCoord.coord[0], othertrack.trackTopology.trackBegin.geoCoord.coord[1]);
+                            double dist = GetDistance(tracknodelocation, p);
+                            if (dist < lowestdist) 
+                            { 
+                                lowestdist = dist;
+                                bestnode = othertrack.trackTopology.trackBegin;
+                            }
+                        }
+                        if (othertrack.trackTopology.trackEnd.Item == null)
+                        {
+                            Point p = new Point(othertrack.trackTopology.trackEnd.geoCoord.coord[0], othertrack.trackTopology.trackEnd.geoCoord.coord[1]);
+                            double dist = GetDistance(tracknodelocation, p);
+                            if (dist < lowestdist)
+                            {
+                                lowestdist = dist;
+                                bestnode = othertrack.trackTopology.trackEnd;
+                            }
+                        }
+                    }
 
+                    tConnectionData c1 = new tConnectionData();
+                    tConnectionData c2 = new tConnectionData();
+                    DataContainer.IDGenerator(c1);
+                    DataContainer.IDGenerator(c2);
+                    c1.@ref = c2.id;
+                    c2.@ref = c1.id;
+                    track.trackTopology.trackBegin.Item = c1;
+                    bestnode.Item = c2;
+                }
+                if(track.trackTopology.trackEnd.Item == null)
+                {
+                    Point tracknodelocation = new Point(track.trackTopology.trackEnd.geoCoord.coord[0], track.trackTopology.trackEnd.geoCoord.coord[1]);
+                    double lowestdist = double.PositiveInfinity;
+                    eTrackNode bestnode = null;
+                    foreach (eTrack othertrack in _model.infrastructure.tracks.Where(x => x != track
+                        && (x.trackTopology.trackBegin.Item == null || x.trackTopology.trackEnd == null)))
+                    {
+                        if (othertrack.trackTopology.trackBegin.Item == null)
+                        {
+                            Point p = new Point(othertrack.trackTopology.trackBegin.geoCoord.coord[0], othertrack.trackTopology.trackBegin.geoCoord.coord[1]);
+                            double dist = GetDistance(tracknodelocation, p);
+                            if (dist < lowestdist)
+                            {
+                                lowestdist = dist;
+                                bestnode = othertrack.trackTopology.trackBegin;
+                            }
+                        }
+                        if (othertrack.trackTopology.trackEnd.Item == null)
+                        {
+                            Point p = new Point(othertrack.trackTopology.trackEnd.geoCoord.coord[0], othertrack.trackTopology.trackEnd.geoCoord.coord[1]);
+                            double dist = GetDistance(tracknodelocation, p);
+                            if (dist < lowestdist)
+                            {
+                                lowestdist = dist;
+                                bestnode = othertrack.trackTopology.trackEnd;
+                            }
+                        }
+                    }
+
+                    tConnectionData c1 = new tConnectionData();
+                    tConnectionData c2 = new tConnectionData();
+                    DataContainer.IDGenerator(c1);
+                    DataContainer.IDGenerator(c2);
+                    c1.@ref = c2.id;
+                    c2.@ref = c1.id;
+                    track.trackTopology.trackEnd.Item = c1;
+                    bestnode.Item = c2;
+                }
             }
         }
 

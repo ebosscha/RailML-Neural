@@ -2,9 +2,12 @@
 using Encog.Neural.Networks.Training.Propagation.Resilient;
 using Encog.Neural.NeuralData;
 using ProtoBuf;
+using RailMLNeural.Neural;
 using RailMLNeural.Neural.PreProcessing;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace RailMLNeural.Data
 {
@@ -13,13 +16,18 @@ namespace RailMLNeural.Data
     public class NeuralNetwork
     {
         [ProtoMember(1)]
+        
         private NeuralSettings _settings = new NeuralSettings { LearningRate = 0.1, Momentum = 0 };
+        [Category("Neural Network Settings")]
+        [ExpandableObject]
         public NeuralSettings Settings
         {
             get { return _settings; }
             set { _settings = value; }
         }
         [ProtoIgnore]
+        [Category("Neural Network")]
+        [ExpandableObject]
         public BasicNetwork Network { get; set; }
         [ProtoIgnore]
         public INeuralDataSet Data { get; set; }
@@ -31,10 +39,19 @@ namespace RailMLNeural.Data
         public string timetablefile { get; set; }
         [ProtoMember(5)]
         public string reportsfile { get; set; }
+        [Category("General")]
         public string Name { get; set; }
+        [Category("General")]
         public string Description { get; set; }
-        public string Type { get; set; }
+        [Category("General")]
+        public AlgorithmEnum Type { get; set; }
+        [Category("Neural Network")]
+        public List<int> HiddenLayerSize { get; set; }
 
+        public NeuralNetwork()
+        {
+            HiddenLayerSize = new List<int>();
+        }
 
 
 

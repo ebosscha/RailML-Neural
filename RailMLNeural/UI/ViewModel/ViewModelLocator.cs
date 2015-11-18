@@ -54,6 +54,7 @@ namespace RailMLNeural.UI.ViewModel
             SimpleIoc.Default.Register<NeuralPropertiesViewModel>();
             SimpleIoc.Default.Register<NeuralResultsViewModel>();
             SimpleIoc.Default.Register<NeuralRunManagerViewModel>();
+            SimpleIoc.Default.Register<CreateNeuralViewModel>();
         }
 
         /// <summary>
@@ -162,6 +163,14 @@ namespace RailMLNeural.UI.ViewModel
                 return ServiceLocator.Current.GetInstance<NeuralRunManagerViewModel>();
             }
         }
+        public CreateNeuralViewModel CreateNeuralVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<CreateNeuralViewModel>();
+            }
+        }
+           
 
     
 
