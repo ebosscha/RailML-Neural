@@ -19,7 +19,7 @@ namespace RailMLNeural.Neural.Algorithms
         {
             worker = sender as BackgroundWorker;
             worker.ReportProgress(0, "Starting... Preprocessing DataSet.");
-            PreProcesser pproc = new PreProcesser();
+            PreProcesser pproc = new PreProcesser(DataContainer.NeuralNetworks[1]);
             BackgroundWorker worker2 = new BackgroundWorker();
             worker2.WorkerReportsProgress = true;
             worker2.DoWork += new DoWorkEventHandler(pproc.PerLineClassification);

@@ -15,11 +15,16 @@ namespace RailMLNeural.Neural.PreProcessing
         private double[] idealtemplate { get; set; }
         private BackgroundWorker worker;
 
-        public PreProcesser()
+        public PreProcesser(NeuralNetwork Network)
         {
-
+            NetworkSettings = Network;
         }
 
+        /// <summary>
+        /// Base for Preprocessing for PerLineClassification algorithm
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void PerLineClassification(object sender, DoWorkEventArgs e)
         {
             worker = sender as BackgroundWorker;
@@ -123,6 +128,88 @@ namespace RailMLNeural.Neural.PreProcessing
             NetworkSettings.Data = dataset;
 
 
+        }
+
+        public void PerLineExact(object sender, DoWorkEventArgs e)
+        {
+            worker = sender as BackgroundWorker;
+            Dictionary<string, int> inputmap = new Dictionary<string, int>() 
+            {
+                {"Belfast - Connolly", 0},
+                {"DART",1},
+                {"IWT",2},
+                {"DFDS",3},
+                {"Timber",4},
+                {"Tara Mines",5},
+                {"Northern Commuter",6},
+                {"Cork - Heuston",7},
+                {"Heuston Commuter",8},
+                {"Tralee",9 },
+                {"Limerick - Heuston",10},
+                {"Limerick Junction - Limerick",11},
+                {"Ballybrophy - Limerick",12},
+                {"Waterford - Heuston",13},
+                {"Waterford - Limerick Junction",14},
+                {"Rosslare - Waterford",15},
+                {"Rosslare - Connolly",16},
+                {"Galway - Heuston",17},
+                {"Westport - Heuston",18},
+                {"Sligo - Connolly",19},
+                {"Maynooth Commuter",20}
+            };
+            inputtemplate = new double[inputmap.Count];
+            idealtemplate = new double[inputmap.Count];
+
+            DateTime ThresholdDateLower = new DateTime(2010, 1, 1);
+            DateTime ThresholdDateUpper = DateTime.Now;
+            if (DataContainer.Settings.UseDateFilter)
+            {
+                ThresholdDateLower = DataContainer.Settings.DataStartDate;
+                ThresholdDateUpper = DataContainer.Settings.DataEndDate;
+            }
+
+            List<double[]> inputlist = new List<double[]>();
+            List<double[]> outputlist = new List<double[]>();
+            foreach (KeyValuePair<DateTime, List<DelayCombination>> c in DataContainer.DelayCombinations.dict.Where(x => x.Value != null 
+                && x.Key > ThresholdDateLower && x.Key < ThresholdDateUpper))
+            {
+                List<DelayCombination> day = c.Value;
+                foreach (DelayCombination delaycombination in day)
+                {
+                    worker.ReportProgress(0, "Preprocessing Data... Date : " + delaycombination.primarydelays[0].date.ToString("dd/MM/yyyy"));
+
+                    double[] inputline = new double[inputtemplate.Length];
+                    double[] outputline = new double[idealtemplate.Length];
+
+                    double[] secondarydelaysize = new double[inputtemplate.Length];
+                    foreach (Delay d in delaycombination.primarydelays)
+                    {
+                        //string line = DataContainer.model.timetable.trains.Single(x => x.id == d.traincode).description;
+                        if (GetLine(d) == "None") { goto skip; }
+                        inputline[inputmap[GetLine(d)]] += d.destinationdelay;
+                    }
+                    foreach (Delay d in delaycombination.secondarydelays)
+                    {
+                        //string line = DataContainer.model.timetable.trains.Single(x => x.id == d.traincode).description;
+                        if (GetLine(d) == "None") { goto skip; }
+                        secondarydelaysize[inputmap[GetLine(d)]] += d.destinationdelay;
+                    }
+
+                    outputline = secondarydelaysize;
+
+                    inputlist.Add(inputline);
+                    outputlist.Add(outputline);
+                skip:
+                    continue;
+
+
+                }
+            }
+
+            double[][] input = inputlist.ToArray();
+            double[][] output = outputlist.ToArray();
+            INeuralDataSet dataset = new BasicNeuralDataSet(input, output);
+            NetworkSettings.Data = dataset;
         }
 
         private string GetLine(Delay d)

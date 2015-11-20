@@ -4,6 +4,7 @@ using Encog.Neural.NeuralData;
 using ProtoBuf;
 using RailMLNeural.Neural;
 using RailMLNeural.Neural.PreProcessing;
+using RailMLNeural.UI.Neural.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,10 +36,6 @@ namespace RailMLNeural.Data
         [ProtoIgnore]
         public ResilientPropagation Training;
         [ProtoMember(2)]
-        
-        public string timetablefile { get; set; }
-        [ProtoMember(5)]
-        public string reportsfile { get; set; }
         [Category("General")]
         public string Name { get; set; }
         [Category("General")]
@@ -46,11 +43,11 @@ namespace RailMLNeural.Data
         [Category("General")]
         public AlgorithmEnum Type { get; set; }
         [Category("Neural Network")]
-        public List<int> HiddenLayerSize { get; set; }
+        public List<LayerSize> HiddenLayerSize { get; set; }
 
         public NeuralNetwork()
         {
-            HiddenLayerSize = new List<int>();
+            HiddenLayerSize = new List<LayerSize>();
         }
 
 

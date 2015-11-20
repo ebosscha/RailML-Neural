@@ -1,4 +1,5 @@
-﻿using RailMLNeural.UI.Neural.ViewModel;
+﻿using GalaSoft.MvvmLight.Messaging;
+using RailMLNeural.UI.Neural.ViewModel;
 using System.Windows;
 
 namespace RailMLNeural.UI.Neural.Views
@@ -14,6 +15,8 @@ namespace RailMLNeural.UI.Neural.Views
         public CreateNeuralView()
         {
             InitializeComponent();
+            // View is not hittestable when preprocessing
+            Messenger.Default.Register<IsBusyMessage>(this, (action) => { this.IsHitTestVisible = !action.IsBusy; });
         }
 
         private void HiddenLayerSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)

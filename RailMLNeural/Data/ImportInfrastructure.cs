@@ -196,7 +196,7 @@ namespace RailMLNeural.Data
                 else if ((string)row["Type"] == "Fixed Diamond") { FixedDiamond(row); }
                 else if ((string)row["Type"] == "Switch Diamond") { SwitchDiamond(row); }
                 else if ((string)row["Type"] == "Single Slip") { SingleSlip(row); }
-                else if ((string)row["Type"] == "Double Slip") { DoubleSlip(row); }
+                else if ((string)row["Type"] == "Double Slips") { SingleSlip(row); }
 
             }
         }
@@ -263,6 +263,14 @@ namespace RailMLNeural.Data
             return tempswitch;
         }
 
+        /// <summary>
+        /// Function to get the minimum distance between a point and a line between point start and point end. 
+        /// Used to define the minimum distance to a given track
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="p"></param>
+        /// <returns></returns>
         private static double GetDistance(Point start, Point end, Point p)
         {
             var length = (start - end).LengthSquared;
@@ -280,6 +288,12 @@ namespace RailMLNeural.Data
 
         }
 
+        /// <summary>
+        /// Method to return the distance between two points. Used to define distance between tracknodes
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="p"></param>
+        /// <returns></returns>
         private static double GetDistance(Point a, Point p)
         {
             return Math.Sqrt((a - p).LengthSquared);
@@ -299,26 +313,144 @@ namespace RailMLNeural.Data
             crossing.type = row["Type"] as string;
             crossing.description = row["Description"] as string;
             crossing.geoCoord.coord.Add((double)row["INGEasting"]); crossing.geoCoord.coord.Add((double)row["INGNorthing"]);
-            List<eTrack> hostlist = FindHostLines(crossing.geoCoord.coord[0], crossing.geoCoord.coord[1], 2);
-            foreach (eTrack track in hostlist)
+            var hosttuple = FindHostLines(crossing.geoCoord.coord[0], crossing.geoCoord.coord[1], 2);
+            int count = 0;
+            foreach (eTrack track in hosttuple.Item1)
             {
-                track.trackTopology.connections.Add(crossing);
+                eCrossing tempcrossing = crossing;
+                tempcrossing.id = tempcrossing.id + "-" + (count+1).ToString();
+                tempcrossing.pos = (decimal)hosttuple.Item2[count];
+                track.trackTopology.connections.Add(tempcrossing);    
             }
         }
 
         private static void SwitchDiamond(DataRow row)
         {
-            FixedDiamond(row);
+            if(row["HostLine1"] != DBNull.Value && row["HostLine2"] != DBNull.Value)
+            {
+                // Append crossing to first track
+                eCrossing crossing = new eCrossing();
+                crossing.id = row["SerialNo"] as string + "-1";
+                crossing.type = row["Type"] as string;
+                crossing.description = row["Description"] as string;
+                crossing.geoCoord.coord.Add((double)row["INGEasting"]); crossing.geoCoord.coord.Add((double)row["INGNorthing"]);
+                crossing.pos = GetPos(crossing.geoCoord.coord, DataContainer.model.infrastructure.tracks.Single(x => x.id == (string)row["HostLine1"]));
+
+                //Append crossing to second track
+                crossing = new eCrossing();
+                crossing.id = row["SerialNo"] as string + "-2";
+                crossing.type = row["Type"] as string;
+                crossing.description = row["Description"] as string;
+                crossing.geoCoord.coord.Add((double)row["INGEasting"]); crossing.geoCoord.coord.Add((double)row["INGNorthing"]);
+                crossing.pos = GetPos(crossing.geoCoord.coord, DataContainer.model.infrastructure.tracks.Single(x => x.id == (string)row["HostLine2"]));
+
+
+            }
+
         }
 
         private static void SingleSlip(DataRow row)
         {
+            eTrack track1 = DataContainer.model.infrastructure.tracks.Single(x => x.id == (string)row["HostLine1"]);
+            eTrack track2 = DataContainer.model.infrastructure.tracks.Single(x => x.id == (string)row["HostLine2"]);
+            eTrack track3 = DataContainer.model.infrastructure.tracks.Single(x => x.id == (string)row["HostLine3"]);
+            eTrack track4 = DataContainer.model.infrastructure.tracks.Single(x => x.id == (string)row["HostLine4"]);
+            if(track1.id != track3.id)
+            {
+                ConnectTrackNodes(track1, track3);
+            }
+            if(track2.id != track4.id)
+            {
+                ConnectTrackNodes(track2, track4);
+            }
+            eSwitch tempswitch1 = new eSwitch();
+            tempswitch1.id = row["SerialNo"] as string + "-1";
+            tempswitch1.type = row["Type"] as string;
+            tempswitch1.description = row["Description"] as string;
+            tempswitch1.geoCoord.coord.Add((double)row["INGEasting"]); tempswitch1.geoCoord.coord.Add((double)row["INGNorthing"]);
+            tempswitch1.pos = GetPos(tempswitch1.geoCoord.coord, track2);
+
+            eSwitch tempswitch2 = new eSwitch();
+            tempswitch2.id = row["SerialNo"] as string + "-2";
+            tempswitch2.type = row["Type"] as string;
+            tempswitch2.description = row["Description"] as string;
+            tempswitch2.geoCoord.coord.Add((double)row["INGEasting"]); tempswitch2.geoCoord.coord.Add((double)row["INGNorthing"]);
+            tempswitch2.pos = GetPos(tempswitch2.geoCoord.coord, track3);
+
+            tSwitchConnectionData ts1conn = new tSwitchConnectionData();
+            DataContainer.IDGenerator(ts1conn);
+            
+            tSwitchConnectionData ts2conn = new tSwitchConnectionData();
+            DataContainer.IDGenerator(ts2conn);
+
+            ts1conn.@ref = ts2conn.id;
+            ts2conn.@ref = ts1conn.id;
+            tempswitch1.connection.Add(ts1conn);
+            tempswitch2.connection.Add(ts2conn);
+            track2.trackTopology.connections.Add(tempswitch1);
+            track3.trackTopology.connections.Add(tempswitch2);
+
+            if((string)row["Type"] == "Double Slips")
+            {
+                eSwitch tempswitch3 = new eSwitch();
+                tempswitch3.id = row["SerialNo"] as string + "-3";
+                tempswitch3.type = row["Type"] as string;
+                tempswitch3.description = row["Description"] as string;
+                tempswitch3.geoCoord.coord.Add((double)row["INGEasting"]); tempswitch3.geoCoord.coord.Add((double)row["INGNorthing"]);
+                tempswitch3.pos = GetPos(tempswitch3.geoCoord.coord, track1);
+
+                eSwitch tempswitch4 = new eSwitch();
+                tempswitch4.id = row["SerialNo"] as string + "-4";
+                tempswitch4.type = row["Type"] as string;
+                tempswitch4.description = row["Description"] as string;
+                tempswitch4.geoCoord.coord.Add((double)row["INGEasting"]); tempswitch4.geoCoord.coord.Add((double)row["INGNorthing"]);
+                tempswitch4.pos = GetPos(tempswitch4.geoCoord.coord, track4);
+
+                tSwitchConnectionData ts3conn = new tSwitchConnectionData();
+                DataContainer.IDGenerator(ts3conn);
+
+                tSwitchConnectionData ts4conn = new tSwitchConnectionData();
+                DataContainer.IDGenerator(ts4conn);
+
+                ts3conn.@ref = ts4conn.id;
+                ts4conn.@ref = ts3conn.id;
+                tempswitch3.connection.Add(ts3conn);
+                tempswitch4.connection.Add(ts4conn);
+                track1.trackTopology.connections.Add(tempswitch3);
+                track1.trackTopology.connections.Add(tempswitch4);
+            }
 
         }
 
-        private static void DoubleSlip(DataRow row)
+        private static void ConnectTrackNodes(eTrack track1, eTrack track2)
         {
-
+            eTrackNode[] track1nodes = new eTrackNode[] { track1.trackTopology.trackBegin, track1.trackTopology.trackEnd };
+            eTrackNode[] track2nodes = new eTrackNode[] { track2.trackTopology.trackBegin, track2.trackTopology.trackEnd };
+            double bestdist = double.PositiveInfinity;
+            eTrackNode besttrack1node = null;
+            eTrackNode besttrack2node = null;
+            foreach (eTrackNode track1node in track1nodes)
+            {
+                Point a = new Point(track1node.geoCoord.coord[0], track1node.geoCoord.coord[1]);
+                foreach (eTrackNode track2node in track2nodes)
+                {
+                    Point b = new Point(track2node.geoCoord.coord[0], track2node.geoCoord.coord[1]);
+                    if(GetDistance(a,b) < bestdist)
+                    {
+                        bestdist = GetDistance(a, b);
+                        besttrack1node = track1node;
+                        besttrack2node = track2node;
+                    }
+                }
+            }
+            tConnectionData c1 = new tConnectionData();
+            tConnectionData c2 = new tConnectionData();
+            DataContainer.IDGenerator(c1);
+            DataContainer.IDGenerator(c2);
+            c1.@ref = c2.id;
+            c2.@ref = c1.id;
+            besttrack1node.Item = c1;
+            besttrack2node.Item = c2;
         }
 
         public static void AddBridgesFromExcel(string filepath)
@@ -416,7 +548,7 @@ namespace RailMLNeural.Data
                 crossing.pos = (decimal)(((row["Miles"] as double?) ?? 0) + ((row["Yards"] as double?) ?? 0) / 1760);
                 double[] coord = { (row["INGEasting"] as double?) ?? 0, (row["INGNorthing"] as double?) ?? 0 };
                 crossing.geoCoord.coord.AddRange(coord);
-                foreach (eTrack track in FindHostLines(crossing.geoCoord.coord[0], crossing.geoCoord.coord[1], (row["NumberOfTracks"] as int?) ?? 0))
+                foreach (eTrack track in FindHostLines(crossing.geoCoord.coord[0], crossing.geoCoord.coord[1], (row["NumberOfTracks"] as int?) ?? 0).Item1)
                 {
                     track.trackElements.levelCrossings.Add(crossing);
                 }
@@ -518,8 +650,8 @@ namespace RailMLNeural.Data
         }
 
         /// <summary>
-        /// Adds OCP to every track within the margin range. Margin currently set to 100. Affects every type of track.
-        /// Improvement might be to filter on just mainlines.
+        /// Adds OCP to every track within the margin range. Margin currently set to 100. 
+        /// Currently just added to maintracks and stationtracks.
         /// </summary>
         /// <param name="ocp"></param>
         private static void AddOCPToTracks(eOcp ocp)
@@ -576,15 +708,18 @@ namespace RailMLNeural.Data
         /// <param name="y"></param>
         /// <param name="n"></param>
         /// <returns></returns>
-        private static List<eTrack> FindHostLines(double x, double y, int n)
+        private static Tuple<List<eTrack>,List<double>> FindHostLines(double x, double y, int n)
         {
             List<eTrack> tracks = new List<eTrack>();
+            List<double> positions = new List<double>();
             Point location = new Point(x, y);
             int c = 0;
             while (c < n)
             {
                 eTrack besttrack = null;
                 double bestdist = 99999999999;
+                double pos = 0;
+                int index = 0;
 
                 foreach (eTrack track in DataContainer.model.infrastructure.tracks)
                 {
@@ -592,36 +727,80 @@ namespace RailMLNeural.Data
                     {
                         if (track == alreadyinlist) { continue; }
                     }
-                    Point a;
-                    Point b;
-                    a = new Point(track.trackTopology.trackBegin.geoCoord.coord[0], track.trackTopology.trackBegin.geoCoord.coord[1]);
-                    if (track.trackElements.geoMappings.Count > 0)
+                    List<Point> nodelist = NodeList(track);
+                    for(int i=0; i < nodelist.Count - 1; i++)
                     {
-                        b = new Point(track.trackElements.geoMappings[0].geoCoord.coord[0], track.trackElements.geoMappings[0].geoCoord.coord[1]);
+                        double dist = GetDistance(nodelist[i], nodelist[i + 1], location);
+                        if(dist < bestdist)
+                        {
+                            besttrack = track;
+                            bestdist = dist;
+                            index = i;
+                        }
                     }
-                    else { b = new Point(track.trackTopology.trackEnd.geoCoord.coord[0], track.trackTopology.trackEnd.geoCoord.coord[1]); }
-
-                    double dist = GetDistance(a, b, location);
-                    if (dist < bestdist) { bestdist = dist; besttrack = track; }
-
-                    for (int i = 0; i < track.trackElements.geoMappings.Count - 1; i++)
-                    {
-                        a = new Point(track.trackElements.geoMappings[i].geoCoord.coord[0], track.trackElements.geoMappings[i].geoCoord.coord[1]);
-                        b = new Point(track.trackElements.geoMappings[i + 1].geoCoord.coord[0], track.trackElements.geoMappings[i + 1].geoCoord.coord[1]);
-
-                        dist = GetDistance(a, b, location);
-                        if (dist < bestdist) { bestdist = dist; besttrack = track; }
-                    }
-
-                    a = new Point(track.trackTopology.trackEnd.geoCoord.coord[0], track.trackTopology.trackEnd.geoCoord.coord[1]);
-                    dist = GetDistance(a, b, location);
-                    if (dist < bestdist) { bestdist = dist; besttrack = track; }
-
                 }
+
+                List<Point> besttracknodelist = NodeList(besttrack);
+                pos = 0;
+                for(int i=0; i < index; i++)
+                {
+                    pos += GetDistance(besttracknodelist[i], besttracknodelist[i + 1]);
+                }
+                Point a = besttracknodelist[index];
+                Point b = besttracknodelist[index + 1];
+                    
+                if ((a - b).LengthSquared != 0.0)
+                {
+                    var t = (location - a) * (b - a) / (a - b).LengthSquared;
+                    pos += t * GetDistance(a, b);
+                }
+
                 tracks.Add(besttrack);
+                positions.Add((double)besttrack.trackTopology.trackBegin.pos + (pos * 0.000621371));
                 c++;
+                    
             }
-            return tracks;
+            return new Tuple<List<eTrack>, List<double>>(tracks, positions);
+        }
+
+        /// <summary>
+        /// Method to get the position of a feature along a track.
+        /// </summary>
+        /// <param name="coord"></param>
+        /// <param name="track"></param>
+        /// <returns></returns>
+        private static decimal GetPos(List<double> coord, eTrack track)
+        {
+            Point location = new Point(coord[0], coord[1]);
+            List<Point> nodelist = NodeList(track);
+
+            double bestdist = 9999999999999;
+            Point a = new Point();
+            Point b = new Point();
+            int index = 0;
+            for (int i = 0; i < nodelist.Count - 1; i++)
+            {
+                double dist = GetDistance(nodelist[i], nodelist[i + 1], location);
+                if (dist < bestdist)
+                {
+                    bestdist = dist;
+                    a = nodelist[i]; b = nodelist[i + 1];
+                    index = i;
+                }
+            }
+                   
+            double pos = 0;
+            for (int i = 0; i < index - 1; i++)
+            {
+                pos += GetDistance(nodelist[i], nodelist[i + 1]);
+            }
+            if ((a - b).LengthSquared != 0.0)
+            {
+                var t = (location - a) * (b - a) / (a - b).LengthSquared;
+                pos += t * GetDistance(a, b);
+            }
+
+            return track.trackTopology.trackBegin.pos + (decimal)(pos * 0.000621371);
         }
 
         /// <summary>

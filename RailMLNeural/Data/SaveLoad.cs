@@ -27,6 +27,8 @@ namespace RailMLNeural.Data
                 data.railml = XML.ToXElement<railml>(Data.DataContainer.model).ToString();
                 data.NN = SerializeNetwork();
                 data.settings = DataContainer.Settings;
+                data.metadata = DataContainer.MetaData;
+                data.metadata.LastEditTime = DateTime.Now;
                 data.DelayCombinations = DataContainer.DelayCombinations;
                 data.HeaderRoutes = DataContainer.HeaderRoutes;
                 MyStream stream = new MyStream(filename, FileMode.Create, FileAccess.Write);
@@ -61,6 +63,7 @@ namespace RailMLNeural.Data
             DataContainer.Settings = data.settings;
             DataContainer.HeaderRoutes = data.HeaderRoutes;
             DataContainer.DelayCombinations = data.DelayCombinations;
+            DataContainer.MetaData = data.metadata;
             
             stream.Close();
         }
@@ -111,7 +114,15 @@ namespace RailMLNeural.Data
         public DelayCombinationCollection DelayCombinations { get; set; }
         [ProtoMember(7)]
         public Dictionary<string, Dictionary<DateTime, string>> HeaderRoutes { get; set; }
+        [ProtoMember(8)]
+        public MetaData metadata { get; set; }
 
+    }
+
+    [Serializable]
+    public class SaveLoadDataContainer
+    {
+        
     }
 
     class MyStream : FileStream

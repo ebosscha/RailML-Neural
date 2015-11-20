@@ -26,4 +26,15 @@ namespace RailMLNeural.UI.Neural.ViewModel
             set { _network = value; }
         }
     }
+
+    public class IsBusyMessage
+    {
+        private bool _isBusy;
+        public bool IsBusy
+        {
+            get { return _isBusy; }
+            set { _isBusy = value; }
+        }
+    }
+
 }

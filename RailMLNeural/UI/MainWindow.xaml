@@ -53,7 +53,7 @@
                     <MenuItem Header="Infrastructure">
                         <MenuItem Header="Import Excel Dataset" Command="{Binding ExcelTracksCommand}"/>
                         <MenuItem Header="Add from Excel">
-                            <MenuItem Header="Add Switches from Excel" Command="{Binding ExcelTracksCommand}"/>
+                            <MenuItem Header="Add Switches from Excel" Command="{Binding ExcelSwitchesCommand}"/>
                             <MenuItem Header="Add Bridges from Excel" Command="{Binding ExcelBridgesCommand}"/>
                             <MenuItem Header="Add Buffer Stops from Excel" Command="{Binding ExcelBufferStopsCommand}"/>
                             <MenuItem Header="Add Tunnels from Excel" Command="{Binding ExcelTunnelsCommand}"/>
