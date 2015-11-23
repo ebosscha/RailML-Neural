@@ -27,7 +27,7 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -196,14 +196,14 @@
     <Compile Include="UI\RailML\Views\VisualizationView.xaml.cs">
       <DependentUpon>VisualizationView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\Statistics\ViewModel\NetworkStatisticsViewModel.cs" />
+    <Compile Include="UI\Statistics\View\NetworkStatisticsView.xaml.cs">
+      <DependentUpon>NetworkStatisticsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\ViewModel\MainViewModel.cs" />
     <Compile Include="UI\ViewModel\ViewModelLocator.cs" />
     <Page Include="UI\Dialog\View\ProjectOptionsView.xaml">
       <SubType>Form</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UI\MainViewResourceDictionary.xaml">
-      <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI\MainWindow.xaml">
@@ -301,6 +301,10 @@
     <Page Include="UI\Skins\WhistlerBlue.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\Statistics\View\NetworkStatisticsView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>

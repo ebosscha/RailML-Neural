@@ -1,0 +1,50 @@
+﻿<UserControl x:Class="RailMLNeural.UI.Statistics.View.NetworkStatisticsView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ignore="http://www.galasoft.ch/ignore"
+        mc:Ignorable="d ignore"
+        DataContext="{Binding NetworkStatisticsVM, Source={StaticResource Locator}}"
+        Loaded="UserControl_Loaded">
+
+    <Grid>
+        <StackPanel Orientation="Horizontal">
+            <GroupBox Header="Track Stats"
+                      Margin="10,10,0,10"
+                      Height="Auto"
+                      Width="Auto">
+                  
+                <StackPanel>
+                    <TextBlock Text="{Binding Path=TotalTrackLength, 
+                        StringFormat=Total Track Length : {0} Miles}"/>
+                    <TextBlock Text="{Binding Path=MainSingleTrackLength,
+                        StringFormat=Total Single Track Length : {0} Miles}"/>
+                    <TextBlock Text="{Binding Path=MainDoubleTrackLength,
+                        StringFormat=Total Double Track Length : {0} Miles}"/>
+                    <TextBlock Text="{Binding Path=OtherTrackLength,
+                        StringFormat=Total Other Track Length : {0} Miles}"/>
+                    
+                
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Header="Station Stats"
+                      Margin="0,10,10,10">
+                <StackPanel>
+                    <TextBlock Text="{Binding Path=StationCount,
+                        StringFormat=Number of stations : {0}}"/>
+                </StackPanel>
+
+
+            </GroupBox>
+            <GroupBox Header="Switch Stats"
+                      Margin="0,10,10,10">
+                <StackPanel>
+                    <TextBlock Text="{Binding Path=SwitchCount, 
+                        StringFormat=Number of switches : {0}}"/>
+                </StackPanel>
+            </GroupBox>
+        
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -15,9 +15,9 @@ namespace RailMLNeural.Data
         private static Hashtable _idlist = new Hashtable();
         private static PathContainer _pathcontainer;
         private static Settings _settings = new Settings();
+        private static MetaData _metadata = new MetaData();
         public static DelayCombinationCollection DelayCombinations { get; set; }
         public static Dictionary<string, Dictionary<DateTime, string>> HeaderRoutes { get; set; }
-        public static MetaData MetaData { get; set; }
         static public event EventHandler ModelChanged;
 
         public static railml model
@@ -40,6 +40,12 @@ namespace RailMLNeural.Data
                 return _neuralnetworks;
             }
             set { _neuralnetworks = value; }
+        }
+
+        public static MetaData MetaData
+        {
+            get { return _metadata; }
+            set { _metadata = value; }
         }
 
         public static Hashtable IDList { get { return _idlist; } }

@@ -16,6 +16,7 @@ using RailMLNeural.UI.Dialog.ViewModel;
 using RailMLNeural.UI.Model;
 using RailMLNeural.UI.Neural.ViewModel;
 using RailMLNeural.UI.RailML.ViewModel;
+using RailMLNeural.UI.Statistics.ViewModel;
 
 namespace RailMLNeural.UI.ViewModel
 {
@@ -55,6 +56,7 @@ namespace RailMLNeural.UI.ViewModel
             SimpleIoc.Default.Register<NeuralResultsViewModel>();
             SimpleIoc.Default.Register<NeuralRunManagerViewModel>();
             SimpleIoc.Default.Register<CreateNeuralViewModel>();
+            SimpleIoc.Default.Register<NetworkStatisticsViewModel>();
         }
 
         /// <summary>
@@ -168,6 +170,13 @@ namespace RailMLNeural.UI.ViewModel
             get
             {
                 return ServiceLocator.Current.GetInstance<CreateNeuralViewModel>();
+            }
+        }
+        public NetworkStatisticsViewModel NetworkStatisticsVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<NetworkStatisticsViewModel>();
             }
         }
            

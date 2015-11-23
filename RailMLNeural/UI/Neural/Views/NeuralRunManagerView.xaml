@@ -7,7 +7,8 @@
         mc:Ignorable="d ignore"
         DataContext="{Binding NeuralRunManagerVM, Source={StaticResource Locator}}">
 
-    <Grid Visibility="{Binding Visibility}">
+    <Grid Visibility="{Binding Visibility}"
+          IsEnabled="{Binding IsEnabled}">
         <GroupBox Header="MetaData"
                   Margin="10,10,25,35"
                   Width="150"
@@ -56,6 +57,13 @@
                                        Maximum="1"
                                        Increment="0.05"/>
                 </Grid>
+                <Grid>
+                    <TextBlock Text="Maximum Epochs :"
+                           Margin="10,5,0,0"/>
+                    <xctk:IntegerUpDown Value="{Binding Path=Network.Settings.Epochs}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"/>
+                </Grid>
                 
             </StackPanel>
         </GroupBox>
@@ -74,7 +82,14 @@
                 Margin="0,0,100,10"
                 Width="80"
                 Height="20"/>
-            
+        <TextBlock Visibility="{Binding StatusTextVisibility}">
+            <TextBlock.Text>
+                <MultiBinding StringFormat="{} Running... Epoch: {0}     Error: {1}">
+                    <Binding Path="Network.Training.IterationNumber"/>
+                    <Binding Path="Network.Training.Error"/>
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>    
         
     </Grid>
 </UserControl>

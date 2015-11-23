@@ -13,7 +13,6 @@ namespace RailMLNeural.UI.RailML.Views
     {
         private ZoomableCanvas _canvas;
         private Point LastMousePosition;
-        private double Scale = 1;
         /// <summary>
         /// Initializes a new instance of the VisualizationView class.
         /// </summary>
@@ -31,9 +30,10 @@ namespace RailMLNeural.UI.RailML.Views
         private void Canvas_Loaded(object sender, RoutedEventArgs e)
         {
             _canvas = (ZoomableCanvas)sender;
-            //_canvas.IsVirtualizing = false;
-            _canvas.ApplyTransform = false;
-            //ZoomToBounds();
+            _canvas.IsVirtualizing = true;
+            //_canvas.ApplyTransform = false;
+            //_canvas.Stretch = System.Windows.Media.Stretch.None;
+            ZoomToBounds();
         }
         protected override void OnPreviewMouseMove(System.Windows.Input.MouseEventArgs e)
         {
@@ -42,7 +42,10 @@ namespace RailMLNeural.UI.RailML.Views
                 && !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
             {
                 CaptureMouse();
-                _canvas.Offset -= position - LastMousePosition;
+                //_canvas.Offset -= position - LastMousePosition;
+                Rect viewbox = _canvas.Viewbox;
+                viewbox.Location -= (position - LastMousePosition) / _canvas.Scale;
+                _canvas.Viewbox = viewbox;
                 e.Handled = true;
             }
             else
@@ -55,26 +58,37 @@ namespace RailMLNeural.UI.RailML.Views
         protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
         {
             var x = Math.Pow(2, e.Delta / 3.0 / Mouse.MouseWheelDeltaForOneLine);
-            _canvas.Scale *= x;
+            //_canvas.Scale *= x;
+            Rect viewbox = _canvas.Viewbox;
+            viewbox.Height /= x;
+            viewbox.Width /= x;
 
             // Adjust the offset to make the point under the mouse stay still.
             var position = (Vector)e.GetPosition(MyListBox);
-            _canvas.Offset = (Point)((Vector)
-                (_canvas.Offset + position) * x - position);
-
+            //_canvas.Offset = (Point)((Vector)(_canvas.Offset + position) * x - position);
+            double offsetX = ((position.X / this.ActualWidth) * viewbox.Width * (x - 1));
+            double offsetY = ((position.Y / this.ActualHeight) * viewbox.Height * (x - 1));
+            viewbox.Location += new Vector(offsetX, offsetY);
+            _canvas.Viewbox = viewbox;
             e.Handled = true;
         }
 
         private void ZoomToBounds()
         {
-            Rect extent = _canvas.Extent;
-            _canvas.Viewbox = extent;
-            _canvas.Viewbox = Rect.Empty;
-            //double rescale = Math.Min(extent.Height / this.ActualHeight, extent.Width / this.ActualWidth);
-            //_canvas.Scale *= rescale;
-            //extent = _canvas.Extent;
-            //Point viewcenter = new Point(this.ActualWidth, this.ActualHeight);
-            //_canvas.Offset += extent.GetCenter() - viewcenter;
+            if (_canvas.Children.Count > 0)
+            {
+                Rect extent = _canvas.Extent;
+                //_canvas.Scale = Math.Min(this.ActualHeight / extent.Height, this.ActualWidth / extent.Width)*0.9;
+                //extent = _canvas.Extent;
+                //Point viewcenter = new Point(this.ActualWidth/2, this.ActualHeight/2);
+                //_canvas.Offset = (Point)(extent.GetCenter()-viewcenter);
+                //int i = 1;
+                _canvas.Viewbox = _canvas.Extent;
+            }
+            else
+            {
+                _canvas.Viewbox = new Rect(-1000, -1000, 2000, 2000);
+            }
 
         }
     }

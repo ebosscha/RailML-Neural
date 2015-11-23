@@ -7,6 +7,7 @@ using RailMLNeural.UI.Model;
 using RailMLNeural.UI.Neural.Views;
 using RailMLNeural.UI.RailML.ViewModel;
 using RailMLNeural.UI.RailML.Views;
+using RailMLNeural.UI.Statistics.View;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,6 +32,7 @@ namespace RailMLNeural.UI.ViewModel
         private UserControl _currentViewModel;
         private MainRailMLView _mainRailMLView = new MainRailMLView();
         private MainNeuralView _mainNeuralView = new MainNeuralView();
+        private NetworkStatisticsView _statisticsView = new NetworkStatisticsView();
 
         public UserControl CurrentViewModel
         {
@@ -310,11 +312,22 @@ namespace RailMLNeural.UI.ViewModel
 
             eTrack track2 = new eTrack { trackTopology = new eTrackTopology { trackBegin = new eTrackBegin { pos = 0, geoCoord = new tGeoCoord() }, trackEnd = new eTrackEnd { pos = 600, geoCoord = new tGeoCoord() } } };
             DataContainer.IDGenerator(track2);
-            track2.trackTopology.trackBegin.geoCoord.coord.Add(0); track2.trackTopology.trackBegin.geoCoord.coord.Add(0);
+            track2.trackTopology.trackBegin.geoCoord.coord.Add(200); track2.trackTopology.trackBegin.geoCoord.coord.Add(200);
             track2.trackTopology.trackEnd.geoCoord.coord.Add(600); track2.trackTopology.trackEnd.geoCoord.coord.Add(600);
 
+            eTrack track3 = new eTrack { trackTopology = new eTrackTopology { trackBegin = new eTrackBegin { pos = 0, geoCoord = new tGeoCoord() }, trackEnd = new eTrackEnd { pos = 600, geoCoord = new tGeoCoord() } } };
+            DataContainer.IDGenerator(track3);
+            track3.trackTopology.trackBegin.geoCoord.coord.Add(-200); track3.trackTopology.trackBegin.geoCoord.coord.Add(-200);
+            track3.trackTopology.trackEnd.geoCoord.coord.Add(-600); track3.trackTopology.trackEnd.geoCoord.coord.Add(-600);
+
+            eTrack track4 = new eTrack { trackTopology = new eTrackTopology { trackBegin = new eTrackBegin { pos = 0, geoCoord = new tGeoCoord() }, trackEnd = new eTrackEnd { pos = 600, geoCoord = new tGeoCoord() } } };
+            DataContainer.IDGenerator(track3);
+            track4.trackTopology.trackBegin.geoCoord.coord.Add(600); track4.trackTopology.trackBegin.geoCoord.coord.Add(200);
+            track4.trackTopology.trackEnd.geoCoord.coord.Add(200); track4.trackTopology.trackEnd.geoCoord.coord.Add(600);
 
             DataContainer.model.infrastructure.tracks.Add(track2);
+            DataContainer.model.infrastructure.tracks.Add(track3);
+            DataContainer.model.infrastructure.tracks.Add(track4);
 
             //Data.Editor.AddCrossing(track1, track2, 70, 300, 350);
 
@@ -626,11 +639,13 @@ namespace RailMLNeural.UI.ViewModel
         #region ViewCommands
         public ICommand RailMLViewCommand { get; private set; }
         public ICommand NeuralViewCommand { get; private set; }
+        public ICommand StatisticsViewCommand { get; private set; }
 
         private void InitializeViewCommands()
         {
             RailMLViewCommand = new RelayCommand(ExecuteRailMLView);
             NeuralViewCommand = new RelayCommand(ExecuteNeuralView);
+            StatisticsViewCommand = new RelayCommand(ExecuteStatisticsView);
         }
 
         private void ExecuteRailMLView()
@@ -641,6 +656,11 @@ namespace RailMLNeural.UI.ViewModel
         private void ExecuteNeuralView()
         {
             CurrentViewModel = _mainNeuralView;
+        }
+
+        private void ExecuteStatisticsView()
+        {
+            CurrentViewModel = _statisticsView;
         }
 
         #endregion ViewCommands

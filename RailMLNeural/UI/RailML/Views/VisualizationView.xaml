@@ -15,25 +15,22 @@
 
     <Grid>
         <ListBox ItemsSource="{Binding RenderData}" Name="MyListBox" ClipToBounds="False">
-            <!--<ListBox.RenderTransform>
-                <ScaleTransform ScaleY="-1"/>
-            </ListBox.RenderTransform>-->
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <zc:ZoomableCanvas Loaded="Canvas_Loaded" 
-                                    Scale="{Binding Path=Scale, Source={RelativeSource Self}}"/>
+                                    Scale="{Binding Path=Scale, Source={RelativeSource Self}}"
+                                       Focusable="False">
+                    </zc:ZoomableCanvas>
+                                       
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
             <ListBox.ItemContainerStyle>
-                <Style TargetType="{x:Type ListBoxItem}">
+                <Style TargetType="ListBoxItem">
                     <Setter Property="Canvas.Top"
-                        Value="{Binding Path=Content.(Canvas.Top),
-                                RelativeSource={RelativeSource Self}}"/>
+                        Value="{Binding Top}"/>
 
                     <Setter Property="Canvas.Left"
-                        Value="{Binding Path=Content.(Canvas.Left),
-                                RelativeSource={RelativeSource Self}}"/>
-                    <Setter Property="Focusable" Value="False"/>
+                        Value="{Binding Left}"/>
                     <Style.Resources>
                         <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="transparent" />
                         <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}"  Color="transparent" />
@@ -46,8 +43,8 @@
                 
             </ListBox.ItemContainerStyle>
             <ListBox.Resources>
-                <DataTemplate DataType="{x:Type railml:eTrack}">
-                    <render:RenderTrackLine Track="{Binding}"
+                <DataTemplate DataType="{x:Type vm:TrackWithExtents}">
+                    <render:RenderTrackLine Track="{Binding track}"
                                             StrokeThickness="2"
                                             Stroke="Black"
                                             Scale="{Binding Path=Scale, RelativeSource={RelativeSource AncestorType=zc:ZoomableCanvas}}"

@@ -15,16 +15,6 @@
         Title="RailML Neural Application"
         WindowState="Maximized"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
-    
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Skins/MainSkin.xaml" />
-                <ResourceDictionary Source="MainViewResourceDictionary.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-        
-    </Window.Resources>
 
     <Grid x:Name="LayoutRoot">
         <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" LastChildFill="True">
@@ -82,6 +72,7 @@
                 <MenuItem Header="View">
                     <MenuItem Header="RailML View" Command="{Binding RailMLViewCommand}"/>
                     <MenuItem Header="Neural Network View" Command="{Binding NeuralViewCommand}"/>
+                    <MenuItem Header="Statistics View" Command="{Binding StatisticsViewCommand}"/>
                 </MenuItem>
 
 

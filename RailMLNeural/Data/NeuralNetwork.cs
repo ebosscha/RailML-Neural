@@ -1,4 +1,8 @@
-﻿using Encog.Neural.Networks;
+﻿using Encog.ML;
+using Encog.ML.Data;
+using Encog.ML.Factory;
+using Encog.ML.Train;
+using Encog.Neural.Networks;
 using Encog.Neural.Networks.Training.Propagation.Resilient;
 using Encog.Neural.NeuralData;
 using ProtoBuf;
@@ -29,12 +33,12 @@ namespace RailMLNeural.Data
         [ProtoIgnore]
         [Category("Neural Network")]
         [ExpandableObject]
-        public BasicNetwork Network { get; set; }
+        public IContainsFlat Network { get; set; }
         [ProtoIgnore]
-        public INeuralDataSet Data { get; set; }
+        public IMLDataSet Data { get; set; }
         [NonSerialized]
         [ProtoIgnore]
-        public ResilientPropagation Training;
+        public IMLTrain Training;
         [ProtoMember(2)]
         [Category("General")]
         public string Name { get; set; }
@@ -44,10 +48,20 @@ namespace RailMLNeural.Data
         public AlgorithmEnum Type { get; set; }
         [Category("Neural Network")]
         public List<LayerSize> HiddenLayerSize { get; set; }
+        public bool IsRunning { get; set; }
 
         public NeuralNetwork()
         {
             HiddenLayerSize = new List<LayerSize>();
+        }
+
+        public void RunNetwork(object state)
+        {
+            IsRunning = true;
+            for(int i = 0; i < Settings.Epochs; i++)
+            {
+                Training.Iteration();
+            }
         }
 
 
@@ -62,6 +76,8 @@ namespace RailMLNeural.Data
         public double LearningRate { get; set; }
         [ProtoMember(2)]
         public double Momentum { get; set; }
+        [ProtoMember(3)]
+        public int Epochs { get; set; }
 
 
     }

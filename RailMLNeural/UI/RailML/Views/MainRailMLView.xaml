@@ -12,43 +12,43 @@
 
     <Grid>
         <avalonDock:DockingManager x:Name="dockingManager" >
-            
+
             <avalonDock:LayoutRoot>
                 <avalonDock:LayoutPanel Orientation="Horizontal">
                     <avalonDock:LayoutDocumentPaneGroup>
                         <avalonDock:LayoutDocumentPane>
-                            <avalonDock:LayoutDocument Title="Track Table">
-                                <ContentControl Name="Tracktable" Content="{Binding TrackTable}"/>
+                            <avalonDock:LayoutDocument Title="Track Table" CanClose="False">
+                                <ContentControl Content="{Binding TrackTable}"/>
                                 <!--<vw:TrackTableView/>-->
                             </avalonDock:LayoutDocument>
-                            <avalonDock:LayoutDocument Title="OCP Table">
-                                
+                            <avalonDock:LayoutDocument Title="OCP Table" CanClose="False">
+
                                 <ContentControl Content="{Binding OCPTable}"/>
                             </avalonDock:LayoutDocument>
-                            <avalonDock:LayoutDocument Title="Visualization">
+                            <avalonDock:LayoutDocument Title="Visualization" CanClose="False">
                                 <ContentControl Content="{Binding Visualization}"/>
                             </avalonDock:LayoutDocument>
                         </avalonDock:LayoutDocumentPane>
-                        
+
                     </avalonDock:LayoutDocumentPaneGroup>
                     <avalonDock:LayoutAnchorablePane DockWidth="200">
-                        <avalonDock:LayoutAnchorable Title="Properties">
+                        <avalonDock:LayoutAnchorable Title="Properties" CanClose="False">
                             <ContentControl Content="{Binding Properties}"/>
                         </avalonDock:LayoutAnchorable>
-                        
+
                     </avalonDock:LayoutAnchorablePane>
-                    
+
                 </avalonDock:LayoutPanel>
                 <avalonDock:LayoutRoot.LeftSide>
                     <avalonDock:LayoutAnchorSide>
                         <avalonDock:LayoutAnchorGroup>
-                            
-                            
+
+
                         </avalonDock:LayoutAnchorGroup>
                     </avalonDock:LayoutAnchorSide>
                 </avalonDock:LayoutRoot.LeftSide>
             </avalonDock:LayoutRoot>
-            
+
         </avalonDock:DockingManager>
     </Grid>
 </UserControl>

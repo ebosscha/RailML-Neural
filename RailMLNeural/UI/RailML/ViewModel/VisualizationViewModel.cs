@@ -35,7 +35,7 @@ namespace RailMLNeural.UI.RailML.ViewModel
             }
         }
 
-        private ObservableCollection<eTrack> _renderTracks;
+        private ObservableCollection<TrackWithExtents> _renderTracks;
 
         private ObservableCollection<eOcp> _renderOCP;
 
@@ -62,9 +62,49 @@ namespace RailMLNeural.UI.RailML.ViewModel
             if (DataContainer.model != null)
             {
                 _renderOCP = new ObservableCollection<eOcp>(DataContainer.model.infrastructure.operationControlPoints);
-                _renderTracks = new ObservableCollection<eTrack>(DataContainer.model.infrastructure.tracks);
+                CreateTracksCollection();
                 RenderData.Add(new CollectionContainer() { Collection = _renderOCP });
                 RenderData.Add(new CollectionContainer() { Collection = _renderTracks });
+            }
+        }
+
+        private void CreateTracksCollection()
+        {
+            _renderTracks = new ObservableCollection<TrackWithExtents>();
+            foreach(eTrack track in DataContainer.model.infrastructure.tracks)
+            {
+                _renderTracks.Add(new TrackWithExtents(track));
+            }
+
+        }
+
+    }
+
+    public class TrackWithExtents
+    {
+        public eTrack track { get; set; }
+        public double Top { get; set; }
+        public double Left { get; set; }
+
+        public TrackWithExtents(eTrack t)
+        {
+            track = t;
+            if(track.trackTopology.trackBegin.geoCoord.coord.Count == 2 && track.trackTopology.trackEnd.geoCoord.coord.Count == 2 )
+            {
+                Top = double.NegativeInfinity;
+                Left = double.PositiveInfinity;
+                foreach(eTrackNode x in new eTrackNode[]{track.trackTopology.trackBegin, track.trackTopology.trackEnd})
+                {
+                    Left = Math.Min(Left, x.geoCoord.coord[0]);
+                    Top = Math.Max(Top, x.geoCoord.coord[1]);
+                }
+                foreach(var x in track.trackElements.geoMappings)
+                {
+                    Left = Math.Min(Left, x.geoCoord.coord[0]);
+                    Top = Math.Max(Top, x.geoCoord.coord[1]);
+                }
+                Top = -Top;
+
             }
         }
     }
