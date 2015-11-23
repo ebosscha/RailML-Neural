@@ -162,6 +162,7 @@
     <Compile Include="UI\RailML\Render\RectExtensions.cs" />
     <Compile Include="UI\RailML\Render\RenderItemSource.cs" />
     <Compile Include="UI\RailML\Render\RenderContainer.cs" />
+    <Compile Include="UI\RailML\Render\RenderSwitch.cs" />
     <Compile Include="UI\RailML\Render\RenderOCP.cs" />
     <Compile Include="UI\RailML\Render\RenderTrackLine.cs" />
     <Compile Include="UI\RailML\Render\VirtualPanel.cs" />

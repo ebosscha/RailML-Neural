@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -9,9 +10,20 @@ namespace RailMLNeural.UI.RailML.Views
     /// <summary>
     /// Description for VisualizationView.
     /// </summary>
-    public partial class VisualizationView : UserControl
+    public partial class VisualizationView : UserControl, INotifyPropertyChanged
     {
         private ZoomableCanvas _canvas;
+
+        public ZoomableCanvas Canvas
+        {
+            get { return _canvas; }
+            set 
+            { 
+                _canvas = value;
+                RaisePropertyChanged("Canvas");
+            }
+        }
+    
         private Point LastMousePosition;
         /// <summary>
         /// Initializes a new instance of the VisualizationView class.
@@ -29,7 +41,7 @@ namespace RailMLNeural.UI.RailML.Views
         }
         private void Canvas_Loaded(object sender, RoutedEventArgs e)
         {
-            _canvas = (ZoomableCanvas)sender;
+            Canvas = (ZoomableCanvas)sender;
             _canvas.IsVirtualizing = true;
             //_canvas.ApplyTransform = false;
             //_canvas.Stretch = System.Windows.Media.Stretch.None;
@@ -91,5 +103,15 @@ namespace RailMLNeural.UI.RailML.Views
             }
 
         }
+
+        #region PropertyChanged Implementation
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void RaisePropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+        #endregion PropertyChanged Implementation
     }
 }

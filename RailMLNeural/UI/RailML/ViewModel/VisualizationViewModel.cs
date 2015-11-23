@@ -11,6 +11,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Linq;
 
 namespace RailMLNeural.UI.RailML.ViewModel
 {
@@ -19,12 +20,25 @@ namespace RailMLNeural.UI.RailML.ViewModel
     /// <para>
     /// See http://www.galasoft.ch/mvvm
     /// </para>
-    /// </summary>
+    /// </summary>_NonScalingRenderData
     public class VisualizationViewModel : ViewModelBase
     {
-        private CompositeCollection _renderData;
+        private ObservableCollection<RenderItemContainer> _nonScalingRenderData;
 
-        public CompositeCollection RenderData
+        public ObservableCollection<RenderItemContainer> NonScalingRenderData
+        {
+            get { return _nonScalingRenderData; }
+            set
+            {
+                if (_nonScalingRenderData == value) { return; }
+                _nonScalingRenderData = value;
+                RaisePropertyChanged("NonScalingRenderData");
+            }
+        }
+
+        private ObservableCollection<RenderItemContainer> _renderData;
+
+        public ObservableCollection<RenderItemContainer> RenderData
         {
             get { return _renderData; }
             set
@@ -35,9 +49,8 @@ namespace RailMLNeural.UI.RailML.ViewModel
             }
         }
 
-        private ObservableCollection<TrackWithExtents> _renderTracks;
 
-        private ObservableCollection<eOcp> _renderOCP;
+        
 
         
         /// <summary>
@@ -45,7 +58,6 @@ namespace RailMLNeural.UI.RailML.ViewModel
         /// </summary>
         public VisualizationViewModel()
         {
-            RenderData = new CompositeCollection();
             Initialize();
             DataContainer.ModelChanged += new EventHandler(Data_ModelChanged);
         }
@@ -57,55 +69,90 @@ namespace RailMLNeural.UI.RailML.ViewModel
 
         private void Initialize()
         {
-            RenderData = new CompositeCollection();
+            RenderData = new ObservableCollection<RenderItemContainer>();
+            NonScalingRenderData = new ObservableCollection<RenderItemContainer>();
+
             
             if (DataContainer.model != null)
             {
-                _renderOCP = new ObservableCollection<eOcp>(DataContainer.model.infrastructure.operationControlPoints);
-                CreateTracksCollection();
-                RenderData.Add(new CollectionContainer() { Collection = _renderOCP });
-                RenderData.Add(new CollectionContainer() { Collection = _renderTracks });
+                Populate();
             }
         }
 
-        private void CreateTracksCollection()
+        private void Populate()
         {
-            _renderTracks = new ObservableCollection<TrackWithExtents>();
             foreach(eTrack track in DataContainer.model.infrastructure.tracks)
             {
-                _renderTracks.Add(new TrackWithExtents(track));
+                RenderData.Add(new RenderItemContainer(track));
+                foreach(eSwitch sw in track.trackTopology.connections.Where(x => x is eSwitch))
+                {
+                    RenderData.Add(new RenderItemContainer(sw));
+                }
             }
-
+            foreach(eOcp ocp in DataContainer.model.infrastructure.operationControlPoints)
+            {
+                RenderData.Add(new RenderItemContainer(ocp));
+            }
         }
+
 
     }
 
-    public class TrackWithExtents
+    public class RenderItemContainer
     {
-        public eTrack track { get; set; }
+        public dynamic Item { get; set; }
         public double Top { get; set; }
         public double Left { get; set; }
+        public string DataType { get; set; }
 
-        public TrackWithExtents(eTrack t)
+        public RenderItemContainer(dynamic item)
         {
-            track = t;
-            if(track.trackTopology.trackBegin.geoCoord.coord.Count == 2 && track.trackTopology.trackEnd.geoCoord.coord.Count == 2 )
+            Item = item;
+            if (item is eTrack)
             {
-                Top = double.NegativeInfinity;
-                Left = double.PositiveInfinity;
-                foreach(eTrackNode x in new eTrackNode[]{track.trackTopology.trackBegin, track.trackTopology.trackEnd})
+                eTrack track = Item;
+                if (track.trackTopology.trackBegin.geoCoord.coord.Count == 2 && track.trackTopology.trackEnd.geoCoord.coord.Count == 2)
                 {
-                    Left = Math.Min(Left, x.geoCoord.coord[0]);
-                    Top = Math.Max(Top, x.geoCoord.coord[1]);
+                    DataType = "Track";
+
+                    Top = double.NegativeInfinity;
+                    Left = double.PositiveInfinity;
+                    foreach (eTrackNode x in new eTrackNode[] { track.trackTopology.trackBegin, track.trackTopology.trackEnd })
+                    {
+                        Left = Math.Min(Left, x.geoCoord.coord[0]);
+                        Top = Math.Max(Top, x.geoCoord.coord[1]);
+                    }
+                    foreach (var x in track.trackElements.geoMappings)
+                    {
+                        Left = Math.Min(Left, x.geoCoord.coord[0]);
+                        Top = Math.Max(Top, x.geoCoord.coord[1]);
+                    }
+                    Top = -Top;
                 }
-                foreach(var x in track.trackElements.geoMappings)
-                {
-                    Left = Math.Min(Left, x.geoCoord.coord[0]);
-                    Top = Math.Max(Top, x.geoCoord.coord[1]);
-                }
-                Top = -Top;
+                else item = null;
 
             }
+            if(Item is eOcp)
+            {
+                eOcp ocp = Item;
+                if(ocp.geoCoord.coord.Count == 2)
+                {
+                    DataType = "OCP";
+                    Left = ocp.geoCoord.coord[0];
+                    Top = -ocp.geoCoord.coord[1];
+                }
+            }
+            if(item is eSwitch)
+            {
+                eSwitch sw = Item;
+                if (sw.geoCoord.coord.Count == 2)
+                {
+                    DataType = "Switch";
+                    Left = sw.geoCoord.coord[0];
+                    Top = -sw.geoCoord.coord[1];
+                }
+            }
+
         }
     }
 }
