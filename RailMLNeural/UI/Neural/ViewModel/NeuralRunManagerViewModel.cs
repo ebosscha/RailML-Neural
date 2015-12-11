@@ -32,6 +32,8 @@ namespace RailMLNeural.UI.Neural.ViewModel
                 if(_network == value) {return;}
                 _network = value;
                 RaisePropertyChanged("Network");
+                RaisePropertyChanged("Visibility");
+                RaisePropertyChanged("IsEnabled");
             }
         }
 
@@ -87,7 +89,20 @@ namespace RailMLNeural.UI.Neural.ViewModel
         #endregion Public
 
         #region Private
-        
+        private void AddLearningAlgorithm()
+        {
+            switch (LearningAlgorithm)
+            {
+                case LearningAlgorithmEnum.BackPropagation:
+                    Network.Training = new Backpropagation(Network.Network, Network.Data, Network.Settings.LearningRate, Network.Settings.Momentum);
+                    break;
+                case LearningAlgorithmEnum.ResilientPropagation:
+                    Network.Training = new ResilientPropagation(Network.Network, Network.Data);
+                    break;
+                default:
+                    return;
+            }
+        }
         #endregion Private
 
         #region Commands
@@ -102,26 +117,16 @@ namespace RailMLNeural.UI.Neural.ViewModel
 
         private void ExecuteRunNetwork()
         {
-            switch(LearningAlgorithm)
-            {
-                case LearningAlgorithmEnum.BackPropagation:
-                    Network.Training = new Backpropagation(Network.Network, Network.Data, Network.Settings.LearningRate, Network.Settings.Momentum);
-                    break;
-                case LearningAlgorithmEnum.ResilientPropagation:
-                    Network.Training = new ResilientPropagation(Network.Network, Network.Data);
-                    break;
-                default:
-                    return;
-
-            }
-
-            ThreadPool.QueueUserWorkItem(Network.RunNetwork);
+            AddLearningAlgorithm();
+            //ThreadPool.QueueUserWorkItem(Network.RunNetwork);
+            Network.RunNetwork(0);
 
         }
 
         private void ExecuteAddToBatch()
         {
-
+            AddLearningAlgorithm(); 
+            BatchManager.Add(Network);
         }
 
         #endregion Commands

@@ -86,12 +86,12 @@ namespace RailMLNeural.UI.RailML.ViewModel
                 RenderData.Add(new RenderItemContainer(track));
                 foreach(eSwitch sw in track.trackTopology.connections.Where(x => x is eSwitch))
                 {
-                    RenderData.Add(new RenderItemContainer(sw));
+                    NonScalingRenderData.Add(new RenderItemContainer(sw));
                 }
             }
-            foreach(eOcp ocp in DataContainer.model.infrastructure.operationControlPoints)
+            foreach(eOcp ocp in DataContainer.model.infrastructure.operationControlPoints.Where(x => x.geoCoord.coord.Count == 2))
             {
-                RenderData.Add(new RenderItemContainer(ocp));
+                NonScalingRenderData.Add(new RenderItemContainer(ocp));
             }
         }
 
@@ -103,6 +103,8 @@ namespace RailMLNeural.UI.RailML.ViewModel
         public dynamic Item { get; set; }
         public double Top { get; set; }
         public double Left { get; set; }
+        public double Right { get; set; }
+        public double Bottom { get; set; }
         public string DataType { get; set; }
 
         public RenderItemContainer(dynamic item)
@@ -115,19 +117,24 @@ namespace RailMLNeural.UI.RailML.ViewModel
                 {
                     DataType = "Track";
 
-                    Top = double.NegativeInfinity;
+                    Top = double.PositiveInfinity;
                     Left = double.PositiveInfinity;
+                    Right = double.NegativeInfinity;
+                    Bottom = double.NegativeInfinity;
                     foreach (eTrackNode x in new eTrackNode[] { track.trackTopology.trackBegin, track.trackTopology.trackEnd })
                     {
                         Left = Math.Min(Left, x.geoCoord.coord[0]);
-                        Top = Math.Max(Top, x.geoCoord.coord[1]);
+                        Top = Math.Min(Top, -x.geoCoord.coord[1]);
+                        Right = Math.Max(Right, x.geoCoord.coord[0]);
+                        Bottom = Math.Max(Bottom, -x.geoCoord.coord[1]);
                     }
                     foreach (var x in track.trackElements.geoMappings)
                     {
                         Left = Math.Min(Left, x.geoCoord.coord[0]);
-                        Top = Math.Max(Top, x.geoCoord.coord[1]);
+                        Top = Math.Min(Top, -x.geoCoord.coord[1]);
+                        Right = Math.Max(Right, x.geoCoord.coord[0]);
+                        Bottom = Math.Max(Bottom, -x.geoCoord.coord[1]);
                     }
-                    Top = -Top;
                 }
                 else item = null;
 
@@ -140,6 +147,8 @@ namespace RailMLNeural.UI.RailML.ViewModel
                     DataType = "OCP";
                     Left = ocp.geoCoord.coord[0];
                     Top = -ocp.geoCoord.coord[1];
+                    Right = Left + 10;
+                    Bottom = Top + 10;
                 }
             }
             if(item is eSwitch)
@@ -150,8 +159,16 @@ namespace RailMLNeural.UI.RailML.ViewModel
                     DataType = "Switch";
                     Left = sw.geoCoord.coord[0];
                     Top = -sw.geoCoord.coord[1];
+                    Right = Left + 10;
+                    Bottom = Top + 10;
                 }
             }
+
+        }
+
+        public Rect Extent()
+        {
+            return new Rect(Left, Top, Right - Left, Bottom - Top);
 
         }
     }

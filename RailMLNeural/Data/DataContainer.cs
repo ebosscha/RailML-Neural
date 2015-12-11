@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using System.Windows;
 
 namespace RailMLNeural.Data
 {
@@ -23,7 +24,9 @@ namespace RailMLNeural.Data
         public static railml model
         {
             get { return _model; }
-            set { _model = value; PrepareData(); OnModelChanged("model"); }
+            set { _model = value;
+                PrepareData(); 
+                OnModelChanged("model"); }
         }
 
         public static Settings Settings
@@ -61,13 +64,17 @@ namespace RailMLNeural.Data
             set { _pathcontainer = value; }
         }
 
-        private static void OnModelChanged(string name)
+        public static void OnModelChanged(string name)
         {
-            EventHandler handler = ModelChanged;
-            if (handler != null)
+            Application.Current.Dispatcher.Invoke((Action)(() =>
             {
-                handler(model, new PropertyChangedEventArgs(name));
-            }
+                EventHandler handler = ModelChanged;
+                if (handler != null)
+                {
+                    handler(model, new PropertyChangedEventArgs(name));
+                }
+            }));
+
         }
 
         public static void PrepareData()
@@ -93,7 +100,7 @@ namespace RailMLNeural.Data
                         _idlist.Add(item.id, item);
                     }
                 }
-                if (prop.PropertyType.Namespace == "Data" && prop.GetValue(item) != null && !prop.PropertyType.IsEnum)
+                if (prop.PropertyType.Namespace == "RailMLNeural.RailML" && prop.GetValue(item) != null && !prop.PropertyType.IsEnum)
                 {
                     dynamic property = prop.GetValue(item);
                     property.SetParent(item);
@@ -103,14 +110,41 @@ namespace RailMLNeural.Data
                 {
                     foreach (dynamic listitem in prop.GetValue(item))
                     {
-                        if (listitem.GetType().Namespace == "Data")
+                        if (listitem.GetType().Namespace == "RailMLNeural.RailML")
                         {
                             listitem.SetParent(item);
                             RecurrentPrepareData(listitem);
                         }
                     }
                 }
-
+                if (prop.PropertyType == typeof(object) && prop.GetValue(item) != null)
+                {
+                    if(prop.GetValue(item).GetType() == typeof(tConnectionData))
+                    {
+                        var obj = (tConnectionData)prop.GetValue(item);
+                        obj.SetParent(item);
+                        RecurrentPrepareData(obj);
+                    }
+                    
+                     if(prop.GetValue(item).GetType() == typeof(tBufferStop))
+                    {
+                        var obj = (tBufferStop)prop.GetValue(item);
+                        obj.SetParent(item);
+                        RecurrentPrepareData(obj);
+                    }
+                    if(prop.GetValue(item).GetType() == typeof(tOpenEnd))
+                    {
+                        var obj = (tOpenEnd)prop.GetValue(item);
+                        obj.SetParent(item);
+                        RecurrentPrepareData(obj);
+                    }
+                    if(prop.GetValue(item).GetType() == typeof(tMacroscopicNode))
+                    {
+                        var obj = (tMacroscopicNode)prop.GetValue(item);
+                        obj.SetParent(item);
+                        RecurrentPrepareData(obj);
+                    }
+                }
             }
         }
 

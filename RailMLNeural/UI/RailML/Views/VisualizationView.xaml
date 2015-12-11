@@ -15,12 +15,14 @@
 
 
     <Grid>
-        <ListBox ItemsSource="{Binding RenderData}" Name="MyListBox" ClipToBounds="False">
+        <ListBox ItemsSource="{Binding RenderData}" Name="MyListBox" ClipToBounds="False"
+                 zc:ZoomableCanvas.VirtualizationMode="Recycling">
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <zc:ZoomableCanvas Loaded="Canvas_Loaded" 
-                                    Scale="{Binding Path=Scale, Source={RelativeSource Self}}"
-                                       Focusable="False">
+                                       RealizationPriority="ContextIdle"
+                                       
+                                       >
                     </zc:ZoomableCanvas>
                                        
                 </ItemsPanelTemplate>
@@ -104,6 +106,95 @@
             </ListBox.ItemContainerStyle>
             
         </ListBox>
-        
+        <ItemsControl ItemsSource="{Binding NonScalingRenderData}" Name="NonScalingListBox" ClipToBounds="False"
+                 zc:ZoomableCanvas.VirtualizationMode="Recycling">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <zc:ZoomableCanvas
+                                    Scale="{Binding Path=Canvas.Scale, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
+                                    Offset="{Binding Path=Canvas.Offset, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
+                                       RealizationPriority="ContextIdle"
+                                       IsVirtualizing="False"
+                                       ApplyTransform="False">
+                                       
+                                      
+                    </zc:ZoomableCanvas>
+
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Canvas.Top"
+                        Value="{Binding Top}"/>
+
+                    <Setter Property="Canvas.Left"
+                        Value="{Binding Left}"/>
+                    <Setter Property="FocusVisualStyle"
+                            Value="{x:Null}"/>
+                    <Setter Property="Focusable"
+                            Value="False"/>
+                    
+
+                    <Style.Resources>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Transparent" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="Transparent" />
+                    </Style.Resources>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding DataType}"
+                                     Value="Track">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <render:RenderTrackLine Track="{Binding Item}"
+                                            StrokeThickness="2"
+                                            Stroke="Black"
+                                            Scale="{Binding Path=Scale, RelativeSource={RelativeSource AncestorType=zc:ZoomableCanvas}}"
+                                            Focusable="False"/>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding DataType}"
+                                     Value="OCP">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <render:RenderOCP OCP="{Binding Item}"
+                                            Width="10"
+                                            Height="10"
+                                           
+                                            Fill="Blue"/>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding DataType}"
+                                     Value="Switch">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <render:RenderSwitch Switch="{Binding Item}"
+                                            Width="8"
+                                            Height="8"
+                                          
+                                            Fill="Green"/>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+
+                    </Style.Triggers>
+                </Style>
+
+
+
+
+
+
+            </ItemsControl.ItemContainerStyle>
+
+        </ItemsControl>
+
     </Grid>
 </UserControl>

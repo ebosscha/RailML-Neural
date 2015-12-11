@@ -1,4 +1,9 @@
 ﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Messaging;
+using RailMLNeural.Data;
+using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace RailMLNeural.UI.Neural.ViewModel
 {
@@ -10,11 +15,48 @@ namespace RailMLNeural.UI.Neural.ViewModel
     /// </summary>
     public class NeuralResultsViewModel : ViewModelBase
     {
-        /// <summary>
-        /// Initializes a new instance of the NeuralResultsViewModel class.
-        /// </summary>
+        private ObservableCollection<double> _errorHistory { get; set; }
+        public ObservableCollection<double> ErrorHistory
+        {
+            get { return _errorHistory; }
+            set { _errorHistory = value;
+            RaisePropertyChanged("ErrorHistory");
+            }
+        }
+
+        private NeuralNetwork _selectedNetwork;
+
+        public NeuralNetwork SelectedNetwork
+        {
+            get { return _selectedNetwork; }
+            set
+            {
+                if (_selectedNetwork == value) { return; }
+                _selectedNetwork = value;
+                RaisePropertyChanged("SelectedNetwork");
+            }
+        }
+
         public NeuralResultsViewModel()
         {
+            Messenger.Default.Register<NeuralSelectionChangedMessage>(this, (action) => ChangeSelection(action));
+        }
+
+        private void ChangeSelection(NeuralSelectionChangedMessage msg)
+        {
+            if(SelectedNetwork != null)
+            {
+                SelectedNetwork.ProgressChanged -= new EventHandler(ProgressChanged);
+            }
+            
+            SelectedNetwork = msg.NeuralNetwork;
+            SelectedNetwork.ProgressChanged += new EventHandler(ProgressChanged);
+            
+        }
+
+        private void ProgressChanged(object sender, EventArgs e)
+        {
+            ErrorHistory = new ObservableCollection<double>(SelectedNetwork.ErrorHistory);
         }
     }
 }

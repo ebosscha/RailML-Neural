@@ -8,6 +8,9 @@
         DataContext="{Binding PropertiesVM, Source={StaticResource Locator}}">
 
     <Grid>
-        <ContentControl Content="{Binding PropPresenter}"/>
+        <ScrollViewer>
+            <ContentControl Content="{Binding PropPresenter}"/>
+        </ScrollViewer>
+        
     </Grid>
 </UserControl>

@@ -20,6 +20,7 @@ namespace RailMLNeural.Data
         public static DataTable _maintable;
         public static railml _model;
         private static Hashtable _coordtable;
+        public static bool VisualFeedback = false;
 
         public static void ImportFromExcel(string filepath)
         {
@@ -61,7 +62,10 @@ namespace RailMLNeural.Data
                     eLine line = new eLine();
                     line.id = (string)datarow["Sector"];
                     line.description = (string)datarow["Description"];
-                    _model.infrastructure.trackGroups.line.Add(line);
+                    if (!_model.infrastructure.trackGroups.line.Any(x => x.id == line.id))
+                    {
+                        _model.infrastructure.trackGroups.line.Add(line);
+                    }
                     functionalLocation loc = new functionalLocation();
                     loc.sectorID = line.id;
                     loc.name = line.description;
@@ -77,7 +81,7 @@ namespace RailMLNeural.Data
         {
             foreach (DataRow row in table.Rows)
             {
-                if (row.RowState != DataRowState.Deleted && !(bool)row["removed"])// && (string)row["ElementUsage"] != "C" && (string)row["ElementUsage"] != "F" && (string)row["ElementUsage"] != "A")
+                if (row.RowState != DataRowState.Deleted && !(bool)row["removed"] && (string)row["ElementUsage"] != "C" && (string)row["ElementUsage"] != "A")
                 {
                     eTrack track = new eTrack()
                     {
@@ -94,7 +98,8 @@ namespace RailMLNeural.Data
                     else if ((string)row["Road"] == "MAIN") { track.type = "mainTrack"; }
                     else if ((string)row["Road"] == "BAY") { track.type = "stationTrack"; }
                     else { track.type = "sidingTrack"; }
-                    if ((string)row["ElementUsage"] != "C" && (string)row["ElementUsage"] != "A")
+                    track.code = ((double)row["EquipmentID"]).ToString() ?? string.Empty;
+                    if ((string)row["ElementUsage"] == "C" || (string)row["ElementUsage"] == "A")
                     {
                         track.trackDescr = new List<string>();
                         track.trackDescr.Add("Closed/Abandoned");
@@ -165,6 +170,11 @@ namespace RailMLNeural.Data
 
         public static void AddSwitchesFromExcel(string filepath)
         {
+            //MessageBoxResult yesnobox = MessageBox.Show("Use Visual Feedback?", null, MessageBoxButton.YesNo);
+            //if (yesnobox == MessageBoxResult.Yes)
+            //{
+            //    VisualFeedback = true;
+            //}
             FileStream stream;
         Loop:
             try { stream = File.Open(filepath, FileMode.Open, FileAccess.Read); }
@@ -177,7 +187,6 @@ namespace RailMLNeural.Data
 
             IExcelDataReader excelreader = ExcelReaderFactory.CreateOpenXmlReader(stream);
             excelreader.IsFirstRowAsColumnNames = true;
-
             _dataset = excelreader.AsDataSet();
             _maintable = _dataset.Tables[0];
 
@@ -187,6 +196,11 @@ namespace RailMLNeural.Data
                 {
                     eSwitch tempswitch = new eSwitch();
                     tempswitch.id = row["SerialNo"] as string;
+                    tempswitch.code = ((double)row["EquipmentID"]).ToString() ?? string.Empty;
+                    if(tempswitch.id == string.Empty || tempswitch.id == null)
+                    {
+                        DataContainer.IDGenerator(tempswitch);
+                    }
                     tempswitch.pos = (decimal)(((row["Miles"] as double?) ?? 0) + ((row["Yards"] as double?) ?? 0) / 1760);
                     tempswitch.description = row["Description"] as string;
                     tempswitch.geoCoord.coord.Add((double)row["INGEasting"]); tempswitch.geoCoord.coord.Add((double)row["INGNorthing"]);
@@ -198,7 +212,10 @@ namespace RailMLNeural.Data
                 else if ((string)row["Type"] == "Single Slip") { SingleSlip(row); }
                 else if ((string)row["Type"] == "Double Slips") { SingleSlip(row); }
 
+
             }
+            VisualFeedback = false;
+            DataContainer.model = DataContainer.model;
         }
 
         /// <summary>
@@ -217,25 +234,36 @@ namespace RailMLNeural.Data
             while (track2 == null)
             {
                 eTrack besttrack = null;
-                double bestdist = 999999999999;
+                double bestdist = double.PositiveInfinity;
 
                 foreach (eTrack track in DataContainer.model.infrastructure.tracks)
                 {
-                    double dist = GetDistance(switchlocation, new Point(track.trackTopology.trackBegin.geoCoord.coord[0], track.trackTopology.trackBegin.geoCoord.coord[1]));
-                    if (dist < bestdist) { bestdist = dist; besttrack = track; trackend = false; }
-                    dist = GetDistance(switchlocation, new Point(track.trackTopology.trackEnd.geoCoord.coord[0], track.trackTopology.trackEnd.geoCoord.coord[1]));
-                    if (dist < bestdist) { bestdist = dist; besttrack = track; trackend = true; }
+                    if (track.trackTopology.trackBegin.Item == null)
+                    {
+                        double dist = GetDistance(switchlocation, new Point(track.trackTopology.trackBegin.geoCoord.coord[0], track.trackTopology.trackBegin.geoCoord.coord[1]));
+                        if (dist < bestdist) { bestdist = dist; besttrack = track; trackend = false; }
+                    }
+                    if (track.trackTopology.trackEnd.Item == null)
+                    {
+                        double dist = GetDistance(switchlocation, new Point(track.trackTopology.trackEnd.geoCoord.coord[0], track.trackTopology.trackEnd.geoCoord.coord[1]));
+                        if (dist < bestdist) { bestdist = dist; besttrack = track; trackend = true; }
+                    }
                 }
+                if(bestdist > 100)
+                {
+                    int i = 0;
+                }
+
                 track2 = besttrack;
             }
             while (hostline == null)
             {
                 eTrack besttrack = null;
-                double bestdist = 99999999999;
+                double bestdist = double.PositiveInfinity;
 
                 foreach (eTrack track in DataContainer.model.infrastructure.tracks)
                 {
-                    if (track == track2) { continue; }
+                    if (track.id == track2.id) { continue; }
                     List<Point> pointlist = NodeList(track);
                     for (int i = 0; i < pointlist.Count - 1; i++)
                     {
@@ -252,7 +280,7 @@ namespace RailMLNeural.Data
             tSwitchConnectionData conn2 = new tSwitchConnectionData();
             DataContainer.IDGenerator(conn2);
             conn1.@ref = conn2.id; conn2.@ref = conn1.id;
-            if (trackend == true) { track2.trackTopology.trackEnd.Item = conn1; }
+            if (trackend) { track2.trackTopology.trackEnd.Item = conn1; }
             else { track2.trackTopology.trackBegin.Item = conn1; }
             tempswitch.connection.Add(conn2);
             hostline.trackTopology.connections.Add(tempswitch);
@@ -317,10 +345,15 @@ namespace RailMLNeural.Data
             int count = 0;
             foreach (eTrack track in hosttuple.Item1)
             {
-                eCrossing tempcrossing = crossing;
-                tempcrossing.id = tempcrossing.id + "-" + (count+1).ToString();
+                eCrossing tempcrossing = new eCrossing();
+                tempcrossing.id = crossing.id + "-" + (count + 1).ToString();
                 tempcrossing.pos = (decimal)hosttuple.Item2[count];
-                track.trackTopology.connections.Add(tempcrossing);    
+                tempcrossing.code = ((double)row["EquipmentID"]).ToString() ?? string.Empty;
+                tempcrossing.type = row["Type"] as string;
+                tempcrossing.description = row["Description"] as string;
+                tempcrossing.geoCoord.coord.Add((double)row["INGEasting"]); crossing.geoCoord.coord.Add((double)row["INGNorthing"]);
+                track.trackTopology.connections.Add(tempcrossing);
+                count++;
             }
         }
 
@@ -332,17 +365,24 @@ namespace RailMLNeural.Data
                 eCrossing crossing = new eCrossing();
                 crossing.id = row["SerialNo"] as string + "-1";
                 crossing.type = row["Type"] as string;
+                crossing.code = ((double)row["EquipmentID"]).ToString() ?? string.Empty;
                 crossing.description = row["Description"] as string;
                 crossing.geoCoord.coord.Add((double)row["INGEasting"]); crossing.geoCoord.coord.Add((double)row["INGNorthing"]);
                 crossing.pos = GetPos(crossing.geoCoord.coord, DataContainer.model.infrastructure.tracks.Single(x => x.id == (string)row["HostLine1"]));
+                eTrack track1 = DataContainer.model.infrastructure.tracks.Single(x => x.id == (string)row["HostLine1"]);
+                track1.trackTopology.connections.Add(crossing);
+
 
                 //Append crossing to second track
                 crossing = new eCrossing();
                 crossing.id = row["SerialNo"] as string + "-2";
                 crossing.type = row["Type"] as string;
+                crossing.code = ((double)row["EquipmentID"]).ToString() ?? string.Empty;
                 crossing.description = row["Description"] as string;
                 crossing.geoCoord.coord.Add((double)row["INGEasting"]); crossing.geoCoord.coord.Add((double)row["INGNorthing"]);
                 crossing.pos = GetPos(crossing.geoCoord.coord, DataContainer.model.infrastructure.tracks.Single(x => x.id == (string)row["HostLine2"]));
+                eTrack track2 = DataContainer.model.infrastructure.tracks.Single(x => x.id == (string)row["HostLine2"]);
+                track2.trackTopology.connections.Add(crossing);
 
 
             }
@@ -366,6 +406,7 @@ namespace RailMLNeural.Data
             eSwitch tempswitch1 = new eSwitch();
             tempswitch1.id = row["SerialNo"] as string + "-1";
             tempswitch1.type = row["Type"] as string;
+            tempswitch1.code = ((double)row["EquipmentID"]).ToString() ?? string.Empty;
             tempswitch1.description = row["Description"] as string;
             tempswitch1.geoCoord.coord.Add((double)row["INGEasting"]); tempswitch1.geoCoord.coord.Add((double)row["INGNorthing"]);
             tempswitch1.pos = GetPos(tempswitch1.geoCoord.coord, track2);
@@ -373,6 +414,7 @@ namespace RailMLNeural.Data
             eSwitch tempswitch2 = new eSwitch();
             tempswitch2.id = row["SerialNo"] as string + "-2";
             tempswitch2.type = row["Type"] as string;
+            tempswitch2.code = ((double)row["EquipmentID"]).ToString() ?? string.Empty;
             tempswitch2.description = row["Description"] as string;
             tempswitch2.geoCoord.coord.Add((double)row["INGEasting"]); tempswitch2.geoCoord.coord.Add((double)row["INGNorthing"]);
             tempswitch2.pos = GetPos(tempswitch2.geoCoord.coord, track3);
@@ -395,6 +437,7 @@ namespace RailMLNeural.Data
                 eSwitch tempswitch3 = new eSwitch();
                 tempswitch3.id = row["SerialNo"] as string + "-3";
                 tempswitch3.type = row["Type"] as string;
+                tempswitch3.code = ((double)row["EquipmentID"]).ToString() ?? string.Empty;
                 tempswitch3.description = row["Description"] as string;
                 tempswitch3.geoCoord.coord.Add((double)row["INGEasting"]); tempswitch3.geoCoord.coord.Add((double)row["INGNorthing"]);
                 tempswitch3.pos = GetPos(tempswitch3.geoCoord.coord, track1);
@@ -402,6 +445,7 @@ namespace RailMLNeural.Data
                 eSwitch tempswitch4 = new eSwitch();
                 tempswitch4.id = row["SerialNo"] as string + "-4";
                 tempswitch4.type = row["Type"] as string;
+                tempswitch4.code = ((double)row["EquipmentID"]).ToString() ?? string.Empty;
                 tempswitch4.description = row["Description"] as string;
                 tempswitch4.geoCoord.coord.Add((double)row["INGEasting"]); tempswitch4.geoCoord.coord.Add((double)row["INGNorthing"]);
                 tempswitch4.pos = GetPos(tempswitch4.geoCoord.coord, track4);
@@ -514,6 +558,7 @@ namespace RailMLNeural.Data
                 }
                 besttrack.Item = buffer;
             }
+            DataContainer.model = DataContainer.model;
 
         }
 
@@ -548,11 +593,16 @@ namespace RailMLNeural.Data
                 crossing.pos = (decimal)(((row["Miles"] as double?) ?? 0) + ((row["Yards"] as double?) ?? 0) / 1760);
                 double[] coord = { (row["INGEasting"] as double?) ?? 0, (row["INGNorthing"] as double?) ?? 0 };
                 crossing.geoCoord.coord.AddRange(coord);
+                int count = 1;
                 foreach (eTrack track in FindHostLines(crossing.geoCoord.coord[0], crossing.geoCoord.coord[1], (row["NumberOfTracks"] as int?) ?? 0).Item1)
                 {
-                    track.trackElements.levelCrossings.Add(crossing);
+                    tLevelCrossing tempcrossing = crossing;
+                    tempcrossing.id = crossing.id + "-" + count.ToString();
+                    track.trackElements.levelCrossings.Add(tempcrossing);
+                    count++;
                 }
             }
+            DataContainer.model = DataContainer.model;
         }
 
         /// <summary>
@@ -588,6 +638,7 @@ namespace RailMLNeural.Data
                 AddOCPToTracks(tempocp);
                 Data.DataContainer.model.infrastructure.operationControlPoints.Add(tempocp);
             }
+            DataContainer.model = DataContainer.model;
         }
 
 
@@ -647,6 +698,7 @@ namespace RailMLNeural.Data
 
                 DataContainer.model.infrastructure.operationControlPoints.Add(ocp);
             }
+            DataContainer.model = DataContainer.model;
         }
 
         /// <summary>
@@ -884,7 +936,7 @@ namespace RailMLNeural.Data
         /// Works by iterating all tracks with an empty Item variable in the trackbegin or trackend tracknodes. 
         /// Traces minimum distance to other tracks, forms connection with those. 
         /// </summary>
-        private static void ConnectTracks()
+        public static void ConnectTracks()
         {
             foreach (eTrack track in _model.infrastructure.tracks)
             {
@@ -893,7 +945,7 @@ namespace RailMLNeural.Data
                     Point tracknodelocation = new Point(track.trackTopology.trackBegin.geoCoord.coord[0], track.trackTopology.trackBegin.geoCoord.coord[1]);
                     double lowestdist = double.PositiveInfinity;
                     eTrackNode bestnode = null;
-                    foreach(eTrack othertrack in _model.infrastructure.tracks.Where(x => x != track 
+                    foreach(eTrack othertrack in _model.infrastructure.tracks.Where(x => x.id != track.id 
                         && ( x.trackTopology.trackBegin.Item == null || x.trackTopology.trackEnd == null)))
                     {
                         if(othertrack.trackTopology.trackBegin.Item == null)
@@ -918,21 +970,25 @@ namespace RailMLNeural.Data
                         }
                     }
 
-                    tConnectionData c1 = new tConnectionData();
-                    tConnectionData c2 = new tConnectionData();
-                    DataContainer.IDGenerator(c1);
-                    DataContainer.IDGenerator(c2);
-                    c1.@ref = c2.id;
-                    c2.@ref = c1.id;
-                    track.trackTopology.trackBegin.Item = c1;
-                    bestnode.Item = c2;
+                    if (lowestdist < 3)
+                    {
+
+                        tConnectionData c1 = new tConnectionData();
+                        tConnectionData c2 = new tConnectionData();
+                        DataContainer.IDGenerator(c1);
+                        DataContainer.IDGenerator(c2);
+                        c1.@ref = c2.id;
+                        c2.@ref = c1.id;
+                        track.trackTopology.trackBegin.Item = c1;
+                        bestnode.Item = c2;
+                    }
                 }
                 if(track.trackTopology.trackEnd.Item == null)
                 {
                     Point tracknodelocation = new Point(track.trackTopology.trackEnd.geoCoord.coord[0], track.trackTopology.trackEnd.geoCoord.coord[1]);
                     double lowestdist = double.PositiveInfinity;
                     eTrackNode bestnode = null;
-                    foreach (eTrack othertrack in _model.infrastructure.tracks.Where(x => x != track
+                    foreach (eTrack othertrack in _model.infrastructure.tracks.Where(x => x.id != track.id
                         && (x.trackTopology.trackBegin.Item == null || x.trackTopology.trackEnd == null)))
                     {
                         if (othertrack.trackTopology.trackBegin.Item == null)
@@ -957,14 +1013,17 @@ namespace RailMLNeural.Data
                         }
                     }
 
-                    tConnectionData c1 = new tConnectionData();
-                    tConnectionData c2 = new tConnectionData();
-                    DataContainer.IDGenerator(c1);
-                    DataContainer.IDGenerator(c2);
-                    c1.@ref = c2.id;
-                    c2.@ref = c1.id;
-                    track.trackTopology.trackEnd.Item = c1;
-                    bestnode.Item = c2;
+                    if (lowestdist < 2)
+                    {
+                        tConnectionData c1 = new tConnectionData();
+                        tConnectionData c2 = new tConnectionData();
+                        DataContainer.IDGenerator(c1);
+                        DataContainer.IDGenerator(c2);
+                        c1.@ref = c2.id;
+                        c2.@ref = c1.id;
+                        track.trackTopology.trackEnd.Item = c1;
+                        bestnode.Item = c2;
+                    }
                 }
             }
         }

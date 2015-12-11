@@ -10,8 +10,7 @@ namespace RailMLNeural.Neural
     {
         PerLineClassification,
         PerLineExact,
-        PerTrackClassification,
-        PerTrackExact,
+        PerRoutePartExact,
         RecurrentClassification,
         RecurrentExact
     }

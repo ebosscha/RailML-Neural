@@ -14,12 +14,14 @@ namespace RailMLNeural.Neural.PreProcessing
         private double[] inputtemplate { get; set; }
         private double[] idealtemplate { get; set; }
         private BackgroundWorker worker;
+        private List<string> inputmap { get; set; }
 
         public PreProcesser(NeuralNetwork Network)
         {
             NetworkSettings = Network;
         }
 
+        #region PerLine
         /// <summary>
         /// Base for Preprocessing for PerLineClassification algorithm
         /// </summary>
@@ -271,5 +273,135 @@ namespace RailMLNeural.Neural.PreProcessing
 
 
         }
+        #endregion PerLine
+
+        #region PerRoutePart
+        /// <summary>
+        /// Base for algorithm learning total delay propagation per each route part.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void PerRoutePartExact(object sender, DoWorkEventArgs e)
+        {
+            worker = sender as BackgroundWorker;
+            inputmap = InputMap();
+            List<double[]> inputlist = new List<double[]>();
+            List<double[]> outputlist = new List<double[]>();
+
+            DateTime ThresholdDateLower = new DateTime(2010, 1, 1);
+            DateTime ThresholdDateUpper = DateTime.Now;
+            if (DataContainer.Settings.UseDateFilter)
+            {
+                ThresholdDateLower = DataContainer.Settings.DataStartDate;
+                ThresholdDateUpper = DataContainer.Settings.DataEndDate;
+            }
+
+            foreach (KeyValuePair<DateTime, List<DelayCombination>> c in DataContainer.DelayCombinations.dict.Where(x => x.Value != null && x.Key > ThresholdDateLower && x.Key < ThresholdDateUpper))
+            {
+                worker.ReportProgress(0, "Preprocessing Data... Date : " + c.Key.ToString("dd/MM/yyyy"));
+                List<DelayCombination> day = c.Value;
+                foreach(DelayCombination dc in day)
+                {
+                    double[] inputpart = new double[inputmap.Count];
+                    double[] outputpart = new double[inputmap.Count];
+                    inputpart = HandleDelays(dc.primarydelays);
+                    outputpart = HandleDelays(dc.secondarydelays);
+                    inputlist.Add(inputpart);
+                    outputlist.Add(outputpart);
+                }
+            }
+
+            worker.ReportProgress(0, "Converting to Array.....");
+            double[][] input = inputlist.ToArray();
+            inputlist.Clear();
+            double[][] output = outputlist.ToArray();
+            outputlist.Clear();
+            worker.ReportProgress(0, "Collectiong Garbage....");
+            GC.Collect(2);
+            worker.ReportProgress(0, "Converting to DataSet....");
+            NetworkSettings.Data = new BasicNeuralDataSet(input, output);
+
+            worker.ReportProgress(0, "Preprocessing Finished.");
+        }
+
+        /// <summary>
+        /// Method to create a list of route parts between stations. Gathers all possible origin/destination combinations that have occurred within the dataset.
+        /// </summary>
+        /// <returns></returns>
+        private List<string> InputMap()
+        {
+            worker.ReportProgress(0, "Creating Input Map.....");
+            List<string> map = new List<string>();
+            foreach (KeyValuePair<DateTime, List<DelayCombination>> c in DataContainer.DelayCombinations.dict.Where(x => x.Value != null))
+            {
+                worker.ReportProgress(0, "Creating Input Map ...... Date: " + c.Key.ToString("dd/MM/yyyy"));
+                List<DelayCombination> dclist = c.Value;
+                foreach (DelayCombination dc in dclist)
+                {
+                    foreach(Delay d in dc.primarydelays)
+                    {
+                        if(d.stopdelays.Count > 0)
+                        {
+                            if(!map.Contains(d.origin + "to" + d.stopdelays[0].location))
+                            {
+                                map.Add(d.origin + "to" + d.stopdelays[0].location);
+                            }
+                            for(int i = 0; i < d.stopdelays.Count-1; i++)
+                            {
+                                if(!map.Contains(d.stopdelays[i].location + "to" + d.stopdelays[i+1].location))
+                                {
+                                    map.Add(d.stopdelays[i].location + "to" + d.stopdelays[i + 1].location);
+                                }
+                            }
+                            if (!map.Contains(d.stopdelays[d.stopdelays.Count-1].location + "to" + d.destination))
+                            {
+                                map.Add(d.stopdelays[d.stopdelays.Count - 1].location + "to" + d.destination);
+                            }
+
+                        }
+                        else
+                        {
+                            if (!map.Contains(d.origin + "to" + d.destination))
+                            {
+                                map.Add(d.origin + "to" + d.destination);
+                            }
+                        }
+
+                    }
+                }
+            }
+            return map;
+
+        }
+
+        private double[] HandleDelays(List<Delay> delays)
+        {
+            double[] output = new double[inputmap.Count];
+            foreach(Delay d in delays.Where(x => x.origin != null && x.destination != null))
+            {
+                if (d.stopdelays.Count > 0)
+                {
+                    output[inputmap.IndexOf(d.origin + "to" + d.stopdelays[0].location)] += d.stopdelays[0].arrivaldelay;
+                    
+                    for (int i = 0; i < d.stopdelays.Count - 1; i++)
+                    {
+                        output[inputmap.IndexOf(d.stopdelays[i].location + "to" + d.stopdelays[i + 1].location)] += d.stopdelays[i + 1].arrivaldelay;
+                        
+                    }
+                    
+                    output[inputmap.IndexOf(d.stopdelays[d.stopdelays.Count - 1].location + "to" + d.destination)] += d.destinationdelay;
+                }
+                else
+                {
+                    
+                    output[inputmap.IndexOf(d.origin + "to" + d.destination)] += d.destinationdelay;
+                }
+
+            }
+            return output;
+        }
+
+        #endregion PerRoutePart
+
     }
 }

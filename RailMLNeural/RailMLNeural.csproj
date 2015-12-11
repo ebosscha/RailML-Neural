@@ -9,11 +9,12 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RailMLNeural</RootNamespace>
     <AssemblyName>RailMLNeural</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -108,6 +109,7 @@
     </ApplicationDefinition>
     <Compile Include="Data\CsvFiles.cs" />
     <Compile Include="Data\DataContainer.cs" />
+    <Compile Include="Data\DebugData.cs" />
     <Compile Include="Data\ImportInfrastructure.cs" />
     <Compile Include="Data\ImportTimetable.cs" />
     <Compile Include="Data\MetaData.cs" />
@@ -117,12 +119,17 @@
     <Compile Include="Data\ShortestPath.cs" />
     <Compile Include="Data\XML.cs" />
     <Compile Include="Neural\Algorithms\PerLineClassification.cs" />
+    <Compile Include="Neural\BatchManager.cs" />
     <Compile Include="Neural\Enums.cs" />
     <Compile Include="Neural\PreProcessing\Import.cs" />
     <Compile Include="Neural\PreProcessing\PreProcesser.cs" />
     <Compile Include="RailML\schema.cs" />
     <Compile Include="UI\Design\DesignDataService.cs" />
+    <Compile Include="UI\Dialog\ViewModel\DebugViewModel.cs" />
     <Compile Include="UI\Dialog\ViewModel\ProjectOptionsViewModel.cs" />
+    <Compile Include="UI\Dialog\View\DebugWindow.xaml.cs">
+      <DependentUpon>DebugWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\Dialog\View\ProjectOptionsView.xaml.cs">
       <DependentUpon>ProjectOptionsView.xaml</DependentUpon>
     </Compile>
@@ -203,6 +210,10 @@
     </Compile>
     <Compile Include="UI\ViewModel\MainViewModel.cs" />
     <Compile Include="UI\ViewModel\ViewModelLocator.cs" />
+    <Page Include="UI\Dialog\View\DebugWindow.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\Dialog\View\ProjectOptionsView.xaml">
       <SubType>Form</SubType>
       <Generator>MSBuild:Compile</Generator>

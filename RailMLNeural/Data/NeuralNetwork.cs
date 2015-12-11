@@ -12,6 +12,7 @@ using RailMLNeural.UI.Neural.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Windows;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace RailMLNeural.Data
@@ -49,10 +50,13 @@ namespace RailMLNeural.Data
         [Category("Neural Network")]
         public List<LayerSize> HiddenLayerSize { get; set; }
         public bool IsRunning { get; set; }
+        public List<double> ErrorHistory { get; set; }
+        public event EventHandler ProgressChanged;
 
         public NeuralNetwork()
         {
             HiddenLayerSize = new List<LayerSize>();
+            ErrorHistory = new List<Double>();
         }
 
         public void RunNetwork(object state)
@@ -61,10 +65,22 @@ namespace RailMLNeural.Data
             for(int i = 0; i < Settings.Epochs; i++)
             {
                 Training.Iteration();
+                ErrorHistory.Add(Training.Error);
+                OnProgressChanged();
             }
         }
 
-
+        private void OnProgressChanged()
+        {
+            Application.Current.Dispatcher.Invoke((Action)(() =>
+            {
+                EventHandler handler = ProgressChanged;
+                if (handler != null)
+                {
+                    handler(ErrorHistory, new PropertyChangedEventArgs("ErrorHistory"));
+                }
+            }));
+        }
 
     }
 

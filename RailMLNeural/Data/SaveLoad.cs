@@ -35,6 +35,8 @@ namespace RailMLNeural.Data
                 stream.ProgressChanged += new ProgressChangedEventHandler(Save_ProgressChanged);
                 Serializer.Serialize(stream, data);
                 stream.Close();
+                data = null;
+                GC.Collect(0);
             }
             catch (Exception ex)
             {
@@ -66,6 +68,7 @@ namespace RailMLNeural.Data
             DataContainer.MetaData = data.metadata;
             
             stream.Close();
+            data = null;
         }
 
 
@@ -79,18 +82,30 @@ namespace RailMLNeural.Data
         private static string SerializeNetwork()
         {
             IFormatter formatter = new BinaryFormatter();
-            MemoryStream stream = new MemoryStream();
-            formatter.Serialize(stream, DataContainer.NeuralNetworks);
-            byte[] b = stream.ToArray();
-            return System.Text.Encoding.UTF8.GetString(b);
+            string output = string.Empty;
+            using (MemoryStream stream = new MemoryStream())
+            {
+                formatter.Serialize(stream, DataContainer.NeuralNetworks);
+                output = Convert.ToBase64String(stream.ToArray());
+            }
+            return output;
+            
         }
 
         private static List<NeuralNetwork> DeserializeNetwork(string input)
         {
             IFormatter formatter = new BinaryFormatter();
-            byte[] b = System.Text.Encoding.UTF8.GetBytes(input);
-            MemoryStream stream = new MemoryStream(b);
-            return formatter.Deserialize(stream) as List<NeuralNetwork>;
+            //byte[] b = System.Text.Encoding.UTF8.GetBytes(input);
+            byte[] b = Convert.FromBase64String(input);
+            List<NeuralNetwork> output = new List<NeuralNetwork>();
+            using (MemoryStream stream = new MemoryStream(b, 0, b.Length))
+            {
+                stream.Write(b, 0, b.Length);
+                stream.Position = 0;
+                output = formatter.Deserialize(stream) as List<NeuralNetwork>;
+                stream.Close();
+            }
+            return output;
         }
 
 

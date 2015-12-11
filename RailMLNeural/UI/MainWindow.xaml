@@ -51,6 +51,8 @@
                         </MenuItem>
                         <MenuItem Header="Add OCPs from API" Command="{Binding APIOCPCommand}"/>
                         <MenuItem Header="Add OCPs from Excel" Command="{Binding ExcelOCPCommand}"/>
+                        <MenuItem Header="_Connect TrackNodes" Command="{Binding ConnectTracksCommand}"/>
+                        <MenuItem Header="_Debug Data" Command="{Binding DebugDataCommand}"/>
 
                     </MenuItem>
                     <MenuItem Header="Rolling Stock">

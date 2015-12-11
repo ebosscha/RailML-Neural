@@ -1422,6 +1422,10 @@ namespace System.Windows.Controls
 
         #region Utility Methods
 
+        public UIElementCollection TotalChildren
+        {
+            get { return InternalChildren; }
+        }
         /// <summary>
         /// Represents the extent of the instantiated UIElements calculated during <see cref="ArrangeOverride"/>.
         /// </summary>

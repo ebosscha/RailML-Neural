@@ -10,7 +10,6 @@ namespace RailMLNeural.Data
     [ProtoContract]
     class MetaData
     {
-        [ProtoMember(1)]
         public bool DelayCombinationsSpecified
         {
             get
@@ -19,7 +18,6 @@ namespace RailMLNeural.Data
                     DataContainer.DelayCombinations.dict.Values.Count > 0);
             }
         }
-        [ProtoMember(2)]
         public bool TimeTableSpecified 
         { get
             {
@@ -27,7 +25,6 @@ namespace RailMLNeural.Data
                     DataContainer.model.timetable.trainGroups.Count > 0);
             }
         }
-        [ProtoMember(3)]
         public bool HeaderHistorySpecified
         {
             get
@@ -37,7 +34,7 @@ namespace RailMLNeural.Data
             }
         }
         
-        [ProtoMember(4)]
+        [ProtoMember(1)]
         public DateTime LastEditTime { get; set; }
     
     }

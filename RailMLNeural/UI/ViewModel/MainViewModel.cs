@@ -3,6 +3,7 @@ using GalaSoft.MvvmLight.Command;
 using RailMLNeural.Data;
 using RailMLNeural.Neural.PreProcessing;
 using RailMLNeural.RailML;
+using RailMLNeural.UI.Dialog.View;
 using RailMLNeural.UI.Model;
 using RailMLNeural.UI.Neural.Views;
 using RailMLNeural.UI.RailML.ViewModel;
@@ -11,6 +12,7 @@ using RailMLNeural.UI.Statistics.View;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -184,6 +186,7 @@ namespace RailMLNeural.UI.ViewModel
                 worker.RunWorkerAsync(filename);
                 Application.Current.MainWindow.IsHitTestVisible = false;
                 Mouse.OverrideCursor = Cursors.AppStarting;
+                
             }
         }
 
@@ -387,6 +390,8 @@ namespace RailMLNeural.UI.ViewModel
         public ICommand APIOCPCommand { get; private set; }
         public ICommand ExcelOCPCommand { get; private set; }
         public ICommand TimetableCSVCommand { get; private set; }
+        public ICommand ConnectTracksCommand { get; private set; }
+        public ICommand DebugDataCommand { get; private set; }
 
         private void InitializeDataMenuCommands()
         {
@@ -399,6 +404,8 @@ namespace RailMLNeural.UI.ViewModel
             APIOCPCommand = new RelayCommand(ExecuteAPIOCP);
             ExcelOCPCommand = new RelayCommand(ExecuteExcelOCP);
             TimetableCSVCommand = new RelayCommand(ExecuteTimetableCSV);
+            DebugDataCommand = new RelayCommand(ExecuteDebugData);
+            ConnectTracksCommand = new RelayCommand(() => ImportInfrastructure.ConnectTracks());
         }
 
         private void ExecuteExcelTracks()
@@ -540,6 +547,12 @@ namespace RailMLNeural.UI.ViewModel
                 { message += "    Inner Exception : " + e.Error.InnerException.Message; }
                 MessageBox.Show(message + " Error Line: " + e.Error.TargetSite.ToString());
             }
+        }
+
+        private void ExecuteDebugData()
+        {
+            DebugWindow dw = new DebugWindow();
+            dw.Show();
         }
         
         

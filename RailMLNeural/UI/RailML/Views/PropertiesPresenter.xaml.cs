@@ -32,7 +32,7 @@ namespace RailMLNeural.UI.RailML.Views
             this.HeaderLabel.Content = name ?? String.Empty;
             this.PropExpander.Expanded += new RoutedEventHandler(PropExpander_Expanded);
             this.PropExpander.IsExpanded = expanded;
-            if (elem.GetType().Namespace == "System.Collections.Generic")
+            if (elem.GetType().Namespace == "System.Collections.Generic" && elem.GetType().GetGenericArguments()[0].GetConstructor(Type.EmptyTypes) != null)
             {
                 this.AddButton.IsEnabled = true;
             }
@@ -50,7 +50,7 @@ namespace RailMLNeural.UI.RailML.Views
                 {
                     dynamic listelem = elem[i];
 
-                    if (listelem.GetType().Namespace == "RailML___WPF.Data" && !listelem.GetType().IsEnum)
+                    if (listelem.GetType().Namespace == "RailMLNeural.RailML" && !listelem.GetType().IsEnum)
                     {
                         PropStack.Children.Add(new PropertiesPresenter(listelem, listelem.id ?? null, false));
                     }
@@ -79,7 +79,7 @@ namespace RailMLNeural.UI.RailML.Views
                     label.Content = prop.Name;
                     property.Children.Add(label);
 
-                    if (prop.PropertyType.Namespace == "RailML___WPF.Data" && !prop.PropertyType.IsEnum)
+                    if (prop.PropertyType.Namespace == "RailMLNeural.RailML" && !prop.PropertyType.IsEnum)
                     {
                         PropStack.Children.Add(new PropertiesPresenter(prop.GetValue(elem), prop.Name, false));
                     }

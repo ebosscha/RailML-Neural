@@ -23,6 +23,15 @@ namespace RailMLNeural.UI.RailML.Render
             this.MouseLeftButtonDown += new System.Windows.Input.MouseButtonEventHandler(Track_MouseLeftButtonDown);
             this.Cursor = Cursors.Hand;
             Messenger.Default.Register<SelectionChangedMessage>(this, action => Selection_Changed(action));
+            Messenger.Default.Register<HighlightElementMessage>(this, action => Highlight(action));
+            Messenger.Default.Register<ClearHighlightMessage>(this, action => ClearHighlight(action));
+            this.Loaded += new RoutedEventHandler(Shape_Loaded);
+        }
+
+        private void Shape_Loaded(object sender, RoutedEventArgs e)
+        {
+            OriginalBrush = this.Stroke;
+            //this.Loaded -= new RoutedEventHandler(Shape_Loaded);
         }
         
 #region DependencyProperties
@@ -63,6 +72,7 @@ namespace RailMLNeural.UI.RailML.Render
 
         #region Privates
 
+        private Brush OriginalBrush { get; set; }
         public PathGeometry line { get; set; }
         public PathGeometry correctedline { get; set; }
 
@@ -147,10 +157,25 @@ namespace RailMLNeural.UI.RailML.Render
         {
             if(msg.SelectedElement.id != Track.id)
             {
-                this.Stroke = Brushes.Black;
+                this.Stroke = OriginalBrush;
             }
         }
         #endregion SelectionHandler
+
+        #region Highlighting
+        private void Highlight(HighlightElementMessage msg)
+        {
+            if(msg.Element.id == Track.id)
+            {
+                this.Stroke = msg.Color;
+            }
+        }
+
+        private void ClearHighlight(ClearHighlightMessage msg)
+        {
+            this.Stroke = OriginalBrush;
+        }
+        #endregion Highlighting
 
         #region PropertyChanged Implementation
         public event PropertyChangedEventHandler PropertyChanged;

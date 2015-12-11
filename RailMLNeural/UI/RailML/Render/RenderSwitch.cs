@@ -13,18 +13,18 @@ using System.Windows.Shapes;
 
 namespace RailMLNeural.UI.RailML.Render
 {
-    public class RenderOCP : Shape
+    public class RenderSwitch : Shape
     {
         #region DependencyProperties
-        public static readonly DependencyProperty OCPProperty = DependencyProperty.Register("OCP", typeof(eOcp), typeof(RenderOCP),new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, new PropertyChangedCallback(OCPProperty_Changed)));
-        public static readonly DependencyProperty ScaleProperty = DependencyProperty.Register("Scale", typeof(double), typeof(RenderOCP), new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender, new PropertyChangedCallback(ScaleProperty_Changed)));
+        public static readonly DependencyProperty SwitchProperty = DependencyProperty.Register("Switch", typeof(eSwitch), typeof(RenderSwitch),new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, new PropertyChangedCallback(SwitchProperty_Changed)));
+        public static readonly DependencyProperty ScaleProperty = DependencyProperty.Register("Scale", typeof(double), typeof(RenderSwitch), new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender, new PropertyChangedCallback(ScaleProperty_Changed)));
         #endregion DependencyProperties
 
         #region Properties
-        public eOcp OCP
+        public eSwitch Switch
         {
-            get { return (eOcp)GetValue(OCPProperty); }
-            set { SetValue(OCPProperty, value); }
+            get { return (eSwitch)GetValue(SwitchProperty); }
+            set { SetValue(SwitchProperty, value); }
         }
 
         public double Scale
@@ -38,9 +38,9 @@ namespace RailMLNeural.UI.RailML.Render
         #endregion Properties
 
         #region Initialization
-        public RenderOCP()
+        public RenderSwitch()
         {
-            this.MouseLeftButtonDown += new System.Windows.Input.MouseButtonEventHandler(OCP_MouseLeftButtonDown);
+            this.MouseLeftButtonDown += new System.Windows.Input.MouseButtonEventHandler(Switch_MouseLeftButtonDown);
             this.Cursor = Cursors.Hand;
             Messenger.Default.Register<SelectionChangedMessage>(this, action => Selection_Changed(action));
             Messenger.Default.Register<HighlightElementMessage>(this, action => Highlight(action));
@@ -67,23 +67,24 @@ namespace RailMLNeural.UI.RailML.Render
         #endregion Overrides
 
         #region Privates
-        private static void OCPProperty_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void SwitchProperty_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            RenderOCP obj = (RenderOCP)d;
+            RenderSwitch obj = (RenderSwitch)d;
             obj.CalculateGeometry();
         }
 
         private static void ScaleProperty_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            RenderOCP obj = (RenderOCP)d;
+            RenderSwitch obj = (RenderSwitch)d;
             obj.CalculateGeometry();
         }
 
         private void CalculateGeometry()
         {
-            if (OCP.geoCoord.coord.Count == 2)
+            if (Switch.geoCoord.coord.Count == 2)
             {
-                geometry = new RectangleGeometry(new Rect(0, 0, Width / Scale, Height / Scale));
+                geometry = new RectangleGeometry(new Rect(0,0, Width/Scale, Height/Scale));
+                geometry.Transform = new RotateTransform(45, 0, 0);
                 this.Margin = new Thickness(-(Width / Scale) / 2, -(Height / Scale) / 2, 0, 0);
                 InvalidateVisual();
             }
@@ -91,15 +92,15 @@ namespace RailMLNeural.UI.RailML.Render
         #endregion Privates
 
         #region SelectionHandler
-        private void OCP_MouseLeftButtonDown(object sender, MouseEventArgs e)
+        private void Switch_MouseLeftButtonDown(object sender, MouseEventArgs e)
         {
             this.Fill = Brushes.Red;
-            Messenger.Default.Send(new SelectionChangedMessage(OCP));
+            Messenger.Default.Send(new SelectionChangedMessage(Switch));
         }
 
         private void Selection_Changed(SelectionChangedMessage msg)
         {
-            if(msg.SelectedElement.id != OCP.id)
+            if(msg.SelectedElement.id != Switch.id)
             {
                 this.Fill = OriginalBrush;
             }
@@ -109,7 +110,7 @@ namespace RailMLNeural.UI.RailML.Render
         #region Highlighting
         private void Highlight(HighlightElementMessage msg)
         {
-            if (msg.Element.id == OCP.id)
+            if (msg.Element.id == Switch.id)
             {
                 this.Fill = msg.Color;
             }

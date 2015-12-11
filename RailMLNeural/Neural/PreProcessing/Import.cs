@@ -54,8 +54,16 @@ namespace RailMLNeural.Neural.PreProcessing
                 delay.WLCheader = record.WLCTrainCode;
                 delay.date = record.trainDate;
                 delay.delaycode = record.delayCode;
-                if (record.locationType == "D") { delay.destinationdelay = record.difference; }
-                else { delay.origindelay = record.difference; }
+                if (record.locationType == "D") 
+                { 
+                    delay.destinationdelay = record.difference;
+                    delay.destination = record.locationSemaName;
+                }
+                else 
+                { 
+                    delay.origindelay = record.difference;
+                    delay.origin = record.locationSemaName;
+                }
 
                 if (day.delays.ContainsKey(delay.traincode)) { ((Delay)day.delays[delay.traincode]).destinationdelay = delay.destinationdelay; }
                 else { day.delays.Add(delay.traincode, delay); }
@@ -187,6 +195,10 @@ namespace RailMLNeural.Neural.PreProcessing
         public List<Delay> secondary { get; set; }
         [ProtoMember(8)]
         public List<StopDelay> stopdelays { get; set; }
+        [ProtoMember(9)]
+        public string origin { get; set; }
+        [ProtoMember(10)]
+        public string destination { get; set; }
 
         public Delay()
         {
