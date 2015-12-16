@@ -9,13 +9,13 @@
 
     <Grid>
         <xcdg:DataGridControl ItemsSource="{Binding ErrorHistory}">
-            <xcdg:TableflowView UseDefaultHeadersFooters="False">
+            <!--<xcdg:TableflowView UseDefaultHeadersFooters="False">
                 <xcdg:TableflowView.FixedHeaders>
                     <DataTemplate>
                         <xcdg:ColumnManagerRow />
                     </DataTemplate>
                 </xcdg:TableflowView.FixedHeaders>
-            </xcdg:TableflowView>
+            </xcdg:TableflowView>-->
             
         </xcdg:DataGridControl>
     </Grid>

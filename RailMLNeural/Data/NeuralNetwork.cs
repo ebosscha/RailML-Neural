@@ -22,7 +22,6 @@ namespace RailMLNeural.Data
     public class NeuralNetwork
     {
         [ProtoMember(1)]
-        
         private NeuralSettings _settings = new NeuralSettings { LearningRate = 0.1, Momentum = 0 };
         [Category("Neural Network Settings")]
         [ExpandableObject]
@@ -50,6 +49,7 @@ namespace RailMLNeural.Data
         [Category("Neural Network")]
         public List<LayerSize> HiddenLayerSize { get; set; }
         public bool IsRunning { get; set; }
+        public string filefolder { get; set; }
         public List<double> ErrorHistory { get; set; }
         public event EventHandler ProgressChanged;
 
@@ -81,6 +81,19 @@ namespace RailMLNeural.Data
                 }
             }));
         }
+
+        #region Serialization
+        public void Serialize()
+        {
+
+        }
+
+        public void Deserialize()
+        {
+
+        }
+
+        #endregion Serialization
 
     }
 

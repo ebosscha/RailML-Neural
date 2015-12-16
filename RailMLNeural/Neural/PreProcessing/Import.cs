@@ -49,24 +49,28 @@ namespace RailMLNeural.Neural.PreProcessing
                 }
                 //if (record.delayCode != string.Empty)// || record.difference > 120)
                 //{
-                Delay delay = new Delay();
-                delay.traincode = record.trainCode;
-                delay.WLCheader = record.WLCTrainCode;
-                delay.date = record.trainDate;
-                delay.delaycode = record.delayCode;
                 if (record.locationType == "D") 
                 { 
-                    delay.destinationdelay = record.difference;
-                    delay.destination = record.locationSemaName;
+                    if (day.delays.ContainsKey(record.trainCode)) 
+                    {
+                        ((Delay)day.delays[record.trainCode]).destinationdelay = record.difference;
+                        ((Delay)day.delays[record.trainCode]).delaycode = record.delayCode;
+                        ((Delay)day.delays[record.trainCode]).destination = record.locationSemaName;
+                    }
                 }
-                else 
-                { 
+                else if(record.locationType == "O") 
+                {
+                    Delay delay = new Delay();
+                    delay.traincode = record.trainCode;
+                    delay.WLCheader = record.WLCTrainCode;
+                    delay.date = record.trainDate;
+                    delay.delaycode = record.delayCode;
                     delay.origindelay = record.difference;
                     delay.origin = record.locationSemaName;
+                    day.delays.Add(delay.traincode, delay);
                 }
 
-                if (day.delays.ContainsKey(delay.traincode)) { ((Delay)day.delays[delay.traincode]).destinationdelay = delay.destinationdelay; }
-                else { day.delays.Add(delay.traincode, delay); }
+                
 
                 //}
                 count++;
@@ -257,7 +261,7 @@ namespace RailMLNeural.Neural.PreProcessing
 
             foreach (Delay delay in delays.Values)
             {
-                if (delay.WLCheader == String.Empty && (delay.delaycode != null || delay.secondary.Count != 0))
+                if (delay.WLCheader == String.Empty && (delay.delaycode != string.Empty || delay.secondary.Count != 0))
                 {
                     DelayCombination combination = new DelayCombination();
                     combination.primarydelays.Add(delay);

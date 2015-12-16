@@ -134,15 +134,17 @@ namespace RailMLNeural.UI.ViewModel
             {
                 // Load document
                 string filename = dlg.FileName;
-                BackgroundWorker worker = new BackgroundWorker();
-                worker.WorkerReportsProgress = true;
-                //SaveLoad.ProtoLoadFile(worker, new DoWorkEventArgs(filename));
-                worker.ProgressChanged += new ProgressChangedEventHandler(LoadButton_ProgressChanged);
-                worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(LoadButton_Completed);
-                worker.DoWork += new DoWorkEventHandler(SaveLoad.ProtoLoadFile);
-                worker.RunWorkerAsync(filename);
-                Application.Current.MainWindow.IsHitTestVisible = false;
-                Mouse.OverrideCursor = Cursors.AppStarting;
+                using (BackgroundWorker worker = new BackgroundWorker())
+                {
+                    worker.WorkerReportsProgress = true;
+                    //SaveLoad.ProtoLoadFile(worker, new DoWorkEventArgs(filename));
+                    worker.ProgressChanged += new ProgressChangedEventHandler(LoadButton_ProgressChanged);
+                    worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(LoadButton_Completed);
+                    worker.DoWork += new DoWorkEventHandler(SaveLoad.ProtoLoadFile);
+                    worker.RunWorkerAsync(filename);
+                    Application.Current.MainWindow.IsHitTestVisible = false;
+                    Mouse.OverrideCursor = Cursors.AppStarting;
+                }
             }
         }
 
@@ -156,6 +158,7 @@ namespace RailMLNeural.UI.ViewModel
             Application.Current.MainWindow.IsHitTestVisible = true;
             Mouse.OverrideCursor = null;
             StatusText = null;
+            SaveLoad.worker = null;
         }
         #endregion LoadButton
 
@@ -176,16 +179,19 @@ namespace RailMLNeural.UI.ViewModel
             if (result == true)
             {
                 // Save document
+                
                 string filename = dlg.FileName;
-                BackgroundWorker worker = new BackgroundWorker();
-                worker.WorkerReportsProgress = true;
-                //SaveLoad.ProtoSaveToFile(worker, new DoWorkEventArgs(filename));
-                worker.ProgressChanged += new ProgressChangedEventHandler(SaveButton_ProgressChanged);
-                worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(SaveButton_Completed);
-                worker.DoWork += new DoWorkEventHandler(SaveLoad.ProtoSaveToFile);
-                worker.RunWorkerAsync(filename);
-                Application.Current.MainWindow.IsHitTestVisible = false;
-                Mouse.OverrideCursor = Cursors.AppStarting;
+                using (BackgroundWorker worker = new BackgroundWorker())
+                {
+                    worker.WorkerReportsProgress = true;
+                    //SaveLoad.ProtoSaveToFile(worker, new DoWorkEventArgs(filename));
+                    worker.ProgressChanged += new ProgressChangedEventHandler(SaveButton_ProgressChanged);
+                    worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(SaveButton_Completed);
+                    worker.DoWork += new DoWorkEventHandler(SaveLoad.ProtoSaveToFile);
+                    worker.RunWorkerAsync(filename);
+                    Application.Current.MainWindow.IsHitTestVisible = false;
+                    Mouse.OverrideCursor = Cursors.AppStarting;
+                }
                 
             }
         }
@@ -204,6 +210,7 @@ namespace RailMLNeural.UI.ViewModel
             Application.Current.MainWindow.IsHitTestVisible = true;
             Mouse.OverrideCursor = null;
             StatusText = null;
+            SaveLoad.worker = null;
         }
         #endregion SaveButton
 

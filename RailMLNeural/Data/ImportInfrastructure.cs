@@ -938,14 +938,14 @@ namespace RailMLNeural.Data
         /// </summary>
         public static void ConnectTracks()
         {
-            foreach (eTrack track in _model.infrastructure.tracks)
+            foreach (eTrack track in DataContainer.model.infrastructure.tracks)
             {
                 if(track.trackTopology.trackBegin.Item == null)
                 {
                     Point tracknodelocation = new Point(track.trackTopology.trackBegin.geoCoord.coord[0], track.trackTopology.trackBegin.geoCoord.coord[1]);
                     double lowestdist = double.PositiveInfinity;
                     eTrackNode bestnode = null;
-                    foreach(eTrack othertrack in _model.infrastructure.tracks.Where(x => x.id != track.id 
+                    foreach(eTrack othertrack in DataContainer.model.infrastructure.tracks.Where(x => x.id != track.id 
                         && ( x.trackTopology.trackBegin.Item == null || x.trackTopology.trackEnd == null)))
                     {
                         if(othertrack.trackTopology.trackBegin.Item == null)
@@ -988,7 +988,7 @@ namespace RailMLNeural.Data
                     Point tracknodelocation = new Point(track.trackTopology.trackEnd.geoCoord.coord[0], track.trackTopology.trackEnd.geoCoord.coord[1]);
                     double lowestdist = double.PositiveInfinity;
                     eTrackNode bestnode = null;
-                    foreach (eTrack othertrack in _model.infrastructure.tracks.Where(x => x.id != track.id
+                    foreach (eTrack othertrack in DataContainer.model.infrastructure.tracks.Where(x => x.id != track.id
                         && (x.trackTopology.trackBegin.Item == null || x.trackTopology.trackEnd == null)))
                     {
                         if (othertrack.trackTopology.trackBegin.Item == null)

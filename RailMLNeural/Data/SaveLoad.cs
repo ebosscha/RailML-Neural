@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows;
@@ -15,34 +16,27 @@ namespace RailMLNeural.Data
 {
     static class SaveLoad
     {
-        static BackgroundWorker worker;
+        public static BackgroundWorker worker;
         
         public static void ProtoSaveToFile(object sender, DoWorkEventArgs e)
         {
-            try
-            {
-                worker = sender as BackgroundWorker;
-                string filename = e.Argument as string;
-                SaveLoadData data = new SaveLoadData();
-                data.railml = XML.ToXElement<railml>(Data.DataContainer.model).ToString();
-                data.NN = SerializeNetwork();
-                data.settings = DataContainer.Settings;
-                data.metadata = DataContainer.MetaData;
-                data.metadata.LastEditTime = DateTime.Now;
-                data.DelayCombinations = DataContainer.DelayCombinations;
-                data.HeaderRoutes = DataContainer.HeaderRoutes;
-                MyStream stream = new MyStream(filename, FileMode.Create, FileAccess.Write);
-                stream.ProgressChanged += new ProgressChangedEventHandler(Save_ProgressChanged);
-                Serializer.Serialize(stream, data);
-                stream.Close();
-                data = null;
-                GC.Collect(0);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex + "      Inner Exception: " + ex.InnerException);
-                worker.ReportProgress(1, ex + "      Inner Exception: " + ex.InnerException);
-            }
+            worker = sender as BackgroundWorker;
+            string filename = e.Argument as string;
+            SaveLoadData data = new SaveLoadData();
+            data.railml = XML.ToXElement<railml>(Data.DataContainer.model).ToString();
+            data.NN = SerializeNetwork();
+            data.settings = DataContainer.Settings;
+            data.metadata = DataContainer.MetaData;
+            data.metadata.LastEditTime = DateTime.Now;
+            data.DelayCombinations = DataContainer.DelayCombinations;
+            data.HeaderRoutes = DataContainer.HeaderRoutes;
+            MyStream stream = new MyStream(filename, FileMode.Create, FileAccess.Write);
+            stream.ProgressChanged += new ProgressChangedEventHandler(Save_ProgressChanged);
+            Serializer.Serialize(stream, data);
+            stream.Close();
+            data.Dispose();
+            data = null;
+            GC.Collect();
 
         }
 
@@ -68,7 +62,9 @@ namespace RailMLNeural.Data
             DataContainer.MetaData = data.metadata;
             
             stream.Close();
+            data.Dispose();
             data = null;
+            GC.Collect();
         }
 
 
@@ -113,7 +109,7 @@ namespace RailMLNeural.Data
 
     [Serializable]
     [ProtoContract]
-    class SaveLoadData
+    class SaveLoadData : IDisposable
     {
         [ProtoMember(1)]
         public string railml { get; set; }
@@ -131,6 +127,27 @@ namespace RailMLNeural.Data
         public Dictionary<string, Dictionary<DateTime, string>> HeaderRoutes { get; set; }
         [ProtoMember(8)]
         public MetaData metadata { get; set; }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);  
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if(disposing)
+            {
+                railml = null;
+                NN = null;
+                network = null;
+                trainingset = null;
+                settings = null;
+                DelayCombinations = null;
+                HeaderRoutes = null;
+                metadata = null;
+            }
+        }
 
     }
 

@@ -40,6 +40,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
         public NeuralResultsViewModel()
         {
             Messenger.Default.Register<NeuralSelectionChangedMessage>(this, (action) => ChangeSelection(action));
+            ErrorHistory = new ObservableCollection<double>();
         }
 
         private void ChangeSelection(NeuralSelectionChangedMessage msg)

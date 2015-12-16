@@ -1,10 +1,13 @@
-﻿using Encog.Neural.Data.Basic;
+﻿using Encog.ML.Data.Basic;
+using Encog.ML.Data.Buffer;
+using Encog.Neural.Data.Basic;
 using Encog.Neural.NeuralData;
 using RailMLNeural.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime;
 
 namespace RailMLNeural.Neural.PreProcessing
 {
@@ -296,6 +299,9 @@ namespace RailMLNeural.Neural.PreProcessing
                 ThresholdDateUpper = DataContainer.Settings.DataEndDate;
             }
 
+            BufferedMLDataSet dataset = new BufferedMLDataSet("C:/Users/Edwin/OneDrive/Afstuderen/IrishRail Data/NN/test.txt");
+            dataset.BeginLoad(inputmap.Count, inputmap.Count);
+
             foreach (KeyValuePair<DateTime, List<DelayCombination>> c in DataContainer.DelayCombinations.dict.Where(x => x.Value != null && x.Key > ThresholdDateLower && x.Key < ThresholdDateUpper))
             {
                 worker.ReportProgress(0, "Preprocessing Data... Date : " + c.Key.ToString("dd/MM/yyyy"));
@@ -306,21 +312,31 @@ namespace RailMLNeural.Neural.PreProcessing
                     double[] outputpart = new double[inputmap.Count];
                     inputpart = HandleDelays(dc.primarydelays);
                     outputpart = HandleDelays(dc.secondarydelays);
-                    inputlist.Add(inputpart);
-                    outputlist.Add(outputpart);
+                    for(int i = 0; i < inputpart.Length; i++)
+                    {
+                        outputpart[i] += inputpart[i];
+                    }
+                    BasicMLData inputdata = new BasicMLData(inputpart);
+                    BasicMLData idealdata = new BasicMLData(outputpart);
+                    dataset.Add(inputdata, idealdata);
+                    //inputlist.Add(inputpart);
+                    //outputlist.Add(outputpart);
                 }
             }
 
+            dataset.EndLoad();
+
             worker.ReportProgress(0, "Converting to Array.....");
-            double[][] input = inputlist.ToArray();
+            //double[][] input = inputlist.ToArray();
             inputlist.Clear();
-            double[][] output = outputlist.ToArray();
+            //double[][] output = outputlist.ToArray();
             outputlist.Clear();
             worker.ReportProgress(0, "Collectiong Garbage....");
-            GC.Collect(2);
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
             worker.ReportProgress(0, "Converting to DataSet....");
-            NetworkSettings.Data = new BasicNeuralDataSet(input, output);
-
+            //NetworkSettings.Data = new BasicMLDataSet(input, output);
+            NetworkSettings.Data = dataset;
             worker.ReportProgress(0, "Preprocessing Finished.");
         }
 
@@ -354,6 +370,36 @@ namespace RailMLNeural.Neural.PreProcessing
                                 }
                             }
                             if (!map.Contains(d.stopdelays[d.stopdelays.Count-1].location + "to" + d.destination))
+                            {
+                                map.Add(d.stopdelays[d.stopdelays.Count - 1].location + "to" + d.destination);
+                            }
+
+                        }
+                        else
+                        {
+                            if (!map.Contains(d.origin + "to" + d.destination))
+                            {
+                                map.Add(d.origin + "to" + d.destination);
+                            }
+                        }
+
+                    }
+                    foreach (Delay d in dc.secondarydelays)
+                    {
+                        if (d.stopdelays.Count > 0)
+                        {
+                            if (!map.Contains(d.origin + "to" + d.stopdelays[0].location))
+                            {
+                                map.Add(d.origin + "to" + d.stopdelays[0].location);
+                            }
+                            for (int i = 0; i < d.stopdelays.Count - 1; i++)
+                            {
+                                if (!map.Contains(d.stopdelays[i].location + "to" + d.stopdelays[i + 1].location))
+                                {
+                                    map.Add(d.stopdelays[i].location + "to" + d.stopdelays[i + 1].location);
+                                }
+                            }
+                            if (!map.Contains(d.stopdelays[d.stopdelays.Count - 1].location + "to" + d.destination))
                             {
                                 map.Add(d.stopdelays[d.stopdelays.Count - 1].location + "to" + d.destination);
                             }
