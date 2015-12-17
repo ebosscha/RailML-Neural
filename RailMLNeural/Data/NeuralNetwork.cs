@@ -35,8 +35,9 @@ namespace RailMLNeural.Data
         [ExpandableObject]
         public IContainsFlat Network { get; set; }
         [ProtoIgnore]
+        [ExpandableObject]
         public IMLDataSet Data { get; set; }
-        [NonSerialized]
+        public IMLDataSet VerificationData { get; set; }
         [ProtoIgnore]
         public IMLTrain Training;
         [ProtoMember(2)]
@@ -51,12 +52,16 @@ namespace RailMLNeural.Data
         public bool IsRunning { get; set; }
         public string filefolder { get; set; }
         public List<double> ErrorHistory { get; set; }
+        public List<double> VerificationSetHistory { get; set; }
+        public List<string> InputMap { get; private set; }
         public event EventHandler ProgressChanged;
 
         public NeuralNetwork()
         {
             HiddenLayerSize = new List<LayerSize>();
             ErrorHistory = new List<Double>();
+            VerificationSetHistory = new List<Double>();
+            InputMap = new List<string>();
         }
 
         public void RunNetwork(object state)
@@ -66,6 +71,7 @@ namespace RailMLNeural.Data
             {
                 Training.Iteration();
                 ErrorHistory.Add(Training.Error);
+                RunVerificationSet();
                 OnProgressChanged();
             }
         }
@@ -80,6 +86,18 @@ namespace RailMLNeural.Data
                     handler(ErrorHistory, new PropertyChangedEventArgs("ErrorHistory"));
                 }
             }));
+        }
+
+        public void SetInputMap(List<string> map)
+        {
+            InputMap = map;
+        }
+        private void RunVerificationSet()
+        {
+            if(Network is BasicNetwork)
+            {
+                VerificationSetHistory.Add(((BasicNetwork)Network).CalculateError(VerificationData));
+            }
         }
 
         #region Serialization
@@ -107,6 +125,8 @@ namespace RailMLNeural.Data
         public double Momentum { get; set; }
         [ProtoMember(3)]
         public int Epochs { get; set; }
+        [ProtoMember(4)]
+        public double VerificationSize { get; set; }
 
 
     }

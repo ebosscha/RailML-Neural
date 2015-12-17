@@ -41,6 +41,7 @@ namespace RailMLNeural.Data
             RuntimeRep rep = new RuntimeRep();
             List<StopDelay> stopdelays = new List<StopDelay>();
             string traincode = "";
+            double origindelay = 0;
             foreach (TimetableEntry entry in reader)
             {
                 entry.TrainCode = entry.TrainCode.Trim();
@@ -98,7 +99,11 @@ namespace RailMLNeural.Data
 
                 }
 
-                if (entry.LocationType == "O") { rep.departuretime = default(DateTime).Add(entry.ScheduledDeparture.TimeOfDay); }
+                if (entry.LocationType == "O") 
+                { 
+                    rep.departuretime = default(DateTime).Add(entry.ScheduledDeparture.TimeOfDay); 
+                    origindelay = (entry.Departure - entry.ScheduledDeparture).TotalSeconds;
+                }
                 else if (entry.LocationType == "D") { rep.arrivaltime = default(DateTime).Add(entry.ScheduledArrival.TimeOfDay); }
                 else if (entry.LocationType == "S" || entry.LocationType == "T")
                 {
@@ -107,11 +112,31 @@ namespace RailMLNeural.Data
                         Stop stop = new Stop() { location = entry.LocationCode, arrival = entry.ScheduledArrival, departure = entry.ScheduledDeparture };
                         rep.stops.Add(stop);
                     }
-                    if (entry.Arrival != default(DateTime) && entry.Departure != default(DateTime))
+                    StopDelay delay = new StopDelay() { location = entry.LocationCode};
+
+                    if (entry.Arrival !=default(DateTime))
                     {
-                        StopDelay delay = new StopDelay() { location = entry.LocationCode, departuredelay = (entry.Departure - entry.ScheduledDeparture).TotalSeconds, arrivaldelay = (entry.Arrival - entry.ExpectedArrival).TotalSeconds };
-                        stopdelays.Add(delay);
+                        delay.arrivaldelay = (entry.Arrival - entry.ScheduledArrival).TotalSeconds;
                     }
+                    else if(stopdelays.Count > 0)
+                    {
+                        delay.arrivaldelay = stopdelays.Last().departuredelay;
+                    }
+                    else
+                    {
+                        delay.arrivaldelay = origindelay;
+                    }
+                    if (entry.Departure != default(DateTime))
+                    { 
+                        delay.departuredelay = (entry.Departure - entry.ScheduledDeparture).TotalSeconds;
+                    }
+                    else
+                    {
+                        delay.departuredelay = delay.arrivaldelay;
+                    }
+                    
+                    stopdelays.Add(delay);
+                    
                 }
 
                 //if (count > 300000) { break; }
@@ -147,7 +172,7 @@ namespace RailMLNeural.Data
 
         private static void AddStopDelays(List<StopDelay> stopdelays, string traincode, DateTime date)
         {
-            if (stopdelays.Count > 0 && DataContainer.DelayCombinations.dict.ContainsKey(date) && DataContainer.DelayCombinations.dict[date].Count != 0)
+            if (stopdelays.Count > 0 && DataContainer.DelayCombinations.dict.ContainsKey(date) && DataContainer.DelayCombinations.dict[date] != null)
             {
                 foreach (DelayCombination comb in DataContainer.DelayCombinations.dict[date].Where(e => e.HasTrain(traincode)))
                 {

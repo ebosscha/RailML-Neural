@@ -4,19 +4,27 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ignore="http://www.galasoft.ch/ignore"
+        xmlns:d3="clr-namespace:Microsoft.Research.DynamicDataDisplay;assembly=DynamicDataDisplay"
         mc:Ignorable="d ignore"
         DataContext="{Binding NeuralResultsVM, Source={StaticResource Locator}}">
 
     <Grid>
-        <xcdg:DataGridControl ItemsSource="{Binding ErrorHistory}">
-            <!--<xcdg:TableflowView UseDefaultHeadersFooters="False">
-                <xcdg:TableflowView.FixedHeaders>
-                    <DataTemplate>
-                        <xcdg:ColumnManagerRow />
-                    </DataTemplate>
-                </xcdg:TableflowView.FixedHeaders>
-            </xcdg:TableflowView>-->
-            
-        </xcdg:DataGridControl>
+        <!--<xcdg:DataGridControl ItemsSource="{Binding ErrorHistory}">
+        </xcdg:DataGridControl>-->
+        <d3:ChartPlotter>
+            <d3:HorizontalAxisTitle>
+                Epoch
+            </d3:HorizontalAxisTitle>
+            <d3:VerticalAxisTitle>
+                Error
+            </d3:VerticalAxisTitle>
+            <d3:LineGraph DataSource="{Binding ErrorHistory}"/>
+            <d3:LineGraph DataSource="{Binding VerificationHistory}"/>
+
+
+
+
+        </d3:ChartPlotter>
+        
     </Grid>
 </UserControl>

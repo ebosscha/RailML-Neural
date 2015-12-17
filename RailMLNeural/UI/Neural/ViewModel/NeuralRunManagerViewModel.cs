@@ -118,8 +118,8 @@ namespace RailMLNeural.UI.Neural.ViewModel
         private void ExecuteRunNetwork()
         {
             AddLearningAlgorithm();
-            //ThreadPool.QueueUserWorkItem(Network.RunNetwork);
-            Network.RunNetwork(0);
+            ThreadPool.QueueUserWorkItem(Network.RunNetwork);
+            //Network.RunNetwork(0);
 
         }
 

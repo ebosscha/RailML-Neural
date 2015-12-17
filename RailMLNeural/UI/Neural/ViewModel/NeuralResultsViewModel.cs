@@ -1,9 +1,12 @@
-﻿using GalaSoft.MvvmLight;
+﻿using DynamicDataDisplay.Markers.DataSources;
+using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
+using Microsoft.Research.DynamicDataDisplay.DataSources;
 using RailMLNeural.Data;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
 
 namespace RailMLNeural.UI.Neural.ViewModel
 {
@@ -15,14 +18,26 @@ namespace RailMLNeural.UI.Neural.ViewModel
     /// </summary>
     public class NeuralResultsViewModel : ViewModelBase
     {
-        private ObservableCollection<double> _errorHistory { get; set; }
-        public ObservableCollection<double> ErrorHistory
+        private ObservableDataSource<Point> _errorHistory { get; set; }
+        public ObservableDataSource<Point> ErrorHistory
         {
             get { return _errorHistory; }
             set { _errorHistory = value;
             RaisePropertyChanged("ErrorHistory");
             }
         }
+
+        private ObservableDataSource<Point> _verificationHistory { get; set; }
+        public ObservableDataSource<Point> VerificationHistory
+        {
+            get { return _verificationHistory; }
+            set
+            {
+                _verificationHistory = value;
+                RaisePropertyChanged("VerificationHistory");
+            }
+        }
+
 
         private NeuralNetwork _selectedNetwork;
 
@@ -40,7 +55,6 @@ namespace RailMLNeural.UI.Neural.ViewModel
         public NeuralResultsViewModel()
         {
             Messenger.Default.Register<NeuralSelectionChangedMessage>(this, (action) => ChangeSelection(action));
-            ErrorHistory = new ObservableCollection<double>();
         }
 
         private void ChangeSelection(NeuralSelectionChangedMessage msg)
@@ -52,12 +66,23 @@ namespace RailMLNeural.UI.Neural.ViewModel
             
             SelectedNetwork = msg.NeuralNetwork;
             SelectedNetwork.ProgressChanged += new EventHandler(ProgressChanged);
-            
+            ProgressChanged(this, EventArgs.Empty);
         }
 
         private void ProgressChanged(object sender, EventArgs e)
         {
-            ErrorHistory = new ObservableCollection<double>(SelectedNetwork.ErrorHistory);
+            ErrorHistory = new ObservableDataSource<Point>();
+            for(int i = 0; i < SelectedNetwork.ErrorHistory.Count; i++)
+            {
+                ErrorHistory.Collection.Add(new Point(i + 1, SelectedNetwork.ErrorHistory[i]));
+            }
+            ErrorHistory.SetXYMapping(p => p);
+            VerificationHistory = new ObservableDataSource<Point>();
+            for (int i = 0; i < SelectedNetwork.VerificationSetHistory.Count; i++)
+            {
+                VerificationHistory.Collection.Add(new Point(i + 1, SelectedNetwork.VerificationSetHistory[i]));
+            }
+            VerificationHistory.SetXYMapping(p => p);
         }
     }
 }

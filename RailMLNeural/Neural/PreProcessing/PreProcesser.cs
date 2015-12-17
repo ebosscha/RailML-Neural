@@ -6,6 +6,7 @@ using RailMLNeural.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime;
 
@@ -61,6 +62,8 @@ namespace RailMLNeural.Neural.PreProcessing
                 {"Sligo - Connolly",19},
                 {"Maynooth Commuter",20}
             };
+
+            NetworkSettings.SetInputMap(new List<string>(inputmap.Keys));
             inputtemplate = new double[inputmap.Count];
             idealtemplate = new double[inputmap.Count * 4];
 
@@ -129,9 +132,10 @@ namespace RailMLNeural.Neural.PreProcessing
 
             double[][] input = inputlist.ToArray();
             double[][] output = outputlist.ToArray();
-            INeuralDataSet dataset = new BasicNeuralDataSet(input, output);
-            NetworkSettings.Data = dataset;
+            BasicMLDataSet dataset = new BasicMLDataSet(input, output);
 
+            NetworkSettings.Data = dataset;
+            SplitData();
 
         }
 
@@ -162,6 +166,7 @@ namespace RailMLNeural.Neural.PreProcessing
                 {"Sligo - Connolly",19},
                 {"Maynooth Commuter",20}
             };
+            NetworkSettings.SetInputMap(new List<string>(inputmap.Keys));
             inputtemplate = new double[inputmap.Count];
             idealtemplate = new double[inputmap.Count];
 
@@ -213,8 +218,9 @@ namespace RailMLNeural.Neural.PreProcessing
 
             double[][] input = inputlist.ToArray();
             double[][] output = outputlist.ToArray();
-            INeuralDataSet dataset = new BasicNeuralDataSet(input, output);
+            BasicMLDataSet dataset = new BasicMLDataSet(input, output);
             NetworkSettings.Data = dataset;
+            SplitData();
         }
 
         private string GetLine(Delay d)
@@ -288,6 +294,7 @@ namespace RailMLNeural.Neural.PreProcessing
         {
             worker = sender as BackgroundWorker;
             inputmap = InputMap();
+            NetworkSettings.SetInputMap(inputmap);
             List<double[]> inputlist = new List<double[]>();
             List<double[]> outputlist = new List<double[]>();
 
@@ -325,7 +332,7 @@ namespace RailMLNeural.Neural.PreProcessing
             }
 
             dataset.EndLoad();
-
+            dataset.Open();
             worker.ReportProgress(0, "Converting to Array.....");
             //double[][] input = inputlist.ToArray();
             inputlist.Clear();
@@ -337,6 +344,7 @@ namespace RailMLNeural.Neural.PreProcessing
             worker.ReportProgress(0, "Converting to DataSet....");
             //NetworkSettings.Data = new BasicMLDataSet(input, output);
             NetworkSettings.Data = dataset;
+            SplitData();
             worker.ReportProgress(0, "Preprocessing Finished.");
         }
 
@@ -449,5 +457,56 @@ namespace RailMLNeural.Neural.PreProcessing
 
         #endregion PerRoutePart
 
+        #region SplitData
+        private void SplitData()
+        {
+            int VerificationCount = (int)(NetworkSettings.Data.Count * NetworkSettings.Settings.VerificationSize);
+            if(NetworkSettings.Data is BasicMLDataSet)
+            {
+                BasicMLDataSet dataset = (BasicMLDataSet)NetworkSettings.Data;
+                BasicMLDataSet VerificationData = new BasicMLDataSet();
+                Random rand = new Random();
+                while(VerificationData.Count < VerificationCount)
+                {
+                    int i = rand.Next(dataset.Count);
+                    VerificationData.Add(dataset[i]);
+                    dataset.Data.RemoveAt(i);
+                }
+                NetworkSettings.Data = dataset;
+                NetworkSettings.VerificationData = VerificationData;
+                return;
+            }
+            if(NetworkSettings.Data is BufferedMLDataSet)
+            {
+                BufferedMLDataSet olddataset = (BufferedMLDataSet)NetworkSettings.Data;
+                BufferedMLDataSet VerificationData = new BufferedMLDataSet("C:/Users/Edwin/OneDrive/Afstuderen/IrishRail Data/NN/testVer.txt");
+                BufferedMLDataSet newdataset = new BufferedMLDataSet("C:/Users/Edwin/OneDrive/Afstuderen/IrishRail Data/NN/testVer.txt");
+                VerificationData.BeginLoad(olddataset.InputSize, olddataset.IdealSize);
+                newdataset.BeginLoad(olddataset.InputSize, olddataset.IdealSize);
+                int c = 0;
+                Random rand = new Random();
+                for(int i = 0; i<olddataset.Count; i++)
+                {
+                    double q = (double)((VerificationCount - c) / (olddataset.Count - i));
+                    if(rand.NextDouble() < q)
+                    {
+                        VerificationData.Add(olddataset[i]);
+                    }
+                    else
+                    {
+                        newdataset.Add(olddataset[i]);
+                    }
+                }
+                olddataset.Close();
+                VerificationData.EndLoad();
+                newdataset.EndLoad();
+                VerificationData.Open();
+                newdataset.Open();
+                NetworkSettings.Data = newdataset;
+                NetworkSettings.Data = VerificationData;
+                File.Delete(olddataset.BinaryFile);
+            }
+        }
+        #endregion SplitData
     }
 }
