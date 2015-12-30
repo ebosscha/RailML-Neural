@@ -18,8 +18,13 @@
             <d3:VerticalAxisTitle>
                 Error
             </d3:VerticalAxisTitle>
-            <d3:LineGraph DataSource="{Binding ErrorHistory}"/>
-            <d3:LineGraph DataSource="{Binding VerificationHistory}"/>
+            
+            <d3:LineGraph DataSource="{Binding ErrorHistory}"
+                          Stroke="Blue"
+                          Name="TrainingError"/>
+            <d3:LineGraph DataSource="{Binding VerificationHistory}"
+                          Stroke="Green"
+                          Name="VerificationError"/>
 
 
 

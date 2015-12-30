@@ -15,6 +15,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
         private static NeuralPropertiesView _neuralproperties = new NeuralPropertiesView();
         private static NeuralRunManagerView _neuralrunmanager = new NeuralRunManagerView();
         private static NeuralResultsView _neuralresults = new NeuralResultsView();
+        private static NeuralOutputView _neuraloutput = new NeuralOutputView();
 
         public NeuralCollectionView NeuralCollection
         {
@@ -56,6 +57,17 @@ namespace RailMLNeural.UI.Neural.ViewModel
                 if (_neuralresults == value) { return; }
                 _neuralresults = value;
                 RaisePropertyChanged("NeuralResults");
+            }
+        }
+
+        public NeuralOutputView NeuralOutput
+        {
+            get { return _neuraloutput; }
+            set
+            {
+                if (_neuraloutput == value) { return; }
+                _neuraloutput = value;
+                RaisePropertyChanged("NeuralOutput");
             }
         }
         

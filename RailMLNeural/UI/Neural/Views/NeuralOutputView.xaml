@@ -1,0 +1,58 @@
+﻿<UserControl xmlns:xcdg="http://schemas.xceed.com/wpf/xaml/datagrid"  x:Class="RailMLNeural.UI.Neural.Views.NeuralOutputView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ignore="http://www.galasoft.ch/ignore"
+        mc:Ignorable="d ignore"
+        DataContext="{Binding NeuralOutputVM, Source={StaticResource Locator}}">
+
+    <Grid>
+        <StackPanel Orientation="Horizontal">
+            <xcdg:DataGridControl 
+                ItemsSource="{Binding InputCollection}"
+                AutoCreateColumns="False"
+                xcdg:Cell.EditEnded="DataGridControl_EditEnded">
+                <xcdg:DataGridControl.View>
+                    <xcdg:TableView>
+                        <xcdg:TableView.FixedHeaders>
+                            <xcdg:ClearHeadersFooters />
+                            <DataTemplate>
+                                <xcdg:ColumnManagerRow />
+                            </DataTemplate>
+                        </xcdg:TableView.FixedHeaders>
+                    </xcdg:TableView>
+                </xcdg:DataGridControl.View>
+                <xcdg:DataGridControl.Columns>
+                    <xcdg:Column FieldName="Label"
+                             ReadOnly="True"
+                                 Title="Label"/>
+                    <xcdg:Column FieldName="Value"
+                                 Title="Value"/>
+                </xcdg:DataGridControl.Columns>
+            </xcdg:DataGridControl>
+            <xcdg:DataGridControl
+                ItemsSource="{Binding OutputCollection}"
+                AutoCreateColumns="False">
+                <xcdg:DataGridControl.View>
+                    <xcdg:TableView>
+                        <xcdg:TableView.FixedHeaders>
+                            <xcdg:ClearHeadersFooters />
+                            <DataTemplate>
+                                <xcdg:ColumnManagerRow />
+                            </DataTemplate>
+                        </xcdg:TableView.FixedHeaders>
+                    </xcdg:TableView>
+                </xcdg:DataGridControl.View>
+                <xcdg:DataGridControl.Columns>
+                    <xcdg:Column FieldName="Label"
+                                 Title="Label"
+                                ReadOnly="True"/>
+                    <xcdg:Column FieldName="Value"
+                                 Title="Value"
+                                ReadOnly="True"/>
+                </xcdg:DataGridControl.Columns>
+            </xcdg:DataGridControl>
+        </StackPanel>
+    </Grid>
+</UserControl>

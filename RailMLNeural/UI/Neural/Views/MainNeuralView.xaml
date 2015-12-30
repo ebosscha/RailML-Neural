@@ -25,11 +25,15 @@
                                 <ContentControl
                                     Content="{Binding NeuralRunManager}"/>
                             </xcad:LayoutDocument>
-                        <xcad:LayoutDocument Title="Result Manager">
-                            <ContentControl 
-                                Content="{Binding NeuralResults}"/>
-                        </xcad:LayoutDocument>
-                        </xcad:LayoutDocumentPane>
+                            <xcad:LayoutDocument Title="Result Manager">
+                                <ContentControl 
+                                    Content="{Binding NeuralResults}"/>
+                            </xcad:LayoutDocument>
+                            <xcad:LayoutDocument Title="Result Manager">
+                                <ContentControl 
+                                    Content="{Binding NeuralOutput}"/>
+                            </xcad:LayoutDocument>
+                    </xcad:LayoutDocumentPane>
                     <xcad:LayoutAnchorablePaneGroup DockWidth="Auto">
                         <xcad:LayoutAnchorablePane>
                             <xcad:LayoutAnchorable

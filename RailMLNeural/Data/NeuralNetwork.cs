@@ -5,8 +5,10 @@ using Encog.ML.Train;
 using Encog.Neural.Networks;
 using Encog.Neural.Networks.Training.Propagation.Resilient;
 using Encog.Neural.NeuralData;
+using Encog.Util.Arrayutil;
 using ProtoBuf;
 using RailMLNeural.Neural;
+using RailMLNeural.Neural.Normalization;
 using RailMLNeural.Neural.PreProcessing;
 using RailMLNeural.UI.Neural.ViewModel;
 using System;
@@ -53,7 +55,9 @@ namespace RailMLNeural.Data
         public string filefolder { get; set; }
         public List<double> ErrorHistory { get; set; }
         public List<double> VerificationSetHistory { get; set; }
-        public List<string> InputMap { get; private set; }
+        public List<string> InputMap { get; set; }
+        public List<string> OutputMap { get; set; }
+        //public NormalizationHelper Normalizer { get; set; }
         public event EventHandler ProgressChanged;
 
         public NeuralNetwork()
@@ -67,6 +71,13 @@ namespace RailMLNeural.Data
         public void RunNetwork(object state)
         {
             IsRunning = true;
+            if(ErrorHistory.Count == 0)
+            {
+                if (Network is IContainsFlat)
+                {
+                    ((IContainsFlat)Network).Flat.Randomize();
+                }
+            }
             for(int i = 0; i < Settings.Epochs; i++)
             {
                 Training.Iteration();
@@ -74,6 +85,7 @@ namespace RailMLNeural.Data
                 RunVerificationSet();
                 OnProgressChanged();
             }
+            IsRunning = false;
         }
 
         private void OnProgressChanged()
@@ -88,16 +100,22 @@ namespace RailMLNeural.Data
             }));
         }
 
-        public void SetInputMap(List<string> map)
-        {
-            InputMap = map;
-        }
+        
         private void RunVerificationSet()
         {
             if(Network is BasicNetwork)
             {
                 VerificationSetHistory.Add(((BasicNetwork)Network).CalculateError(VerificationData));
             }
+        }
+
+        public IMLData Compute(IMLData data)
+        {
+            if(Network is BasicNetwork)
+            {
+                return ((BasicNetwork)Network).Compute(data);
+            }
+            return null;
         }
 
         #region Serialization

@@ -134,8 +134,12 @@
     <Compile Include="Data\ShortestPath.cs" />
     <Compile Include="Data\XML.cs" />
     <Compile Include="Neural\Algorithms\PerLineClassification.cs" />
+    <Compile Include="Neural\Algorithms\RecurrentNetwork.cs" />
     <Compile Include="Neural\BatchManager.cs" />
+    <Compile Include="Neural\Data\NormBuffMLDataSet.cs" />
     <Compile Include="Neural\Enums.cs" />
+    <Compile Include="Neural\Normalization\NormalizationHelper.cs" />
+    <Compile Include="Neural\Normalization\Normalizer.cs" />
     <Compile Include="Neural\PreProcessing\Import.cs" />
     <Compile Include="Neural\PreProcessing\PreProcesser.cs" />
     <Compile Include="RailML\schema.cs" />
@@ -155,6 +159,7 @@
     <Compile Include="UI\Neural\ViewModel\MainNeuralViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\Messages.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralCollectionViewModel.cs" />
+    <Compile Include="UI\Neural\ViewModel\NeuralOutputViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralPropertiesViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralResultsViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralRunManagerViewModel.cs" />
@@ -166,6 +171,9 @@
     </Compile>
     <Compile Include="UI\Neural\Views\NeuralCollectionView.xaml.cs">
       <DependentUpon>NeuralCollectionView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Neural\Views\NeuralOutputView.xaml.cs">
+      <DependentUpon>NeuralOutputView.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\Neural\Views\NeuralPropertiesView.xaml.cs">
       <DependentUpon>NeuralPropertiesView.xaml</DependentUpon>
@@ -254,6 +262,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI\Neural\Views\NeuralCollectionView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Neural\Views\NeuralOutputView.xaml">
       <SubType>Form</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

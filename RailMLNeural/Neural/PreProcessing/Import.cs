@@ -16,7 +16,7 @@ namespace RailMLNeural.Neural.PreProcessing
         {
             string filename = e.Argument as string;
             BackgroundWorker worker = sender as BackgroundWorker;
-            DataContainer.DelayCombinations = new Data.DelayCombinationCollection();
+            DataContainer.DelayCombinations = new RailMLNeural.Data.DelayCombinationCollection();
 
             CsvDefinition def = new CsvDefinition() { FieldSeparator = ',' };
             CsvFileReader<Record> reader = new CsvFileReader<Record>(filename, def);
