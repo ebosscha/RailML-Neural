@@ -49,10 +49,24 @@ namespace RailMLNeural.Neural.PreProcessing
                 }
                 //if (record.delayCode != string.Empty)// || record.difference > 120)
                 //{
+
+                //Correct for midnight overruns
+                if(record.difference < -50000)
+                { 
+                    record.difference += 86400; 
+                }
+                if(record.difference > 50000)
+                {
+                    record.difference -= 86400;
+                }
                 if (record.locationType == "D") 
                 { 
                     if (day.delays.ContainsKey(record.trainCode)) 
                     {
+                        if(record.actualTime < ((Delay)day.delays[record.trainCode]).ActualDeparture)
+                        {
+                            day.delays.Remove(record.trainCode);
+                        }
                         ((Delay)day.delays[record.trainCode]).destinationdelay = record.difference;
                         ((Delay)day.delays[record.trainCode]).delaycode = record.delayCode;
                         ((Delay)day.delays[record.trainCode]).destination = record.locationSemaName;
@@ -67,7 +81,9 @@ namespace RailMLNeural.Neural.PreProcessing
                     delay.delaycode = record.delayCode;
                     delay.origindelay = record.difference;
                     delay.origin = record.locationSemaName;
+                    delay.ActualDeparture = record.actualTime;
                     day.delays.Add(delay.traincode, delay);
+
                 }
 
                 
@@ -203,6 +219,10 @@ namespace RailMLNeural.Neural.PreProcessing
         public string origin { get; set; }
         [ProtoMember(10)]
         public string destination { get; set; }
+        [ProtoMember(11)]
+        public DateTime ActualDeparture { get; set; }
+        [ProtoMember(12)]
+        public DateTime ActualArrival { get; set; }
 
         public Delay()
         {
@@ -219,6 +239,27 @@ namespace RailMLNeural.Neural.PreProcessing
                 result.AddRange(d.GetSecondaries());
             }
             return result;
+        }
+
+        /// <summary>
+        /// Get the maximum change in delay over the train run.
+        /// </summary>
+        /// <returns></returns>
+        public double GetMaxDelta()
+        {
+            double d = Math.Max(0, origindelay);
+            List<double> delays = new List<double>();
+            delays.Add(origindelay);
+            foreach(StopDelay s in stopdelays)
+            {
+                delays.Add(s.arrivaldelay);
+            }
+            delays.Add(destinationdelay);
+            for(int i = 1; i < delays.Count; i++)
+            {
+                d = Math.Max(d, delays[i] - delays[i - 1]);
+            }
+            return d;
         }
     }
 

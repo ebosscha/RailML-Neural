@@ -32,7 +32,7 @@
 
                     </avalonDock:LayoutDocumentPaneGroup>
                     <avalonDock:LayoutAnchorablePane DockWidth="200">
-                        <avalonDock:LayoutAnchorable Title="Properties" CanClose="False">
+                        <avalonDock:LayoutAnchorable Title="Properties" CanClose="False" CanHide="False">
                             <ContentControl Content="{Binding Properties}"/>
                         </avalonDock:LayoutAnchorable>
 

@@ -3,6 +3,7 @@ using Encog.ML.Data.Buffer;
 using Encog.Neural.Data.Basic;
 using Encog.Neural.NeuralData;
 using RailMLNeural.Data;
+using RailMLNeural.Neural.Data;
 using RailMLNeural.Neural.Normalization;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,8 @@ namespace RailMLNeural.Neural.PreProcessing
         {
             NetworkSettings = Network;
         }
+
+        public NormalizationTypeEnum NormalizationType { get; set; }
 
         #region PerLine
         /// <summary>
@@ -64,10 +67,15 @@ namespace RailMLNeural.Neural.PreProcessing
                 {"Maynooth Commuter",20}
             };
 
+
             NetworkSettings.InputMap = (new List<string>(inputmap.Keys));
             NetworkSettings.OutputMap = NetworkSettings.InputMap;
             inputtemplate = new double[inputmap.Count];
             idealtemplate = new double[inputmap.Count * 4];
+
+            CreateDataSet();
+            NetworkSettings.Data.BeginLoad(inputmap.Count, inputmap.Count * 4);
+
 
             DateTime ThresholdDateLower = new DateTime(2010,1,1);
             DateTime ThresholdDateUpper = DateTime.Now;
@@ -77,8 +85,6 @@ namespace RailMLNeural.Neural.PreProcessing
                 ThresholdDateUpper = DataContainer.Settings.DataEndDate;
             }
 
-            List<double[]> inputlist = new List<double[]>();
-            List<double[]> outputlist = new List<double[]>();
             foreach (KeyValuePair<DateTime, List<DelayCombination>> c in DataContainer.DelayCombinations.dict.Where(x => x.Value != null && x.Key > ThresholdDateLower && x.Key < ThresholdDateUpper))
             {
                 List<DelayCombination> day = c.Value;
@@ -124,8 +130,10 @@ namespace RailMLNeural.Neural.PreProcessing
                         }
                     }
 
-                    inputlist.Add(inputline);
-                    outputlist.Add(outputline);
+                    var inputData = new BasicMLData(inputline);
+                    var idealData = new BasicMLData(outputline);
+                    NetworkSettings.Data.Add(inputData, idealData);
+
                 skip:
                     continue;
 
@@ -133,14 +141,8 @@ namespace RailMLNeural.Neural.PreProcessing
                 }
             }
 
-            double[][] input = inputlist.ToArray();
-            double[][] output = outputlist.ToArray();
-            BasicMLDataSet dataset = new BasicMLDataSet(input, output);
-
-            NetworkSettings.Normalizer = new NormalizationHelper(0, 3600, 0, 1);
-            NetworkSettings.Normalizer.Normalize(dataset);
-
-            NetworkSettings.Data = dataset;
+            NetworkSettings.Data.EndLoad();
+            NetworkSettings.Data.Normalize(NormalizationType);
             SplitData();
 
         }
@@ -177,6 +179,9 @@ namespace RailMLNeural.Neural.PreProcessing
             inputtemplate = new double[inputmap.Count];
             idealtemplate = new double[inputmap.Count];
 
+            CreateDataSet();
+            NetworkSettings.Data.BeginLoad(inputmap.Count, inputmap.Count);
+
             DateTime ThresholdDateLower = new DateTime(2010, 1, 1);
             DateTime ThresholdDateUpper = DateTime.Now;
             if (DataContainer.Settings.UseDateFilter)
@@ -211,12 +216,17 @@ namespace RailMLNeural.Neural.PreProcessing
                         //string line = DataContainer.model.timetable.trains.Single(x => x.id == d.traincode).description;
                         if (GetLine(d) == "None") { goto skip; }
                         secondarydelaysize[inputmap[GetLine(d)]] += d.destinationdelay;
+                        if(secondarydelaysize[inputmap[GetLine(d)]] < -1000)
+                        {
+                            int i = 0;
+                        }
                     }
 
                     outputline = secondarydelaysize;
 
-                    inputlist.Add(inputline);
-                    outputlist.Add(outputline);
+                    var inputData = new BasicMLData(inputline);
+                    var idealData = new BasicMLData(outputline);
+                    NetworkSettings.Data.Add(inputData, idealData);
                 skip:
                     continue;
 
@@ -224,12 +234,8 @@ namespace RailMLNeural.Neural.PreProcessing
                 }
             }
 
-            double[][] input = inputlist.ToArray();
-            double[][] output = outputlist.ToArray();
-            BasicMLDataSet dataset = new BasicMLDataSet(input, output);
-            NetworkSettings.Normalizer = new NormalizationHelper(0, 3600, 0, 3600);
-            NetworkSettings.Normalizer.Normalize(dataset);
-            NetworkSettings.Data = dataset;
+            NetworkSettings.Data.EndLoad();
+            NetworkSettings.Data.Normalize(NormalizationType);
             SplitData();
         }
 
@@ -315,9 +321,8 @@ namespace RailMLNeural.Neural.PreProcessing
                 ThresholdDateUpper = DataContainer.Settings.DataEndDate;
             }
 
-            NetworkSettings.Normalizer = new NormalizationHelper(0, 3600, 0, 3600);
-            BufferedMLDataSet dataset = new BufferedMLDataSet("C:/Users/Edwin/OneDrive/Afstuderen/IrishRail Data/NN/test.txt");
-            dataset.BeginLoad(inputmap.Count, inputmap.Count);
+            CreateDataSet();
+            NetworkSettings.Data.BeginLoad(inputmap.Count, inputmap.Count);
 
             foreach (KeyValuePair<DateTime, List<DelayCombination>> c in DataContainer.DelayCombinations.dict.Where(x => x.Value != null && x.Key > ThresholdDateLower && x.Key < ThresholdDateUpper))
             {
@@ -336,21 +341,20 @@ namespace RailMLNeural.Neural.PreProcessing
                     BasicMLData inputdata = new BasicMLData(inputpart);
                     BasicMLData idealdata = new BasicMLData(outputpart);
                     BasicMLDataPair pair = new BasicMLDataPair(inputdata, idealdata);
-                    pair = NetworkSettings.Normalizer.Normalize(pair);
-                    dataset.Add(pair);
+                    
+                    NetworkSettings.Data.Add(pair);
                     
                 }
             }
 
-            dataset.EndLoad();
-            dataset.Open();
+            NetworkSettings.Data.EndLoad();
+            NetworkSettings.Data.Normalize(NormalizationType); 
 
             worker.ReportProgress(0, "Collectiong Garbage....");
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
-            worker.ReportProgress(0, "Converting to DataSet....");
 
-            NetworkSettings.Data = dataset;
+            worker.ReportProgress(0, "Splitting DataSet");
             SplitData();
             worker.ReportProgress(0, "Preprocessing Finished.");
         }
@@ -467,53 +471,74 @@ namespace RailMLNeural.Neural.PreProcessing
         #region SplitData
         private void SplitData()
         {
-            int VerificationCount = (int)(NetworkSettings.Data.Count * NetworkSettings.Settings.VerificationSize);
-            if(NetworkSettings.Data is BasicMLDataSet)
-            {
-                BasicMLDataSet dataset = (BasicMLDataSet)NetworkSettings.Data;
-                BasicMLDataSet VerificationData = new BasicMLDataSet();
-                Random rand = new Random();
-                while(VerificationData.Count < VerificationCount)
-                {
-                    int i = rand.Next(dataset.Count);
-                    VerificationData.Add(dataset[i]);
-                    dataset.Data.RemoveAt(i);
-                }
-                NetworkSettings.Data = dataset;
-                NetworkSettings.VerificationData = VerificationData;
-                return;
-            }
-            if(NetworkSettings.Data is BufferedMLDataSet)
-            {
-                BufferedMLDataSet olddataset = (BufferedMLDataSet)NetworkSettings.Data;
-                BufferedMLDataSet VerificationData = new BufferedMLDataSet("C:/Users/Edwin/OneDrive/Afstuderen/IrishRail Data/NN/testVer.txt");
-                BufferedMLDataSet newdataset = new BufferedMLDataSet("C:/Users/Edwin/OneDrive/Afstuderen/IrishRail Data/NN/test1.txt");
-                VerificationData.BeginLoad(olddataset.InputSize, olddataset.IdealSize);
-                newdataset.BeginLoad(olddataset.InputSize, olddataset.IdealSize);
-                int c = 0;
-                Random rand = new Random();
-                for(int i = 0; i<olddataset.Count; i++)
-                {
-                    double q = (double)((VerificationCount - c) / (olddataset.Count - i));
-                    if(rand.NextDouble() < q)
-                    {
-                        VerificationData.Add(olddataset[i]);
-                    }
-                    else
-                    {
-                        newdataset.Add(olddataset[i]);
-                    }
-                }
-                olddataset.Close();
-                VerificationData.EndLoad();
-                newdataset.EndLoad();
-                VerificationData.Open();
-                newdataset.Open();
-                NetworkSettings.Data = newdataset;
-                NetworkSettings.VerificationData = VerificationData;
-                File.Delete(olddataset.BinaryFile);
-            }
+            NetworkSettings.Data.Divide(NetworkSettings.Settings.VerificationSize);
+            //if(NetworkSettings.Data is BasicMLDataSet)
+            //{
+            //    BasicMLDataSet dataset = (BasicMLDataSet)NetworkSettings.Data;
+            //    BasicMLDataSet VerificationData = new BasicMLDataSet();
+            //    Random rand = new Random();
+            //    while(VerificationData.Count < VerificationCount)
+            //    {
+            //        int i = rand.Next(dataset.Count);
+            //        VerificationData.Add(dataset[i]);
+            //        dataset.Data.RemoveAt(i);
+            //    }
+            //    NetworkSettings.Data = dataset;
+            //    NetworkSettings.VerificationData = VerificationData;
+            //    return;
+            //}
+            //if(NetworkSettings.Data is NormBuffMLDataSet)
+            //{
+            //    NormBuffMLDataSet olddataset = (NormBuffMLDataSet)NetworkSettings.Data;
+            //    olddataset.Open();
+            //    NormBuffMLDataSet VerificationData = new NormBuffMLDataSet(olddataset.BinaryFile.Replace(".txt", string.Empty) + "Ver.txt");
+            //    NormBuffMLDataSet newdataset = new NormBuffMLDataSet(olddataset.BinaryFile.Replace(".txt", string.Empty) + "1.txt");
+            //    VerificationData.BeginLoad(olddataset.InputSize, olddataset.IdealSize);
+            //    newdataset.BeginLoad(olddataset.InputSize, olddataset.IdealSize);
+            //    int c = 0;
+            //    Random rand = new Random();
+            //    for(int i = 0; i<olddataset.Count; i++)
+            //    {
+            //        double q = (double)((VerificationCount - c) / (olddataset.Count - i));
+            //        if(rand.NextDouble() < q)
+            //        {
+            //            VerificationData.Add(olddataset[i]);
+            //        }
+            //        else
+            //        {
+            //            newdataset.Add(olddataset[i]);
+            //        }
+            //    }
+            //    olddataset.Close();
+            //    VerificationData.EndLoad();
+            //    newdataset.EndLoad();
+            //    VerificationData.Open();
+            //    newdataset.Open();
+            //    NetworkSettings.Data = newdataset;
+            //    NetworkSettings.VerificationData = VerificationData;
+            //    File.Delete(olddataset.BinaryFile);
+            //}
         }
         #endregion SplitData
+
+        #region CreateDataSet
+        private void CreateDataSet()
+        {
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "Document"; // Default file name
+            dlg.AddExtension = true;
+            dlg.DefaultExt = ".txt";
+            dlg.Filter = "txt files (.txt.)|*.txt"; // Filter files by extension
+
+            // Show save file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                NetworkSettings.Data = new NormBuffMLDataSet(dlg.FileName);
+            }
+        }
+        #endregion CreateDataSet
     }
 }

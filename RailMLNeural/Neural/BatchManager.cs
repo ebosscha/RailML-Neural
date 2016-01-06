@@ -11,7 +11,11 @@ namespace RailMLNeural.Neural
     static class BatchManager
     {
         #region Variables
-        private static Queue<NeuralNetwork> _queue { get; set; }
+        private static List<NeuralNetwork> _queue = new List<NeuralNetwork>();
+
+        public static List<NeuralNetwork> Queue { get { return _queue; } }
+
+        public static event EventHandler QueueChanged;
         #endregion Variables
 
         #region Public
@@ -21,18 +25,41 @@ namespace RailMLNeural.Neural
         /// <param name="N"></param>
         public static void Add(NeuralNetwork N)
         {
-            _queue.Enqueue(N);
+            _queue.Add(N);
+            OnChanged();
+        }
+
+        public static void Remove(NeuralNetwork N)
+        {
+            if(_queue.Contains(N))
+            {
+                _queue.Remove(N);
+                OnChanged();
+            }
         }
 
         public static void RunBatch()
         {
             while(_queue.Count > 0)
             {
-                NeuralNetwork N = _queue.Dequeue();
+                NeuralNetwork N = _queue[0];
+                _queue.RemoveAt(0);
+                OnChanged();
                 ThreadPool.QueueUserWorkItem(N.RunNetwork);
             }
         }
         #endregion Public
 
+        #region Private
+        private static void OnChanged()
+        {
+            if(QueueChanged != null)
+            {
+                QueueChanged(null, EventArgs.Empty);
+            }
+
+        }
+
+        #endregion Private
     }
 }

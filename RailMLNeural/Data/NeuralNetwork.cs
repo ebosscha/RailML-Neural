@@ -8,6 +8,7 @@ using Encog.Neural.NeuralData;
 using Encog.Util.Arrayutil;
 using ProtoBuf;
 using RailMLNeural.Neural;
+using RailMLNeural.Neural.Data;
 using RailMLNeural.Neural.Normalization;
 using RailMLNeural.Neural.PreProcessing;
 using RailMLNeural.UI.Neural.ViewModel;
@@ -38,8 +39,7 @@ namespace RailMLNeural.Data
         public IContainsFlat Network { get; set; }
         [ProtoIgnore]
         [ExpandableObject]
-        public IMLDataSet Data { get; set; }
-        public IMLDataSet VerificationData { get; set; }
+        public NormBuffMLDataSet Data { get; set; }
         [ProtoIgnore]
         public IMLTrain Training;
         [ProtoMember(2)]
@@ -47,7 +47,7 @@ namespace RailMLNeural.Data
         public string Name { get; set; }
         [Category("General")]
         public string Description { get; set; }
-        [Category("General")]
+        [Category("General"), ReadOnly(true)]
         public AlgorithmEnum Type { get; set; }
         [Category("Neural Network")]
         public List<LayerSize> HiddenLayerSize { get; set; }
@@ -70,6 +70,7 @@ namespace RailMLNeural.Data
 
         public void RunNetwork(object state)
         {
+            Data.Open();
             IsRunning = true;
             if(ErrorHistory.Count == 0)
             {
@@ -105,7 +106,8 @@ namespace RailMLNeural.Data
         {
             if(Network is BasicNetwork)
             {
-                VerificationSetHistory.Add(((BasicNetwork)Network).CalculateError(VerificationData));
+                var data = Data.VerificationDataSet();
+                VerificationSetHistory.Add(((BasicNetwork)Network).CalculateError(data));
             }
         }
 
@@ -116,6 +118,18 @@ namespace RailMLNeural.Data
                 return ((BasicNetwork)Network).Compute(data);
             }
             return null;
+        }
+
+        public void Dispose()
+        {
+            Data.Close();
+            Data = null;
+            Training = null;
+            Network = null;
+            HiddenLayerSize = null;
+            ErrorHistory = null;
+            VerificationSetHistory = null;
+            ProgressChanged = null;
         }
 
         #region Serialization

@@ -116,7 +116,18 @@ namespace RailMLNeural.Data
 
                     if (entry.Arrival !=default(DateTime))
                     {
-                        delay.arrivaldelay = (entry.Arrival - entry.ScheduledArrival).TotalSeconds;
+                        
+
+                        delay.arrivaldelay = ((entry.Arrival) - entry.ScheduledArrival).TotalSeconds;
+                        //Correct for times after 0:00
+                        if(delay.arrivaldelay < -50000)
+                        {
+                            delay.arrivaldelay += 86400;
+                        }
+                        if(delay.arrivaldelay > 50000)
+                        {
+                            delay.arrivaldelay -= 86400;
+                        }
                     }
                     else if(stopdelays.Count > 0)
                     {
@@ -127,8 +138,18 @@ namespace RailMLNeural.Data
                         delay.arrivaldelay = origindelay;
                     }
                     if (entry.Departure != default(DateTime))
-                    { 
+                    {
                         delay.departuredelay = (entry.Departure - entry.ScheduledDeparture).TotalSeconds;
+                        // Correct for 0:00 overruns
+                        if(delay.departuredelay < -50000)
+                        {
+                            delay.departuredelay += 86400;
+                        }
+                        if(delay.departuredelay > 50000)
+                        {
+                            delay.departuredelay -= 86400;
+                        }
+                        
                     }
                     else
                     {

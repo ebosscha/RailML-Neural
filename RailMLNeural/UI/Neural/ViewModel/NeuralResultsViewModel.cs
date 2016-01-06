@@ -63,10 +63,12 @@ namespace RailMLNeural.UI.Neural.ViewModel
             {
                 SelectedNetwork.ProgressChanged -= new EventHandler(ProgressChanged);
             }
-            
-            SelectedNetwork = msg.NeuralNetwork;
-            SelectedNetwork.ProgressChanged += new EventHandler(ProgressChanged);
-            ProgressChanged(this, EventArgs.Empty);
+            if (msg.NeuralNetwork != null)
+            {
+                SelectedNetwork = msg.NeuralNetwork;
+                SelectedNetwork.ProgressChanged += new EventHandler(ProgressChanged);
+                ProgressChanged(this, EventArgs.Empty);
+            }
         }
 
         private void ProgressChanged(object sender, EventArgs e)

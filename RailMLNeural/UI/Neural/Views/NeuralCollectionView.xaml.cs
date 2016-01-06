@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using RailMLNeural.UI.Neural.ViewModel;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace RailMLNeural.UI.Neural.Views
@@ -14,6 +15,11 @@ namespace RailMLNeural.UI.Neural.Views
         public NeuralCollectionView()
         {
             InitializeComponent();
+        }
+
+        public NeuralCollectionViewModel VM
+        {
+            get { return (NeuralCollectionViewModel)DataContext; }
         }
     }
 }

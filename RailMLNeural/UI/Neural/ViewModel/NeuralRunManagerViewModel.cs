@@ -11,6 +11,10 @@ using GalaSoft.MvvmLight.Messaging;
 using Encog.Neural.Networks.Training.Propagation.Back;
 using Encog.Neural.Networks.Training.Propagation.Resilient;
 using System.Threading;
+using System.Collections.ObjectModel;
+using Encog.Neural.Networks.Training.Propagation.Manhattan;
+using Encog.Neural.Networks.Training.Propagation.Quick;
+using Encog.Neural.Networks.Training.Propagation.SCG;
 
 namespace RailMLNeural.UI.Neural.ViewModel
 {
@@ -74,6 +78,17 @@ namespace RailMLNeural.UI.Neural.ViewModel
             }
         }
 
+        private ObservableCollection<NeuralNetwork> _batchCollection;
+
+        public ObservableCollection<NeuralNetwork> BatchCollection
+        {
+            get { return _batchCollection; }
+            set { _batchCollection = value;
+            RaisePropertyChanged("BatchCollection");
+            }
+        }
+
+
         #endregion Parameters
 
         #region Public
@@ -83,8 +98,10 @@ namespace RailMLNeural.UI.Neural.ViewModel
         public NeuralRunManagerViewModel()
         {
             InitializeCommands();
+            BatchCollection = new ObservableCollection<NeuralNetwork>(BatchManager.Queue);
             Messenger.Default.Register<NeuralSelectionChangedMessage>(this, (msg) =>
                 Network = msg.NeuralNetwork);
+            BatchManager.QueueChanged += new EventHandler(OnBatchChanged);
         }
         #endregion Public
 
@@ -99,20 +116,42 @@ namespace RailMLNeural.UI.Neural.ViewModel
                 case LearningAlgorithmEnum.ResilientPropagation:
                     Network.Training = new ResilientPropagation(Network.Network, Network.Data);
                     break;
+                case LearningAlgorithmEnum.ManhattanPropagation:
+                    Network.Training = new ManhattanPropagation(Network.Network, Network.Data, Network.Settings.LearningRate);
+                    break;
+                case LearningAlgorithmEnum.QuickPropagation:
+                    Network.Training = new QuickPropagation(Network.Network, Network.Data);
+                    break;
+                case LearningAlgorithmEnum.ScaledConjugateGradient:
+                    Network.Training = new ScaledConjugateGradient(Network.Network, Network.Data);
+                    break;
                 default:
                     return;
             }
         }
+
+        /// <summary>
+        /// Updates the observablecollection to update the datagrid with the batch in the view.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnBatchChanged(object sender, EventArgs e)
+        {
+            BatchCollection = new ObservableCollection<NeuralNetwork>(BatchManager.Queue);
+        }
+
         #endregion Private
 
         #region Commands
         public ICommand RunNetworkCommand { get; private set; }
         public ICommand AddToBatchCommand { get; private set; }
+        public ICommand RunBatchCommand { get; private set; }
 
         private void InitializeCommands()
         {
             RunNetworkCommand = new RelayCommand(ExecuteRunNetwork);
             AddToBatchCommand = new RelayCommand(ExecuteAddToBatch);
+            RunBatchCommand = new RelayCommand(ExecuteRunBatch);
         }
 
         private void ExecuteRunNetwork()
@@ -127,6 +166,11 @@ namespace RailMLNeural.UI.Neural.ViewModel
         {
             AddLearningAlgorithm(); 
             BatchManager.Add(Network);
+        }
+
+        private void ExecuteRunBatch()
+        {
+            BatchManager.RunBatch();
         }
 
         #endregion Commands

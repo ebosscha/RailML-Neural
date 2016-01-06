@@ -37,6 +37,9 @@ namespace RailMLNeural.Neural
     public enum LearningAlgorithmEnum
     {
         BackPropagation,
-        ResilientPropagation
+        ResilientPropagation,
+        QuickPropagation,
+        ManhattanPropagation,
+        ScaledConjugateGradient
     }
 }

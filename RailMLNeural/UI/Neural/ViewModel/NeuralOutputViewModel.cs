@@ -67,31 +67,38 @@ namespace RailMLNeural.UI.Neural.ViewModel
         private void UpdateInput()
         {
             InputCollection = new ObservableCollection<IOdef>();
-            foreach(string map in _selectedNetwork.InputMap)
+            if (_selectedNetwork != null)
             {
-                InputCollection.Add(new IOdef { Label = map, Value = 0});
+                foreach (string map in _selectedNetwork.InputMap)
+                {
+                    InputCollection.Add(new IOdef { Label = map, Value = 0 });
+                }
             }
         }
 
         public void UpdateOutput()
         {
-            BasicMLData data = new BasicMLData(_selectedNetwork.Data.InputSize);
-            for(int i = 0; i < InputCollection.Count; i++)
-            {
-                data[i] = InputCollection[i].Value;
-            }
-            data = _selectedNetwork.Normalizer.Normalize(data, true);
-            IMLData output = _selectedNetwork.Compute(data);
-            output = _selectedNetwork.Normalizer.DeNormalize(output, true);
             OutputCollection = new ObservableCollection<IOdef>();
-            for(int i = 0; i<output.Count ; i++)
+            if(_selectedNetwork != null)
             {
-                IOdef def = new IOdef { Value = output[i] };
-                if(i < _selectedNetwork.OutputMap.Count)
+                BasicMLData data = new BasicMLData(_selectedNetwork.Data.InputSize);
+                for(int i = 0; i < InputCollection.Count; i++)
                 {
-                    def.Label = _selectedNetwork.OutputMap[i];
+                    data[i] = InputCollection[i].Value;
                 }
-                OutputCollection.Add(def);
+                data = _selectedNetwork.Data.Normalizer.Normalize(data, true) as BasicMLData;
+                var test = _selectedNetwork.Data.Normalizer.DeNormalize(data, true) as BasicMLData;
+                IMLData output = _selectedNetwork.Compute(data);
+                output = _selectedNetwork.Data.Normalizer.DeNormalize(output, false);
+                for(int i = 0; i<output.Count ; i++)
+                {
+                    IOdef def = new IOdef { Value = output[i] };
+                    if(i < _selectedNetwork.OutputMap.Count)
+                    {
+                        def.Label = _selectedNetwork.OutputMap[i];
+                    }
+                    OutputCollection.Add(def);
+                }
             }
 
         }

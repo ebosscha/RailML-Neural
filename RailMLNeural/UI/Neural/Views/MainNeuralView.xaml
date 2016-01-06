@@ -14,22 +14,22 @@
                     <xcad:LayoutAnchorablePaneGroup DockWidth="Auto">
                         <xcad:LayoutAnchorablePane>
                             <xcad:LayoutAnchorable 
-                                Title="Neural Network Configurations">
+                                Title="Neural Network Configurations" CanClose="False" CanHide="False">
                                 <ContentControl 
                                     Content="{Binding NeuralCollection}"/>
                             </xcad:LayoutAnchorable>
                         </xcad:LayoutAnchorablePane>
                     </xcad:LayoutAnchorablePaneGroup>
                         <xcad:LayoutDocumentPane>
-                            <xcad:LayoutDocument Title="Run Manager">
+                            <xcad:LayoutDocument Title="Run Manager" CanClose="False">
                                 <ContentControl
                                     Content="{Binding NeuralRunManager}"/>
                             </xcad:LayoutDocument>
-                            <xcad:LayoutDocument Title="Result Manager">
+                            <xcad:LayoutDocument Title="Training Results" CanClose="False">
                                 <ContentControl 
                                     Content="{Binding NeuralResults}"/>
                             </xcad:LayoutDocument>
-                            <xcad:LayoutDocument Title="Result Manager">
+                            <xcad:LayoutDocument Title="Network Output" CanClose="False">
                                 <ContentControl 
                                     Content="{Binding NeuralOutput}"/>
                             </xcad:LayoutDocument>
@@ -37,7 +37,7 @@
                     <xcad:LayoutAnchorablePaneGroup DockWidth="Auto">
                         <xcad:LayoutAnchorablePane>
                             <xcad:LayoutAnchorable
-                                Title="Neural Network Properties">
+                                Title="Neural Network Properties" CanClose="False" CanHide="False">
                                 <ContentControl 
                                     Content="{Binding NeuralProperties}"/>
                             </xcad:LayoutAnchorable>

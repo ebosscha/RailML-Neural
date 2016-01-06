@@ -11,7 +11,8 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.Data
 {
-    class NormBuffMLDataSet : BufferedMLDataSet
+    [Serializable]
+    public class NormBuffMLDataSet : BufferedMLDataSet
     {
         #region Parameters
         private bool _isNormalized;
@@ -35,28 +36,77 @@ namespace RailMLNeural.Neural.Data
         private int RecordSize;
         private const int DoubleSize = sizeof(double);
         private const int HeaderSize = DoubleSize*3;
+        private int _inputSize;
+        private int _idealSize;
+        private int _trainingCount
+        { 
+            get
+            { return _recordCount - _verificationCount; }
+        }
+        private int _verificationCount;
+
+        public new int Count
+        {
+            get
+            {
+                return _trainingCount;
+            }
+        }
+
+        public int VerificationCount
+        {
+            get
+            {
+                return _verificationCount;
+            }
+        }
 
         #endregion Parameters
 
         #region Public
         public NormBuffMLDataSet(string binaryfile) : base(binaryfile)
         {
-
+            _recordCount = EGB.NumberOfRecords;
         }
 
-        public void Normalize()
+        public void Normalize(NormalizationTypeEnum type)
         {
-            this.Close();
+            Normalizer.Type = type;
+            Normalizer.Generate();
+            EGB.Close();
             _stream = new FileStream(BinaryFile, FileMode.Open, FileAccess.ReadWrite);
             _writer = new BinaryWriter(_stream);
             _reader = new BinaryReader(_stream);
-            RecordSize = (InputSize + IdealSize + 1 ) * DoubleSize;
+            RecordSize = (_inputSize + _idealSize + 1 ) * DoubleSize;
 
-            for(int i = 0; i < EGB.RecordCount; i++)
+            for(int i = 0; i < _recordCount; i++)
             {
                 IMLDataPair newpair = Normalizer.Normalize(ReadPair(i));
                 Replace(newpair, i);
             }
+            _isNormalized = true;
+            _writer.Close();
+            _writer = null;
+            _reader.Close();
+            _reader = null;
+            _stream.Close();
+            _stream = null;
+
+        }
+
+        public void Divide(double verificationPart)
+        {
+            SplitData(verificationPart);
+        }
+
+        /// <summary>
+        /// Method that returns a sub Dataset that reads from the same file. Starts from index after trainingcount, and ends at endfile.
+        /// </summary>
+        /// <returns></returns>
+        public IMLDataSet VerificationDataSet()
+        {
+            var result = new BufferedSubDataSet(this, _trainingCount, _recordCount);
+            return result;
         }
 
         #endregion Public
@@ -67,6 +117,7 @@ namespace RailMLNeural.Neural.Data
             SetLocation(row);
             Write(pair.Input);
             Write(pair.Ideal);
+            _writer.Write(1.0);
         }
 
         private void Replace(IMLData data, int row)
@@ -95,8 +146,8 @@ namespace RailMLNeural.Neural.Data
 
         private IMLDataPair ReadPair(int row)
         {
-            var input = new double[InputSize];
-            var ideal = new double[IdealSize];
+            var input = new double[_inputSize];
+            var ideal = new double[_idealSize];
 
             SetLocation(row);
             for(int i = 0; i < InputSize; i++)
@@ -144,10 +195,56 @@ namespace RailMLNeural.Neural.Data
         public new void BeginLoad(int inputSize, int idealSize)
         {
             base.BeginLoad(inputSize, idealSize);
-            _normalizer = new Normalizer(inputSize, idealSize);
+            _recordCount = 0;
+            _normalizer = new Normalizer(inputSize, idealSize, NormalizationTypeEnum.Linear);
+            _inputSize = inputSize;
+            _idealSize = idealSize;
         }
 
+        public new void Open()
+        {
+            base.Open();
+            _recordCount = EGB.NumberOfRecords;
+        }
 
+        #region SplitData
 
+        private void SplitData(double verificationsize)
+        {
+            _verificationCount = (int)(_recordCount * verificationsize);
+            Shuffle();
+        }
+
+        /// <summary>
+        /// Implementation of Fisher-Yates shuffle algorithm to shuffle the dataset.
+        /// </summary>
+        private void Shuffle()
+        {
+            EGB.Close();
+            _stream = new FileStream(BinaryFile, FileMode.Open, FileAccess.ReadWrite);
+            _writer = new BinaryWriter(_stream);
+            _reader = new BinaryReader(_stream);
+
+            Random rand = new Random();
+            int n = _recordCount;
+            while (n > 1)
+            {
+                n--;
+                int k = rand.Next(n + 1);
+                IMLDataPair value = ReadPair(k);
+                Replace(ReadPair(n), k);
+                Replace(value, n);
+            }
+
+            _writer.Close();
+            _writer = null;
+            _reader.Close();
+            _reader = null;
+            _stream.Close();
+            _stream = null;
+        }
+
+        
+        #endregion SplitData
     }
 }

@@ -9,8 +9,6 @@
         DataContext="{Binding NeuralResultsVM, Source={StaticResource Locator}}">
 
     <Grid>
-        <!--<xcdg:DataGridControl ItemsSource="{Binding ErrorHistory}">
-        </xcdg:DataGridControl>-->
         <d3:ChartPlotter>
             <d3:HorizontalAxisTitle>
                 Epoch
