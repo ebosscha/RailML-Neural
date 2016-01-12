@@ -1,5 +1,6 @@
 ﻿using Encog.ML.Data;
 using Encog.ML.Data.Basic;
+using RailMLNeural.Neural.PreProcessing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,6 @@ namespace RailMLNeural.Neural.Normalization
 
         #region Parameters
 
-        public NormalizationTypeEnum Type { get; set; }
         private int _inputSize;
         private int _idealSize;
         private double _min = -0.8;
@@ -30,25 +30,40 @@ namespace RailMLNeural.Neural.Normalization
         #endregion Parameters
 
         #region Public
-        public Normalizer(int inputSize, int idealSize, NormalizationTypeEnum type)
+        public Normalizer(int inputSize, int idealSize)
         {
             _inputSize = inputSize;
             _idealSize = idealSize;
-            Type = type;
         }
 
-        public void Generate()
+        public void Generate(List<IDataProvider> inputproviders, List<IDataProvider> outputproviders)
         {
-            switch(Type)
+            NormalizationFunctions.Clear();
+            DeNormalizationFunctions.Clear();
+            var AllProviders = new List<IDataProvider>(inputproviders.Count + outputproviders.Count);
+            AllProviders.AddRange(inputproviders);
+            AllProviders.AddRange(outputproviders);
+            int i = 0;
+            foreach (IDataProvider provider in AllProviders)
             {
-                case NormalizationTypeEnum.Linear:
-                    GenerateLinear();
-                    break;
-                case NormalizationTypeEnum.Quadratic:
-                    GenerateQuadratic();
-                    break;
-                default:
-                    break;
+                for (int n = 0; n < provider.Size; n++)
+                {
+                    switch (provider.NormalizationType)
+                    {
+                        case NormalizationTypeEnum.Linear:
+                            GenerateLinear(i);
+                            break;
+                        case NormalizationTypeEnum.Quadratic:
+                            GenerateQuadratic(i);
+                            break;
+                        case NormalizationTypeEnum.None:
+                            GenerateNone(i);
+                            break;
+                        default:
+                            break;
+                    }
+                    i++;
+                }
             }
         }
 
@@ -82,13 +97,13 @@ namespace RailMLNeural.Neural.Normalization
                     {
                         _minValues[i] = Math.Min(_minValues[i], pair.Input[i]);
                         _maxValues[i] = Math.Max(_maxValues[i], pair.Input[i]);
-                        _mean[i] = (_mean[i] + pair.Input[i]) * ((double)n / ((double)n + 1));
+                        _mean[i] = (_mean[i] * (double)n + pair.Input[i]) / ((double)n + 1);
                     }
                     else
                     {
                         _minValues[i] = Math.Min(_minValues[i], pair.Ideal[i - _inputSize]);
                         _maxValues[i] = Math.Max(_maxValues[i], pair.Ideal[i - _inputSize]);
-                        _mean[i] = (_mean[i] + pair.Ideal[i - _inputSize]) * ((double)n / ((double)n + 1));
+                        _mean[i] = (_mean[i] * (double)n + pair.Ideal[i - _inputSize]) / ((double)n + 1);
                     }
                 }
                 n++;
@@ -159,45 +174,37 @@ namespace RailMLNeural.Neural.Normalization
         /// <summary>
         /// Generates Linear normalization and denormalization functions based on _minvalue, _maxvalue and scales to [_min, _max]
         /// </summary>
-        private void GenerateLinear()
+        private void GenerateLinear(int i)
         {
-            NormalizationFunctions.Clear();
-            DeNormalizationFunctions.Clear();
-            for(int i = 0; i < _minValues.Count; i++)
-            {
-                double maxvalue = _maxValues[i];
-                double minvalue = _minValues[i];
-                NormalizationFunctions.Add((x) => LinearNormalizer(x, minvalue, maxvalue, _min, _max));
-                DeNormalizationFunctions.Add((x) => LinearDeNormalizer(x, minvalue, maxvalue, _min, _max));
-            }
+            double maxvalue = _maxValues[i];
+            double minvalue = _minValues[i];
+            NormalizationFunctions.Add((x) => LinearNormalizer(x, minvalue, maxvalue, _min, _max));
+            DeNormalizationFunctions.Add((x) => LinearDeNormalizer(x, minvalue, maxvalue, _min, _max));           
         }
 
         /// <summary>
         /// Generates Quadratic normalization and denormalization functions fitting [_minvalue, _min], [_mean, 0] and [__maxvalue, _max]
         /// </summary>
-        private void GenerateQuadratic()
+        private void GenerateQuadratic(int i)
         {
-            NormalizationFunctions.Clear();
-            DeNormalizationFunctions.Clear();
-            for (int i = 0; i < _minValues.Count; i++)
-            {
-                double maxvalue = _maxValues[i];
-                double minvalue = _minValues[i];
-                double denom = (_minValues[i] - _mean[i]) * (_minValues[i] - _maxValues[i]) * (_mean[i] - _maxValues[i]);
-                double A = (_maxValues[i] * (0.0 - _min) + _mean[i] * (_min - _max) + _minValues[i] * (_max - 0.0)) / denom;
-                double B = (_maxValues[i] * _maxValues[i] * (_min - 0.0) + _mean[i] * _mean[i] * (_max - _min) + _minValues[i] * _minValues[i] * (0.0 - _max)) / denom;
-                double C = (_mean[i] * _maxValues[i] * (_mean[i] - _maxValues[i]) * _min + _maxValues[i] * _minValues[i] * (_maxValues[i] - _minValues[i]) * 0.0 + _minValues[i] * _mean[i] * (_minValues[i] - _mean[i]) * _max) / denom;
+            double maxvalue = _maxValues[i];
+            double minvalue = _minValues[i];
+            double denom = (_min - 0.0) * (_min - _max) * (0.0 - _max);
+            double A = (_max * (_mean[i] - _minValues[i]) + 0.0 * (_minValues[i] - _maxValues[i]) + _min * (_maxValues[i] - _mean[i])) / denom;
+            double B = (_max * _max * (_minValues[i] - _mean[i]) + 0.0 * 0.0 * (_maxValues[i] - _minValues[i]) + _min * _min * (_mean[i] - _maxValues[i])) / denom;
+            double C = (0.0 * _max * (0.0 - _max) * _minValues[i] + _max * _min * (_max - _min) * _mean[i] + _min * 0.0 * (_min - 0.0) * _maxValues[i]) / denom;
 
-                if (double.IsNaN(A) || double.IsNaN(B) || double.IsNaN(C))
-                {
-                    NormalizationFunctions.Add((x) => 0.0);
-                    DeNormalizationFunctions.Add((x) => 0.0);
-                }
-                else
-                {
-                    NormalizationFunctions.Add((x) => QuadraticNormalizer(x, A, B, C));
-                    DeNormalizationFunctions.Add((x) => QuadraticDeNormalizer(x, A, B, C, minvalue, maxvalue));
-                }
+
+            if (double.IsNaN(A) || double.IsNaN(B) || double.IsNaN(C) ||
+                (A == 0 && B == 0 && C == 0))
+            {
+                NormalizationFunctions.Add((x) => 0.0);
+                DeNormalizationFunctions.Add((x) => 0.0);
+            }
+            else
+            {
+                NormalizationFunctions.Add((x) => QuadraticNormalizer(x, A, B, C));
+                DeNormalizationFunctions.Add((x) => QuadraticDeNormalizer(x, A, B, C, minvalue, maxvalue));
             }
         }
 
@@ -210,6 +217,12 @@ namespace RailMLNeural.Neural.Normalization
         private double LinearDeNormalizer(double value, double minvalue, double maxvalue, double minrange, double maxrange)
         {
             return (value + minrange) * Diff(minvalue, maxvalue) / (maxrange - minrange) + minvalue;
+        }
+
+        private void GenerateNone(int i)
+        {
+            NormalizationFunctions.Add((x) => x);
+            DeNormalizationFunctions.Add((x) => x);
         }
         
         /// <summary>
@@ -253,6 +266,7 @@ namespace RailMLNeural.Neural.Normalization
     public enum NormalizationTypeEnum
     {
         Linear,
-        Quadratic
+        Quadratic,
+        None
     }
 }

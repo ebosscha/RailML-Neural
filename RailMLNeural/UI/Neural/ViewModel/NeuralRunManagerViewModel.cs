@@ -143,22 +143,22 @@ namespace RailMLNeural.UI.Neural.ViewModel
         #endregion Private
 
         #region Commands
-        public ICommand RunNetworkCommand { get; private set; }
+        public ICommand TrainNetworkCommand { get; private set; }
         public ICommand AddToBatchCommand { get; private set; }
         public ICommand RunBatchCommand { get; private set; }
 
         private void InitializeCommands()
         {
-            RunNetworkCommand = new RelayCommand(ExecuteRunNetwork);
+            TrainNetworkCommand = new RelayCommand(ExecuteTrainNetwork);
             AddToBatchCommand = new RelayCommand(ExecuteAddToBatch);
             RunBatchCommand = new RelayCommand(ExecuteRunBatch);
         }
 
-        private void ExecuteRunNetwork()
+        private void ExecuteTrainNetwork()
         {
             AddLearningAlgorithm();
-            ThreadPool.QueueUserWorkItem(Network.RunNetwork);
-            //Network.RunNetwork(0);
+            ThreadPool.QueueUserWorkItem(Network.TrainNetwork);
+            //Network.TrainNetwork(0);
 
         }
 

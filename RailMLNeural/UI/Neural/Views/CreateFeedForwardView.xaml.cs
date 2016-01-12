@@ -5,14 +5,14 @@ using System.Windows;
 namespace RailMLNeural.UI.Neural.Views
 {
     /// <summary>
-    /// Description for CreateNeuralView.
+    /// Description for CreateFeedForwardView.
     /// </summary>
-    public partial class CreateNeuralView : Window
+    public partial class CreateFeedForwardView : Window
     {
         /// <summary>
-        /// Initializes a new instance of the CreateNeuralView class.
+        /// Initializes a new instance of the CreateFeedForwardView class.
         /// </summary>
-        public CreateNeuralView()
+        public CreateFeedForwardView()
         {
             InitializeComponent();
             // View is not hittestable when preprocessing
@@ -21,15 +21,23 @@ namespace RailMLNeural.UI.Neural.Views
 
         private void HiddenLayerSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            CreateNeuralViewModel vm = (CreateNeuralViewModel)this.DataContext;
+            CreateFeedForwardViewModel vm = (CreateFeedForwardViewModel)this.DataContext;
             vm.HiddenLayerSize_ValueChanged(sender, e);
         }
 
         private void Algorithm_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            CreateNeuralViewModel vm = (CreateNeuralViewModel)this.DataContext;
+            CreateFeedForwardViewModel vm = (CreateFeedForwardViewModel)this.DataContext;
             vm.Algorithm_SelectionChanged();
         } 
+
+        public CreateFeedForwardViewModel VM
+        {
+            get
+            {
+                return (CreateFeedForwardViewModel)this.DataContext;
+            }
+        }
 
         
     }

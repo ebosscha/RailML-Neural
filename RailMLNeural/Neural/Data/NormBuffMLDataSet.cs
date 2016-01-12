@@ -2,6 +2,7 @@
 using Encog.ML.Data.Basic;
 using Encog.ML.Data.Buffer;
 using RailMLNeural.Neural.Normalization;
+using RailMLNeural.Neural.PreProcessing;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -69,10 +70,9 @@ namespace RailMLNeural.Neural.Data
             _recordCount = EGB.NumberOfRecords;
         }
 
-        public void Normalize(NormalizationTypeEnum type)
+        public void Normalize(List<IDataProvider> inputproviders, List<IDataProvider> outputproviders)
         {
-            Normalizer.Type = type;
-            Normalizer.Generate();
+            Normalizer.Generate(inputproviders, outputproviders);
             EGB.Close();
             _stream = new FileStream(BinaryFile, FileMode.Open, FileAccess.ReadWrite);
             _writer = new BinaryWriter(_stream);
@@ -196,7 +196,7 @@ namespace RailMLNeural.Neural.Data
         {
             base.BeginLoad(inputSize, idealSize);
             _recordCount = 0;
-            _normalizer = new Normalizer(inputSize, idealSize, NormalizationTypeEnum.Linear);
+            _normalizer = new Normalizer(inputSize, idealSize);
             _inputSize = inputSize;
             _idealSize = idealSize;
         }

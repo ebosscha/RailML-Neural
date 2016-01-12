@@ -95,7 +95,7 @@
         
 
         <Button Content="Run"
-                Command="{Binding RunNetworkCommand}"
+                Command="{Binding TrainNetworkCommand}"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 Margin="0,0,10,10"

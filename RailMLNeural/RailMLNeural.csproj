@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RailMLNeural</RootNamespace>
     <AssemblyName>RailMLNeural</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -132,22 +132,31 @@
     <Compile Include="Data\SaveLoad.cs" />
     <Compile Include="Data\Settings.cs" />
     <Compile Include="Data\ShortestPath.cs" />
+    <Compile Include="Data\SimplifiedGraph.cs" />
     <Compile Include="Data\XML.cs" />
-    <Compile Include="Neural\Algorithms\PerLineClassification.cs" />
+    <Compile Include="Neural\Algorithms\Propagators\ChronologicalPropagator.cs" />
+    <Compile Include="Neural\Algorithms\Propagators\IPropagator.cs" />
     <Compile Include="Neural\Algorithms\RecurrentNetwork.cs" />
     <Compile Include="Neural\Algorithms\RecurrentTraining.cs" />
     <Compile Include="Neural\BatchManager.cs" />
+    <Compile Include="Neural\Configurations\RecurrentConfiguration.cs" />
     <Compile Include="Neural\Data\BufferedSubDataSet.cs" />
     <Compile Include="Neural\Data\NormBuffMLDataSet.cs" />
     <Compile Include="Neural\Data\RecurrentDataProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\DelaySizeInputRecurrentProvider.cs" />
     <Compile Include="Neural\Enums.cs" />
+    <Compile Include="Neural\INeuralConfiguration.cs" />
     <Compile Include="Neural\Normalization\Normalizer.cs" />
+    <Compile Include="Neural\PreProcessing\DataProviders\InitialDelaySizeInputProvider.cs" />
+    <Compile Include="Neural\PreProcessing\DataProviders\LineClassificationInputProvider.cs" />
+    <Compile Include="Neural\PreProcessing\DataProviders\TimeInputProvider.cs" />
     <Compile Include="Neural\PreProcessing\DataProviders\PerLineClassificationOutputProvider.cs" />
     <Compile Include="Neural\PreProcessing\DataProviders\DataProviderTemplate.cs" />
     <Compile Include="Neural\PreProcessing\DataProviders\PerLineExactOutputProvider.cs" />
     <Compile Include="Neural\PreProcessing\IDataProvider.cs" />
     <Compile Include="Neural\PreProcessing\DataProviders\PerLineExactInputProvider.cs" />
     <Compile Include="Neural\PreProcessing\Import.cs" />
+    <Compile Include="Neural\PreProcessing\PreProcesser - Copy.cs" />
     <Compile Include="Neural\PreProcessing\PreProcesser.cs" />
     <Compile Include="RailML\schema.cs" />
     <Compile Include="UI\Design\DesignDataService.cs" />
@@ -156,13 +165,17 @@
     <Compile Include="UI\Dialog\View\DebugWindow.xaml.cs">
       <DependentUpon>DebugWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\Dialog\View\NeuralCreationDialog.xaml.cs">
+      <DependentUpon>NeuralCreationDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\Dialog\View\ProjectOptionsView.xaml.cs">
       <DependentUpon>ProjectOptionsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\Model\DataItem.cs" />
     <Compile Include="UI\Model\DataService.cs" />
     <Compile Include="UI\Model\IDataService.cs" />
-    <Compile Include="UI\Neural\ViewModel\CreateNeuralViewModel.cs" />
+    <Compile Include="UI\Neural\ViewModel\CreateFeedForwardViewModel.cs" />
+    <Compile Include="UI\Neural\ViewModel\CreateRecurrentNetworkViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\MainNeuralViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\Messages.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralCollectionViewModel.cs" />
@@ -170,8 +183,11 @@
     <Compile Include="UI\Neural\ViewModel\NeuralPropertiesViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralResultsViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralRunManagerViewModel.cs" />
-    <Compile Include="UI\Neural\Views\CreateNeuralView.xaml.cs">
-      <DependentUpon>CreateNeuralView.xaml</DependentUpon>
+    <Compile Include="UI\Neural\Views\CreateFeedForwardView.xaml.cs">
+      <DependentUpon>CreateFeedForwardView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Neural\Views\CreateRecurrentNetworkView.xaml.cs">
+      <DependentUpon>CreateRecurrentNetworkView.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\Neural\Views\MainNeuralView.xaml.cs">
       <DependentUpon>MainNeuralView.xaml</DependentUpon>
@@ -244,6 +260,10 @@
       <SubType>Form</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="UI\Dialog\View\NeuralCreationDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\Dialog\View\ProjectOptionsView.xaml">
       <SubType>Form</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -260,7 +280,11 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="UI\Neural\Views\CreateNeuralView.xaml">
+    <Page Include="UI\Neural\Views\CreateFeedForwardView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Neural\Views\CreateRecurrentNetworkView.xaml">
       <SubType>Form</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

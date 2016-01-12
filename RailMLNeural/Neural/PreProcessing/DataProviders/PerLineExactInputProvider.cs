@@ -10,6 +10,8 @@ namespace RailMLNeural.Neural.PreProcessing.DataProviders
 {
     class PerLineExactInputProvider : IDataProvider
     {
+        private const string name = "PerLineExactInputProvider";
+        public string Name { get { return name; } }
         /// <summary>
         /// Integer representing the node count of this module
         /// </summary>
@@ -27,6 +29,11 @@ namespace RailMLNeural.Neural.PreProcessing.DataProviders
         /// Represeting the index of the input/output IMLData where this specific data starts
         /// </summary>
         public int LowerIndex { get; set; }
+
+        /// <summary>
+        /// Enum representing the type of normalization applied to this input/output section
+        /// </summary>
+        public Normalization.NormalizationTypeEnum NormalizationType { get; set; }
 
         public PerLineExactInputProvider()
         {

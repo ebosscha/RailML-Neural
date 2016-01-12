@@ -55,9 +55,8 @@ namespace RailMLNeural.Data
         public string filefolder { get; set; }
         public List<double> ErrorHistory { get; set; }
         public List<double> VerificationSetHistory { get; set; }
-        public List<string> InputMap { get; set; }
-        public List<string> OutputMap { get; set; }
-        //public NormalizationHelper Normalizer { get; set; }
+        public List<IDataProvider> InputDataProviders { get; set; }
+        public List<IDataProvider> OutputDataProviders { get; set; }
         public event EventHandler ProgressChanged;
 
         public NeuralNetwork()
@@ -65,10 +64,11 @@ namespace RailMLNeural.Data
             HiddenLayerSize = new List<LayerSize>();
             ErrorHistory = new List<Double>();
             VerificationSetHistory = new List<Double>();
-            InputMap = new List<string>();
+            InputDataProviders = new List<IDataProvider>();
+            OutputDataProviders = new List<IDataProvider>();
         }
 
-        public void RunNetwork(object state)
+        public void TrainNetwork(object state)
         {
             Data.Open();
             IsRunning = true;
@@ -131,6 +131,60 @@ namespace RailMLNeural.Data
             VerificationSetHistory = null;
             ProgressChanged = null;
         }
+
+        public int InputSize
+        {
+            get
+            {
+                int result = 0;
+                foreach(IDataProvider d in InputDataProviders)
+                {
+                    result += d.Size;
+                }
+                return result;
+            }
+        }
+
+        public int OutputSize
+        {
+            get
+            {
+                int result = 0;
+                foreach(IDataProvider d in OutputDataProviders)
+                {
+                    result += d.Size;
+                }
+                return result;
+            }
+        }
+
+        #region Mapping
+        public List<string> InputMap
+        {
+            get
+            {
+                var result = new List<string>();
+                foreach(IDataProvider provider in InputDataProviders)
+                {
+                    result.AddRange(provider.Map);
+                }
+                return result;
+            }
+        }
+
+        public List<string> OutputMap
+        {
+            get
+            {
+                var result = new List<string>();
+                foreach (IDataProvider provider in OutputDataProviders)
+                {
+                    result.AddRange(provider.Map);
+                }
+                return result;
+            }
+        }
+        #endregion Mapping
 
         #region Serialization
         public void Serialize()

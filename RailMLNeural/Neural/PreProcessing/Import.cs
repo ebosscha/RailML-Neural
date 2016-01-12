@@ -63,13 +63,17 @@ namespace RailMLNeural.Neural.PreProcessing
                 { 
                     if (day.delays.ContainsKey(record.trainCode)) 
                     {
-                        if(record.actualTime < ((Delay)day.delays[record.trainCode]).ActualDeparture)
+                        if (record.actualTime < ((Delay)day.delays[record.trainCode]).ActualDeparture)
                         {
                             day.delays.Remove(record.trainCode);
                         }
-                        ((Delay)day.delays[record.trainCode]).destinationdelay = record.difference;
-                        ((Delay)day.delays[record.trainCode]).delaycode = record.delayCode;
-                        ((Delay)day.delays[record.trainCode]).destination = record.locationSemaName;
+                        else
+                        {
+                            ((Delay)day.delays[record.trainCode]).destinationdelay = record.difference;
+                            ((Delay)day.delays[record.trainCode]).delaycode = record.delayCode;
+                            ((Delay)day.delays[record.trainCode]).destination = record.locationSemaName;
+                            ((Delay)day.delays[record.trainCode]).ActualArrival = record.actualTime;
+                        }
                     }
                 }
                 else if(record.locationType == "O") 
@@ -278,16 +282,28 @@ namespace RailMLNeural.Neural.PreProcessing
     class DelayDay
     {
         public DateTime date { get; set; }
-        public Hashtable delays { get; set; }
+        public Dictionary<string, Delay> delays { get; set; }
 
         public DelayDay()
         {
-            delays = new Hashtable();
+            delays = new Dictionary<string,Delay>();
         }
 
         public List<DelayCombination> FormCombinations()
         {
             List<DelayCombination> list = new List<DelayCombination>();
+            while(delays.Values.Any(x => x.ActualArrival == default(DateTime) || x.ActualDeparture == default(DateTime)))
+            {
+                var key = delays.Where(pair => pair.Value.ActualArrival == default(DateTime) || pair.Value.ActualDeparture == default(DateTime))
+                    .Select(pair => pair.Key)
+                    .FirstOrDefault();
+                if(key != null)
+                {
+                    delays.Remove(key);
+                }
+            }
+
+
             foreach (Delay delay in delays.Values)
             {
                 if (delay.WLCheader != null && delay.WLCheader != String.Empty)

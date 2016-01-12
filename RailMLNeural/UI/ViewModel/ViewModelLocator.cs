@@ -55,10 +55,11 @@ namespace RailMLNeural.UI.ViewModel
             SimpleIoc.Default.Register<NeuralPropertiesViewModel>();
             SimpleIoc.Default.Register<NeuralResultsViewModel>();
             SimpleIoc.Default.Register<NeuralRunManagerViewModel>();
-            SimpleIoc.Default.Register<CreateNeuralViewModel>();
+            SimpleIoc.Default.Register<CreateFeedForwardViewModel>();
             SimpleIoc.Default.Register<NetworkStatisticsViewModel>();
             SimpleIoc.Default.Register<DebugViewModel>();
             SimpleIoc.Default.Register<NeuralOutputViewModel>();
+            SimpleIoc.Default.Register<CreateRecurrentNetworkViewModel>();
         }
 
         /// <summary>
@@ -167,11 +168,11 @@ namespace RailMLNeural.UI.ViewModel
                 return ServiceLocator.Current.GetInstance<NeuralRunManagerViewModel>();
             }
         }
-        public CreateNeuralViewModel CreateNeuralVM
+        public CreateFeedForwardViewModel CreateFeedForwardVM
         {
             get
             {
-                return ServiceLocator.Current.GetInstance<CreateNeuralViewModel>();
+                return ServiceLocator.Current.GetInstance<CreateFeedForwardViewModel>();
             }
         }
         public NetworkStatisticsViewModel NetworkStatisticsVM
@@ -195,6 +196,15 @@ namespace RailMLNeural.UI.ViewModel
                 return ServiceLocator.Current.GetInstance<NeuralOutputViewModel>();
             }
         }
+
+        public CreateRecurrentNetworkViewModel CreateRecurrentNetworkVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<CreateRecurrentNetworkViewModel>();
+            }
+        }
+
            
 
     

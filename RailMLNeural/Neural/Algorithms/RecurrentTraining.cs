@@ -18,7 +18,7 @@ namespace RailMLNeural.Neural.Algorithms
 
         private RecurrentNetwork _network;
 
-        private RecurrentDataProvider _dataProvider;
+        private List<IRecurrentDataProvider> _dataProviders;
 
         public bool TrainingDone { get; private set; }
 

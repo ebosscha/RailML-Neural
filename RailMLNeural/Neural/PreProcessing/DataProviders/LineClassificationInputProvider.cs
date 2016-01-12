@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.PreProcessing.DataProviders
 {
-    class PerLineClassificationOutputProvider : IDataProvider
+    class LineClassificationInputProvider : IDataProvider
     {
-        private const string name = "PerLineClassificationOutputProvider";
+        private const string name = "LineClassificatio";
         public string Name { get { return name; } }
         /// <summary>
         /// Integer representing the node count of this module
@@ -31,89 +31,35 @@ namespace RailMLNeural.Neural.PreProcessing.DataProviders
         public int LowerIndex { get; set; }
 
         /// <summary>
-        /// Integer representing number of classes a full day is divided into
-        /// </summary>
-        private int _classes;
-
-        /// <summary>
         /// Enum representing the type of normalization applied to this input/output section
         /// </summary>
         public Normalization.NormalizationTypeEnum NormalizationType { get; set; }
 
-        public PerLineClassificationOutputProvider()
+        public LineClassificationInputProvider()
         {
             _map = inputmap.Keys.ToList();
-            _classes = 5;
-            _size = _map.Count * _classes;
+            _size = inputmap.Count;
+            NormalizationType = Normalization.NormalizationTypeEnum.None;
         }
 
         public double[] Process(DelayCombination dc)
         {
             double[] result = new double[Size];
-            double[] delaysize = new double[Map.Count];
+
             foreach (Delay d in dc.primarydelays)
             {
+                //string line = DataContainer.model.timetable.trains.Single(x => x.id == d.traincode).description;
                 if (GetLine(d) == "None") { return null; }
-                delaysize[inputmap[GetLine(d)]] += d.destinationdelay;
-            }
-
-            foreach (Delay d in dc.secondarydelays)
-            {
-                if (GetLine(d) == "None") { return null; }
-                delaysize[inputmap[GetLine(d)]] += d.destinationdelay;
-            }
-
-            for (int i = 0; i < delaysize.Length; i++)
-            {
-                if (delaysize[i] < 60)
-                {
-                    result[i * 5] = 1;
-                }
-                else if (delaysize[i] < 300)
-                {
-                    result[i * 4 + 1] = 1;
-                }
-                else if (delaysize[i] < 600)
-                {
-                    result[i * 4 + 2] = 1;
-                }
-                else if (delaysize[i] < 1800)
-                {
-                    result[i * 4 + 3] = 1;
-                }
-                else
-                {
-                    result[i * 4 + 4] = 1;
-                }
+                result[inputmap[GetLine(d)]] = 1;
             }
             return result;
         }
 
         public List<Tuple<string, dynamic>> PublishOutput(IMLData Data)
         {
-            List<Tuple<string, dynamic>> result = new List<Tuple<string, dynamic>>();
-            int n = 0;
-            for (int i = LowerIndex; i < LowerIndex + Size; i += 5 )
-            {
-                double[] array = {Data[i], Data[i+1], Data[i+2], Data[i+3], Data[i+4] };
-                int index = array.ToList().IndexOf(array.Max());
-                string Class = Classes[index];
-
-                result.Add(new Tuple<string, dynamic>(Map[n], Class));
-                n++;
-            }
-
-                return result;
+            throw new NotImplementedException();
         }
 
-        private string[] Classes = 
-        {
-            "< 1 Minute",
-            "1 - 5 Minutes",
-            "6 - 10 Minutes",
-            "11 - 30 Minutes",
-            "> 30 Minutes"
-        };
 
         /// <summary>
         /// Dictionary containing all defined lines and corresponding index;

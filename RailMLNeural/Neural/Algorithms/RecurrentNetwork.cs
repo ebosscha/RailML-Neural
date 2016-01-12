@@ -14,19 +14,21 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.Algorithms
 {
+    [Serializable]
     class RecurrentNetwork : IMLMethod
     {
         #region Parameters
         private BasicNetwork _network;
 
-        private RecurrentDataProvider _dataProvider;
+        private IPropagator _propagator;
+
+        private List<IRecurrentDataProvider> _dataProviders;
 
         #endregion Parameters
 
         #region Public
-        public RecurrentNetwork(RecurrentDataProvider provider, List<LayerSize> layers)
+        public RecurrentNetwork()
         {
-            _dataProvider = provider;
             ConstructNetwork(layers);
         }
 

@@ -45,7 +45,7 @@ namespace RailMLNeural.Neural
                 NeuralNetwork N = _queue[0];
                 _queue.RemoveAt(0);
                 OnChanged();
-                ThreadPool.QueueUserWorkItem(N.RunNetwork);
+                ThreadPool.QueueUserWorkItem(N.TrainNetwork);
             }
         }
         #endregion Public

@@ -8,11 +8,8 @@ namespace RailMLNeural.Neural
 {
     public enum AlgorithmEnum
     {
-        PerLineClassification,
-        PerLineExact,
-        PerRoutePartExact,
-        RecurrentClassification,
-        RecurrentExact
+        Recurrent,
+        FeedForward
     }
 
     public enum ActivationFunctionEnum

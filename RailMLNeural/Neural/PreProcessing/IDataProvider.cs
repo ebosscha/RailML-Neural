@@ -16,7 +16,33 @@ namespace RailMLNeural.Neural.PreProcessing
         double[] Process(DelayCombination delaycombination);
         List<Tuple<string, dynamic>> PublishOutput(IMLData Data);
         List<string> Map { get; }
+        int Size { get; }
         int LowerIndex { get; }
+        Normalization.NormalizationTypeEnum NormalizationType { get; set; }
+        string Name { get; }
+    }
 
+    public enum InputDataProviderEnum
+    {
+        PerLineExactInput,
+        TimeOfDayInput,
+        InitialDelayInput,
+        LineClassificationInput
+    }
+
+    public enum OutputDataProviderEnum
+    {
+        PerLineExactOutput,
+        PerLineClassificationOutput
+    }
+
+    public enum DataProviderEnum
+    {
+        InitialDelayInput,
+        LineClassificationInput,
+        PerLineExactInput,
+        TimeOfDayInput,
+        PerLineExactOutput,
+        PerLineClassificationOutput
     }
 }
