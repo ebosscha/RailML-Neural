@@ -38,10 +38,10 @@ namespace RailMLNeural.Neural.Algorithms
         /// </summary>
         /// <param name="Network"></param>
         /// <param name="Provider"></param>
-        public RecurrentTraining(RecurrentNetwork Network, RecurrentDataProvider Provider)
+        public RecurrentTraining(RecurrentNetwork Network)
         {
             _network = Network;
-            _dataProvider = Provider;
+            //_dataProviders = Provider;
         }
 
         public void Iteration()
