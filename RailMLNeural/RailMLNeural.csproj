@@ -124,6 +124,7 @@
     </ApplicationDefinition>
     <Compile Include="Data\CsvFiles.cs" />
     <Compile Include="Data\DataContainer.cs" />
+    <Compile Include="Data\DataExtentions.cs" />
     <Compile Include="Data\DebugData.cs" />
     <Compile Include="Data\ImportInfrastructure.cs" />
     <Compile Include="Data\ImportTimetable.cs" />

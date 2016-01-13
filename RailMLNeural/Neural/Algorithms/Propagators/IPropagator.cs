@@ -9,6 +9,7 @@ namespace RailMLNeural.Neural.Algorithms.Propagators
     interface IPropagator
     {
         object MoveNext();
-        void NewCycle();       
+        void NewCycle();
+        bool HasNext { get; }
     }
 }

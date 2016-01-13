@@ -119,6 +119,7 @@ namespace RailMLNeural.Data
                         
 
                         delay.arrivaldelay = ((entry.Arrival) - entry.ScheduledArrival).TotalSeconds;
+                        delay.ActualArrival = entry.Arrival;
                         //Correct for times after 0:00
                         if(delay.arrivaldelay < -50000)
                         {
@@ -140,6 +141,7 @@ namespace RailMLNeural.Data
                     if (entry.Departure != default(DateTime))
                     {
                         delay.departuredelay = (entry.Departure - entry.ScheduledDeparture).TotalSeconds;
+                        delay.ActualDeparture = entry.Departure; 
                         // Correct for 0:00 overruns
                         if(delay.departuredelay < -50000)
                         {
@@ -206,7 +208,7 @@ namespace RailMLNeural.Data
         private static void ProcessTimetableVariations(TrainVariations variations)
         {
             eTrain train = new eTrain();
-            train.id = variations.traincode;
+            train.id = variations.traincode.Trim();
             train.description = variations.category;
             train.scope = tTrainScope.primary;
             List<eTrainPart> trainparts = new List<eTrainPart>();
@@ -216,6 +218,7 @@ namespace RailMLNeural.Data
                 try
                 {
                     eTrainPart trainpart = new eTrainPart() { id = train.id + "-" + i.ToString() };
+                    trainpart.trainNumber = train.id;
 
                     var operatingperiod = CreateOperatingPeriod(variations.dates[i]);
                     trainpart.operatingPeriodRef = new eOperatingPeriodRef() { @ref = operatingperiod.id };

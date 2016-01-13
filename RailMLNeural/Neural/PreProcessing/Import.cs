@@ -73,6 +73,7 @@ namespace RailMLNeural.Neural.PreProcessing
                             ((Delay)day.delays[record.trainCode]).delaycode = record.delayCode;
                             ((Delay)day.delays[record.trainCode]).destination = record.locationSemaName;
                             ((Delay)day.delays[record.trainCode]).ActualArrival = record.actualTime;
+                            ((Delay)day.delays[record.trainCode]).ScheduledArrival = record.scheduledtime;
                         }
                     }
                 }
@@ -86,8 +87,8 @@ namespace RailMLNeural.Neural.PreProcessing
                     delay.origindelay = record.difference;
                     delay.origin = record.locationSemaName;
                     delay.ActualDeparture = record.actualTime;
+                    delay.ScheduledDeparture = record.scheduledtime;
                     day.delays.Add(delay.traincode, delay);
-
                 }
 
                 
@@ -227,6 +228,10 @@ namespace RailMLNeural.Neural.PreProcessing
         public DateTime ActualDeparture { get; set; }
         [ProtoMember(12)]
         public DateTime ActualArrival { get; set; }
+        [ProtoMember(13)]
+        public DateTime ScheduledDeparture { get; set; }
+        [ProtoMember(14)]
+        public DateTime ScheduledArrival { get; set; }
 
         public Delay()
         {
@@ -277,6 +282,10 @@ namespace RailMLNeural.Neural.PreProcessing
         public double arrivaldelay { get; set; } // Arrivaldelay in seconds 
         [ProtoMember(3)]
         public double departuredelay { get; set; } // Departuredelay in seconds
+        [ProtoMember(4)]
+        public DateTime ActualArrival { get; set; }
+        [ProtoMember(5)]
+        public DateTime ActualDeparture { get; set; }
     }
 
     class DelayDay
