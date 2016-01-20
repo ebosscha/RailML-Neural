@@ -3,6 +3,7 @@ using Encog.ML.Data.Basic;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 using RailMLNeural.Data;
+using RailMLNeural.Neural;
 using System.Collections.ObjectModel;
 
 namespace RailMLNeural.UI.Neural.ViewModel
@@ -42,7 +43,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
             }
         }
 
-        private NeuralNetwork _selectedNetwork;
+        private INeuralConfiguration _selectedNetwork;
 
         #endregion Parameters
 
@@ -78,27 +79,30 @@ namespace RailMLNeural.UI.Neural.ViewModel
 
         public void UpdateOutput()
         {
-            OutputCollection = new ObservableCollection<IOdef>();
-            if(_selectedNetwork != null)
+            if (_selectedNetwork is FeedForwardConfiguration && _selectedNetwork != null)
             {
-                BasicMLData data = new BasicMLData(_selectedNetwork.Data.InputSize);
-                for(int i = 0; i < InputCollection.Count; i++)
+                FeedForwardConfiguration ffconf = _selectedNetwork as FeedForwardConfiguration;
+                OutputCollection = new ObservableCollection<IOdef>();
+                
+                BasicMLData data = new BasicMLData(ffconf.Data.InputSize);
+                for (int i = 0; i < InputCollection.Count; i++)
                 {
                     data[i] = InputCollection[i].Value;
                 }
-                data = _selectedNetwork.Data.Normalizer.Normalize(data, true) as BasicMLData;
-                var test = _selectedNetwork.Data.Normalizer.DeNormalize(data, true) as BasicMLData;
-                IMLData output = _selectedNetwork.Compute(data);
-                output = _selectedNetwork.Data.Normalizer.DeNormalize(output, false);
-                for(int i = 0; i<output.Count ; i++)
+                data = ffconf.Data.Normalizer.Normalize(data, true) as BasicMLData;
+                var test = ffconf.Data.Normalizer.DeNormalize(data, true) as BasicMLData;
+                IMLData output = ffconf.Compute(data);
+                output = ffconf.Data.Normalizer.DeNormalize(output, false);
+                for (int i = 0; i < output.Count; i++)
                 {
                     IOdef def = new IOdef { Value = output[i] };
-                    if(i < _selectedNetwork.OutputMap.Count)
+                    if (i < ffconf.OutputMap.Count)
                     {
-                        def.Label = _selectedNetwork.OutputMap[i];
+                        def.Label = ffconf.OutputMap[i];
                     }
                     OutputCollection.Add(def);
                 }
+                
             }
 
         }

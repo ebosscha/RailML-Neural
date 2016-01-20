@@ -23911,8 +23911,8 @@ namespace RailMLNeural.RailML
         [System.Xml.Serialization.XmlAttributeAttribute("arrival")]
         public string arrivalserialize
         {
-            get { return arrival.ToString("hh:mm:ss"); }
-            set { }
+            get { return arrival.ToString("HH:mm:ss"); }
+            set { this.arrival = DateTime.Parse(value); }
         }
 
         [System.Xml.Serialization.XmlIgnoreAttribute()]
@@ -23945,7 +23945,7 @@ namespace RailMLNeural.RailML
             }
         }
 
-        [System.Xml.Serialization.XmlIgnore]
+        [System.Xml.Serialization.XmlIgnore()]
         //[System.Xml.Serialization.XmlAttributeAttribute(DataType = "time")]
         public System.DateTime departure
         {
@@ -23970,7 +23970,8 @@ namespace RailMLNeural.RailML
         [System.Xml.Serialization.XmlAttributeAttribute("departure")]
         public string departureserialize
         {
-            get { return departure.ToString("hh:mm:ss"); }
+            get { return departure.ToString("HH:mm:ss"); }
+            set { this.departure = DateTime.Parse(value); }
         }
 
         [System.Xml.Serialization.XmlIgnoreAttribute()]
@@ -24045,7 +24046,7 @@ namespace RailMLNeural.RailML
             {
                 return true;
             }
-            return (_arrival != default(System.DateTime));
+            return (_arrival != null && _arrival != default(System.DateTime));
         }
 
         /// <summary>
@@ -24057,7 +24058,7 @@ namespace RailMLNeural.RailML
             {
                 return true;
             }
-            return (_departure != default(System.DateTime));
+            return (_departure != null && _departure != default(System.DateTime));
         }
 
         /// <summary>

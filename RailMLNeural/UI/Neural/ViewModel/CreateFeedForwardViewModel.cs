@@ -31,8 +31,8 @@ namespace RailMLNeural.UI.Neural.ViewModel
         /// <summary>
         /// Defining all parameters in the ViewModel
         /// </summary>
-        private NeuralNetwork _network;
-        public NeuralNetwork Network
+        private FeedForwardConfiguration _network;
+        public FeedForwardConfiguration Network
         {
             get { return _network; }
             set { _network = value; }
@@ -164,7 +164,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
         /// </summary>
         public CreateFeedForwardViewModel()
         {
-            Network = new NeuralNetwork();
+            Network = new FeedForwardConfiguration();
             Network.Type = AlgorithmEnum.FeedForward;
             HiddenLayerSize = new ObservableCollection<LayerSize>();
             InputDataProviders = new ObservableCollection<IDataProvider>();
@@ -225,7 +225,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
 
         private void Reset()
         {
-            NeuralNetwork NewNetwork = new NeuralNetwork();
+            FeedForwardConfiguration NewNetwork = new FeedForwardConfiguration();
             Network = NewNetwork;
             Network.Type = AlgorithmEnum.FeedForward;
             HiddenLayerSize = new ObservableCollection<LayerSize>();

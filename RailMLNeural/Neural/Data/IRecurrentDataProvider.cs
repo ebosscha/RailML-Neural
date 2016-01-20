@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RailMLNeural.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace RailMLNeural.Neural.Data
     {
         int Size { get; }
         int StartIndex { get; }
+        double[] Process(EdgeTrainRepresentation rep);
         
     }
 }

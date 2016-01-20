@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Encog.ML.Data;
+using RailMLNeural.Neural.PreProcessing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +10,9 @@ namespace RailMLNeural.Neural.Algorithms.Propagators
 {
     interface IPropagator
     {
-        object MoveNext();
-        void NewCycle();
+        IMLDataPair MoveNext();
+        void NewCycle(DelayCombination DelayCombination);
         bool HasNext { get; }
+        void Update(IMLData Data);
     }
 }

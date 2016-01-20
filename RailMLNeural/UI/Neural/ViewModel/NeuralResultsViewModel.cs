@@ -3,6 +3,7 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 using Microsoft.Research.DynamicDataDisplay.DataSources;
 using RailMLNeural.Data;
+using RailMLNeural.Neural;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -39,9 +40,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
         }
 
 
-        private NeuralNetwork _selectedNetwork;
+        private INeuralConfiguration _selectedNetwork;
 
-        public NeuralNetwork SelectedNetwork
+        public INeuralConfiguration SelectedNetwork
         {
             get { return _selectedNetwork; }
             set
@@ -80,9 +81,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
             }
             ErrorHistory.SetXYMapping(p => p);
             VerificationHistory = new ObservableDataSource<Point>();
-            for (int i = 0; i < SelectedNetwork.VerificationSetHistory.Count; i++)
+            for (int i = 0; i < SelectedNetwork.VerificationHistory.Count; i++)
             {
-                VerificationHistory.Collection.Add(new Point(i + 1, SelectedNetwork.VerificationSetHistory[i]));
+                VerificationHistory.Collection.Add(new Point(i + 1, SelectedNetwork.VerificationHistory[i]));
             }
             VerificationHistory.SetXYMapping(p => p);
         }

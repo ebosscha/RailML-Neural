@@ -20,7 +20,7 @@
         <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" LastChildFill="True">
             <Menu DockPanel.Dock="Top" Height="20" Background="Transparent">
                 <MenuItem Header="_File">
-                    <MenuItem Header="_New RailML" Command="{Binding NewProjectCommand}"/>
+                    <MenuItem Header="_New Project" Command="{Binding NewProjectCommand}"/>
                     <MenuItem Header="_Open Project" Command="{Binding ProjectLoadCommand}"/>
                     <MenuItem Header="_Open RailML" Command="{Binding RailMLLoadCommand}"/>
                     <MenuItem Header="_Save Project" Command="{Binding ProjectSaveCommand}"/>

@@ -1,6 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using RailMLNeural.Data;
+using RailMLNeural.Neural;
 using RailMLNeural.Neural.PreProcessing;
 using RailMLNeural.RailML;
 using RailMLNeural.UI.Dialog.View;
@@ -34,7 +35,7 @@ namespace RailMLNeural.UI.ViewModel
         private UserControl _currentViewModel;
         private MainRailMLView _mainRailMLView = new MainRailMLView();
         private MainNeuralView _mainNeuralView = new MainNeuralView();
-        private NetworkStatisticsView _statisticsView = new NetworkStatisticsView();
+        private MainStatisticsView _statisticsView = new MainStatisticsView();
 
         public UserControl CurrentViewModel
         {
@@ -113,7 +114,7 @@ namespace RailMLNeural.UI.ViewModel
         private void ExecuteNewProject()
         {
             DataContainer.model = new railml();
-            DataContainer.NeuralNetworks = new List<NeuralNetwork>();
+            DataContainer.NeuralConfigurations = new List<INeuralConfiguration>();
             DataContainer.PathContainer = new PathContainer();
             DataContainer.DelayCombinations = new DelayCombinationCollection();
             DataContainer.HeaderRoutes = new Dictionary<string, Dictionary<DateTime, string>>();

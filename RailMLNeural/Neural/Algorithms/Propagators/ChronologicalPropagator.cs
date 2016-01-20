@@ -1,4 +1,8 @@
-﻿using RailMLNeural.Data;
+﻿using Encog.ML.Data;
+using Encog.ML.Data.Basic;
+using RailMLNeural.Data;
+using RailMLNeural.Neural.Configurations;
+using RailMLNeural.Neural.Data;
 using RailMLNeural.Neural.PreProcessing;
 using RailMLNeural.RailML;
 using System;
@@ -9,74 +13,114 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.Algorithms.Propagators
 {
-    class ChronologicalPropagator
+    class ChronologicalPropagator : IPropagator
     {
         #region Parameters
-        private DateTime _currentDateTime;
-        private List<eTrainPart> _trainParts;
-        private List<Tuple<DateTime, eOcpTT>> _ocpTTs;
         private int _currentIndex;
-        private List<string> primarytrainheaders;
+        private List<string> _ignoreHeaders;
+        private RecurrentConfiguration _owner;
+        private SimplifiedGraph _graph
+        {
+            get
+            {
+                return _owner.Graph;
+            }
+        }
+
+        private List<IRecurrentDataProvider> _inputDataProviders
+        {
+            get
+            {
+                return _owner.InputDataProviders;
+            }
+        }
+
+        private List<IRecurrentDataProvider> _outputDataProviders
+        {
+            get
+            {
+                return _owner.OutputDataProviders;
+            }
+        }
 
         public bool HasNext
         {
             get
             {
-                //TODO!!
-                return true;
+                return _currentIndex < _EdgeTrainRepresentations.Count - 1;
             }
         }
+
+        private List<EdgeTrainRepresentation> _EdgeTrainRepresentations;
         #endregion Parameters
 
         #region Public
-        public ChronologicalPropagator()
+        public ChronologicalPropagator(RecurrentConfiguration Owner)
         {
-
+            _owner = Owner;
+            _ignoreHeaders = new List<string>();
+            _EdgeTrainRepresentations = new List<EdgeTrainRepresentation>();
         }
 
-        public void NewCycle(DelayCombination dc)
+        public void NewCycle()
         {
-            SetDateTime(dc);
-            _trainParts = DataContainer.model.timetable.GetTrainsByDay(_currentDateTime.Date);
-            _ocpTTs = new List<Tuple<DateTime, eOcpTT>>();
-            primarytrainheaders = new List<string>();
-            foreach(Delay d in dc.primarydelays)
+            _EdgeTrainRepresentations = new List<EdgeTrainRepresentation>();
+            foreach(var Edge in _graph.Edges)
             {
-                primarytrainheaders.Add(d.traincode);
+                
+                _EdgeTrainRepresentations.AddRange(Edge.Trains);
+                
             }
-            foreach (eTrainPart trainPart in _trainParts)
-            {
-                foreach(eOcpTT ocpTT in trainPart.ocpsTT)
-                {
-                    _ocpTTs.Add(new Tuple<DateTime, eOcpTT>(ocpTT.times[0].arrival, ocpTT));
-                    _ocpTTs.Add(new Tuple<DateTime, eOcpTT>(ocpTT.times[0].departure, ocpTT));
-                }
-            }
-            _ocpTTs.OrderBy(x => x.Item1);
-            _currentIndex = _ocpTTs.IndexOf(_ocpTTs.FirstOrDefault(x => x.Item1 >= _currentDateTime && !primarytrainheaders.Contains(x.Item2.GetParent().trainNumber)));
+            _EdgeTrainRepresentations.RemoveAll(x => _ignoreHeaders.Contains(x.TrainHeaderCode));
+            _EdgeTrainRepresentations.OrderBy(x => x.PredictedDepartureTime);
+            _currentIndex = 0;
         }
 
-        public object MoveNext()
+        public void NewCycle(DelayCombination DelayCombination)
         {
+            _ignoreHeaders = new List<string>();
+            foreach(Delay d in DelayCombination.primarydelays)
+            {
+                _ignoreHeaders.Add(d.traincode);
+            }
+            NewCycle();
+        }
+
+        public IMLDataPair MoveNext()
+        {
+            EdgeTrainRepresentation rep = null;
             if(HasNext)
             {
-                //TODO! 
+                List<double> inputlist = new List<double>();
+                List<double> ideallist = new List<double>();
+                _currentIndex++;
+                rep = _EdgeTrainRepresentations[_currentIndex];
+                foreach(var provider in _inputDataProviders)
+                {
+                    inputlist.AddRange(provider.Process(rep));
+                }
+                foreach(var provider in _outputDataProviders)
+                {
+                    ideallist.AddRange(provider.Process(rep));
+                }
+                IMLData input = new BasicMLData(inputlist.ToArray());
+                IMLData ideal = new BasicMLData(ideallist.ToArray());
+                return new BasicMLDataPair(input, ideal);
             }
 
             throw new Exception("Propagator can't move to next object");
+        }
+
+        public void Update(IMLData Data)
+        {
+            //TODO!!!
         }
         #endregion Public
 
         #region Private
         private void SetDateTime(DelayCombination dc)
         {
-            _currentDateTime = dc.GetDate();
-            DateTime _time = DateTime.MaxValue;
-            foreach(Delay d in dc.primarydelays)
-            {
-                if (d.ScheduledDeparture < _time) { _time = d.ScheduledDeparture; }
-            }
-            _currentDateTime = _currentDateTime + _time.TimeOfDay;
+            
         }
         #endregion Private
     }

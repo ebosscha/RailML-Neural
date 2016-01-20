@@ -3,6 +3,8 @@ using Encog.ML.Data;
 using Encog.ML.Train;
 using Encog.ML.Train.Strategy;
 using Encog.Neural.Networks.Training.Propagation;
+using RailMLNeural.Data;
+using RailMLNeural.Neural.Configurations;
 using RailMLNeural.Neural.Data;
 using System;
 using System.Collections.Generic;
@@ -16,9 +18,7 @@ namespace RailMLNeural.Neural.Algorithms
     {
         #region Parameters
 
-        private RecurrentNetwork _network;
-
-        private List<IRecurrentDataProvider> _dataProviders;
+        private RecurrentConfiguration _owner;
 
         public bool TrainingDone { get; private set; }
 
@@ -26,9 +26,7 @@ namespace RailMLNeural.Neural.Algorithms
 
         public int IterationNumber { get; set; }
 
-        public bool CanContinue { get; private set; }
-
-        
+        public bool CanContinue { get; private set; } 
 
         #endregion Parameters
 
@@ -38,14 +36,19 @@ namespace RailMLNeural.Neural.Algorithms
         /// </summary>
         /// <param name="Network"></param>
         /// <param name="Provider"></param>
-        public RecurrentTraining(RecurrentNetwork Network)
+        public RecurrentTraining(RecurrentConfiguration Owner)
         {
-            _network = Network;
-            //_dataProviders = Provider;
+            _owner = Owner;
         }
 
         public void Iteration()
         {
+            int n = 0;
+            while (n < DataContainer.DelayCombinations.dict.Sum(x => x.Value.Count))
+            {
+
+                n++;
+            }
 
         }
 

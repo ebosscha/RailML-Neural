@@ -1,4 +1,5 @@
 ﻿using RailMLNeural.Data;
+using RailMLNeural.Neural;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,8 @@ namespace RailMLNeural.UI.Neural.ViewModel
 {
     public class NeuralSelectionChangedMessage
     {
-        private NeuralNetwork _network;
-        public NeuralNetwork NeuralNetwork
+        private INeuralConfiguration _network;
+        public INeuralConfiguration NeuralNetwork
         {
             get { return _network; }
             set { _network = value; }
@@ -19,8 +20,8 @@ namespace RailMLNeural.UI.Neural.ViewModel
 
     public class AddNeuralNetworkMessage
     {
-        private NeuralNetwork _network;
-        public NeuralNetwork NeuralNetwork
+        private INeuralConfiguration _network;
+        public INeuralConfiguration NeuralNetwork
         {
             get { return _network; }
             set { _network = value; }

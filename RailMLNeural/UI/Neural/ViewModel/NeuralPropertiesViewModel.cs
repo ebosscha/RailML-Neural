@@ -1,6 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 using RailMLNeural.Data;
+using RailMLNeural.Neural;
 
 namespace RailMLNeural.UI.Neural.ViewModel
 {
@@ -12,9 +13,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
     /// </summary>
     public class NeuralPropertiesViewModel : ViewModelBase
     {
-        private NeuralNetwork _selectedNetwork;
+        private INeuralConfiguration _selectedNetwork;
 
-        public NeuralNetwork SelectedNetwork
+        public INeuralConfiguration SelectedNetwork
         {
             get { return _selectedNetwork; }
             set

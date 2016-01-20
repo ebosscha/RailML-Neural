@@ -679,7 +679,7 @@ namespace RailMLNeural.Data
                 ocp.id = (row["StationID"] as string ?? string.Empty).Trim();
                 ocp.name = (row["Station_Desc"] as string ?? string.Empty).Trim();
                 ocp.code = (row["SEMA_Name"] as string ?? string.Empty).Trim();
-                if (DataContainer.model.infrastructure.operationControlPoints.Any(x => x.name == ocp.name))
+                if (DataContainer.model.infrastructure.operationControlPoints.Any(x => x.id == ocp.id))
                 {
                     continue;
                 }

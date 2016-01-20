@@ -27,9 +27,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
     public class NeuralRunManagerViewModel : ViewModelBase
     {
         #region Parameters
-        private NeuralNetwork _network;
+        private INeuralConfiguration _network;
 
-        public NeuralNetwork Network
+        public INeuralConfiguration Network
         {
             get { return _network; }
             set { 
@@ -78,9 +78,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
             }
         }
 
-        private ObservableCollection<NeuralNetwork> _batchCollection;
+        private ObservableCollection<INeuralConfiguration> _batchCollection;
 
-        public ObservableCollection<NeuralNetwork> BatchCollection
+        public ObservableCollection<INeuralConfiguration> BatchCollection
         {
             get { return _batchCollection; }
             set { _batchCollection = value;
@@ -98,7 +98,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
         public NeuralRunManagerViewModel()
         {
             InitializeCommands();
-            BatchCollection = new ObservableCollection<NeuralNetwork>(BatchManager.Queue);
+            BatchCollection = new ObservableCollection<INeuralConfiguration>(BatchManager.Queue);
             Messenger.Default.Register<NeuralSelectionChangedMessage>(this, (msg) =>
                 Network = msg.NeuralNetwork);
             BatchManager.QueueChanged += new EventHandler(OnBatchChanged);
@@ -108,25 +108,29 @@ namespace RailMLNeural.UI.Neural.ViewModel
         #region Private
         private void AddLearningAlgorithm()
         {
-            switch (LearningAlgorithm)
+            if (Network is FeedForwardConfiguration)
             {
-                case LearningAlgorithmEnum.BackPropagation:
-                    Network.Training = new Backpropagation(Network.Network, Network.Data, Network.Settings.LearningRate, Network.Settings.Momentum);
-                    break;
-                case LearningAlgorithmEnum.ResilientPropagation:
-                    Network.Training = new ResilientPropagation(Network.Network, Network.Data);
-                    break;
-                case LearningAlgorithmEnum.ManhattanPropagation:
-                    Network.Training = new ManhattanPropagation(Network.Network, Network.Data, Network.Settings.LearningRate);
-                    break;
-                case LearningAlgorithmEnum.QuickPropagation:
-                    Network.Training = new QuickPropagation(Network.Network, Network.Data);
-                    break;
-                case LearningAlgorithmEnum.ScaledConjugateGradient:
-                    Network.Training = new ScaledConjugateGradient(Network.Network, Network.Data);
-                    break;
-                default:
-                    return;
+                FeedForwardConfiguration tempconf = Network as FeedForwardConfiguration;
+                switch (LearningAlgorithm)
+                {
+                    case LearningAlgorithmEnum.BackPropagation:
+                        Network.Training = new Backpropagation(tempconf.Network, tempconf.Data, Network.Settings.LearningRate, Network.Settings.Momentum);
+                        break;
+                    case LearningAlgorithmEnum.ResilientPropagation:
+                        Network.Training = new ResilientPropagation(tempconf.Network, tempconf.Data);
+                        break;
+                    case LearningAlgorithmEnum.ManhattanPropagation:
+                        Network.Training = new ManhattanPropagation(tempconf.Network, tempconf.Data, Network.Settings.LearningRate);
+                        break;
+                    case LearningAlgorithmEnum.QuickPropagation:
+                        Network.Training = new QuickPropagation(tempconf.Network, tempconf.Data);
+                        break;
+                    case LearningAlgorithmEnum.ScaledConjugateGradient:
+                        Network.Training = new ScaledConjugateGradient(tempconf.Network, tempconf.Data);
+                        break;
+                    default:
+                        return;
+                }
             }
         }
 
@@ -137,7 +141,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
         /// <param name="e"></param>
         private void OnBatchChanged(object sender, EventArgs e)
         {
-            BatchCollection = new ObservableCollection<NeuralNetwork>(BatchManager.Queue);
+            BatchCollection = new ObservableCollection<INeuralConfiguration>(BatchManager.Queue);
         }
 
         #endregion Private

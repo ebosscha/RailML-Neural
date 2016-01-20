@@ -60,6 +60,8 @@ namespace RailMLNeural.UI.ViewModel
             SimpleIoc.Default.Register<DebugViewModel>();
             SimpleIoc.Default.Register<NeuralOutputViewModel>();
             SimpleIoc.Default.Register<CreateRecurrentNetworkViewModel>();
+            SimpleIoc.Default.Register<DelayStatisticsViewModel>();
+            SimpleIoc.Default.Register<MainStatisticsViewModel>();
         }
 
         /// <summary>
@@ -205,6 +207,21 @@ namespace RailMLNeural.UI.ViewModel
             }
         }
 
+        public DelayStatisticsViewModel DelayStatisticsVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<DelayStatisticsViewModel>();
+            }
+        }
+
+        public MainStatisticsViewModel MainStatisticsVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<MainStatisticsViewModel>();
+            }
+        }
            
 
     

@@ -44,6 +44,10 @@ namespace RailMLNeural.Data
             double origindelay = 0;
             foreach (TimetableEntry entry in reader)
             {
+                if(!DataContainer.model.infrastructure.operationControlPoints.Any(x => x.code == entry.LocationCode))
+                { 
+                    continue; 
+                }
                 entry.TrainCode = entry.TrainCode.Trim();
                 if (entry.TrainDate < ThresholdDateLower || entry.TrainDate > ThresholdDateUpper ) { count++; continue; }
 
@@ -103,15 +107,26 @@ namespace RailMLNeural.Data
                 { 
                     rep.departuretime = default(DateTime).Add(entry.ScheduledDeparture.TimeOfDay); 
                     origindelay = (entry.Departure - entry.ScheduledDeparture).TotalSeconds;
+                    rep.state = 1;
                 }
-                else if (entry.LocationType == "D") { rep.arrivaltime = default(DateTime).Add(entry.ScheduledArrival.TimeOfDay); }
-                else if (entry.LocationType == "S" || entry.LocationType == "T")
+                else if (entry.LocationType == "D" && rep.state == 1) 
+                { 
+                    rep.arrivaltime = default(DateTime).Add(entry.ScheduledArrival.TimeOfDay);
+                    rep.state = 2;
+                }
+                else if (rep.state == 1 && (entry.LocationType == "S" || entry.LocationType == "T"))
                 {
+                    Stop stop = new Stop() { location = entry.LocationCode, arrival = entry.ScheduledArrival, departure = entry.ScheduledDeparture };
+                    
                     if (entry.LocationType == "S")
                     {
-                        Stop stop = new Stop() { location = entry.LocationCode, arrival = entry.ScheduledArrival, departure = entry.ScheduledDeparture };
-                        rep.stops.Add(stop);
+                        stop.Type = tOcpTTType.stop;
                     }
+                    if(entry.LocationType == "T")
+                    {
+                        stop.Type = tOcpTTType.pass;
+                    }
+                    rep.stops.Add(stop);
                     StopDelay delay = new StopDelay() { location = entry.LocationCode};
 
                     if (entry.Arrival !=default(DateTime))
@@ -157,8 +172,11 @@ namespace RailMLNeural.Data
                     {
                         delay.departuredelay = delay.arrivaldelay;
                     }
-                    
-                    stopdelays.Add(delay);
+                    //Only add stopdelay when location has a geoCoord
+                    if (DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == delay.location).geoCoord.coord.Count == 2)
+                    {
+                        stopdelays.Add(delay);
+                    }
                     
                 }
 
@@ -223,16 +241,30 @@ namespace RailMLNeural.Data
                     var operatingperiod = CreateOperatingPeriod(variations.dates[i]);
                     trainpart.operatingPeriodRef = new eOperatingPeriodRef() { @ref = operatingperiod.id };
                     DataContainer.model.timetable.operatingPeriods.Add(operatingperiod);
-                    eOcpTT departure = new eOcpTT() { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == variations.reps[i].origin).id };
+                    eOcpTT departure = new eOcpTT() { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == variations.reps[i].origin).id,
+                    ocpType = tOcpTTType.stop};
                     departure.times.Add(new eArrivalDepartureTimes() { departure = variations.reps[i].departuretime, scope = "scheduled" });
                     trainpart.ocpsTT.Add(departure);
                     foreach (Stop stop in variations.reps[i].stops)
                     {
-                        eOcpTT ocp = new eOcpTT() { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == stop.location).id };
-                        ocp.times.Add(new eArrivalDepartureTimes() { arrival = stop.arrival, departure = stop.departure, scope = "scheduled" });
-                        trainpart.ocpsTT.Add(ocp);
+                        eOcpTT ocp = new eOcpTT() {ocpType = stop.Type};
+                        eOcp station = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == stop.location);
+                        ocp.ocpRef = station.id;
+                        ocp.times.Add(new eArrivalDepartureTimes() 
+                        { arrival = stop.arrival, departure = stop.departure,scope = "scheduled" });
+                        // Remove non-placed stops from sequence
+                        if(station.geoCoord.coord.Count != 2)
+                        {
+                            ocp.remarks = "ignore";
+                        }
+                        else
+                        {
+                            trainpart.ocpsTT.Add(ocp);
+                        }
+                        
                     }
-                    eOcpTT arrival = new eOcpTT() { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == variations.reps[i].destination).id };
+                    eOcpTT arrival = new eOcpTT() { ocpRef = DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == variations.reps[i].destination).id,
+                    ocpType = tOcpTTType.stop};
                     arrival.times.Add(new eArrivalDepartureTimes() { arrival = variations.reps[i].arrivaltime, scope = "scheduled" });
                     trainpart.ocpsTT.Add(arrival);
                     trainparts.Add(trainpart);
@@ -264,7 +296,7 @@ namespace RailMLNeural.Data
                     };
                     roster.circulations.Add(circ);
                 }
-                catch
+                catch(Exception ex)
                 {
                     unhandled++;
                 }
@@ -369,6 +401,7 @@ namespace RailMLNeural.Data
         public string destination { get; set; }
         public string traincode { get; set; }
         public List<Stop> stops { get; set; }
+        public int state { get; set; } // Int representing if origin and destination have been added. 0 is none, 1 is origin added, 2 is destination added.
 
         public RuntimeRep()
         {
@@ -390,6 +423,7 @@ namespace RailMLNeural.Data
         public string location { get; set; }
         public DateTime arrival { get; set; }
         public DateTime departure { get; set; }
+        public tOcpTTType Type { get; set; }
     }
 
     class TimetableDay : IEquatable<TimetableDay>

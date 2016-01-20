@@ -21,10 +21,8 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 namespace RailMLNeural.Data
 {
     [Serializable]
-    [ProtoContract]
-    public class NeuralNetwork
+    public class FeedForwardConfiguration : INeuralConfiguration
     {
-        [ProtoMember(1)]
         private NeuralSettings _settings = new NeuralSettings { LearningRate = 0.1, Momentum = 0 };
         [Category("Neural Network Settings")]
         [ExpandableObject]
@@ -33,16 +31,12 @@ namespace RailMLNeural.Data
             get { return _settings; }
             set { _settings = value; }
         }
-        [ProtoIgnore]
         [Category("Neural Network")]
         [ExpandableObject]
         public IContainsFlat Network { get; set; }
-        [ProtoIgnore]
         [ExpandableObject]
         public NormBuffMLDataSet Data { get; set; }
-        [ProtoIgnore]
-        public IMLTrain Training;
-        [ProtoMember(2)]
+        public IMLTrain Training { get; set; }
         [Category("General")]
         public string Name { get; set; }
         [Category("General")]
@@ -54,16 +48,16 @@ namespace RailMLNeural.Data
         public bool IsRunning { get; set; }
         public string filefolder { get; set; }
         public List<double> ErrorHistory { get; set; }
-        public List<double> VerificationSetHistory { get; set; }
+        public List<double> VerificationHistory { get; set; }
         public List<IDataProvider> InputDataProviders { get; set; }
         public List<IDataProvider> OutputDataProviders { get; set; }
         public event EventHandler ProgressChanged;
 
-        public NeuralNetwork()
+        public FeedForwardConfiguration()
         {
             HiddenLayerSize = new List<LayerSize>();
             ErrorHistory = new List<Double>();
-            VerificationSetHistory = new List<Double>();
+            VerificationHistory = new List<Double>();
             InputDataProviders = new List<IDataProvider>();
             OutputDataProviders = new List<IDataProvider>();
         }
@@ -107,7 +101,7 @@ namespace RailMLNeural.Data
             if(Network is BasicNetwork)
             {
                 var data = Data.VerificationDataSet();
-                VerificationSetHistory.Add(((BasicNetwork)Network).CalculateError(data));
+                VerificationHistory.Add(((BasicNetwork)Network).CalculateError(data));
             }
         }
 
@@ -128,7 +122,7 @@ namespace RailMLNeural.Data
             Network = null;
             HiddenLayerSize = null;
             ErrorHistory = null;
-            VerificationSetHistory = null;
+            VerificationHistory = null;
             ProgressChanged = null;
         }
 
@@ -217,18 +211,6 @@ namespace RailMLNeural.Data
 
     }
 
-    [Serializable]
-    [ProtoContract]
-    public class DelayCombinationCollection
-    {
-        [ProtoMember(1)]
-        public Dictionary<DateTime, List<DelayCombination>> dict;
-
-        public DelayCombinationCollection()
-        {
-            dict = new Dictionary<DateTime, List<DelayCombination>>();
-        }
-
-    }
+    
 
 }

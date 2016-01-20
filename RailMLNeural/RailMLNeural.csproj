@@ -25,7 +25,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -126,25 +126,29 @@
     <Compile Include="Data\DataContainer.cs" />
     <Compile Include="Data\DataExtentions.cs" />
     <Compile Include="Data\DebugData.cs" />
+    <Compile Include="Data\DelayCombinationCollection.cs" />
     <Compile Include="Data\ImportInfrastructure.cs" />
     <Compile Include="Data\ImportTimetable.cs" />
     <Compile Include="Data\MetaData.cs" />
-    <Compile Include="Data\NeuralNetwork.cs" />
+    <Compile Include="Data\FeedForwardConfiguration.cs" />
     <Compile Include="Data\SaveLoad.cs" />
     <Compile Include="Data\Settings.cs" />
     <Compile Include="Data\ShortestPath.cs" />
     <Compile Include="Data\SimplifiedGraph.cs" />
+    <Compile Include="Data\SimplifiedGraph2.cs" />
     <Compile Include="Data\XML.cs" />
     <Compile Include="Neural\Algorithms\Propagators\ChronologicalPropagator.cs" />
     <Compile Include="Neural\Algorithms\Propagators\IPropagator.cs" />
+    <Compile Include="Neural\Algorithms\RecurrentCalculateScore.cs" />
     <Compile Include="Neural\Algorithms\RecurrentNetwork.cs" />
     <Compile Include="Neural\Algorithms\RecurrentTraining.cs" />
     <Compile Include="Neural\BatchManager.cs" />
     <Compile Include="Neural\Configurations\RecurrentConfiguration.cs" />
     <Compile Include="Neural\Data\BufferedSubDataSet.cs" />
     <Compile Include="Neural\Data\NormBuffMLDataSet.cs" />
-    <Compile Include="Neural\Data\RecurrentDataProvider.cs" />
+    <Compile Include="Neural\Data\IRecurrentDataProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\DelaySizeInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataSet.cs" />
     <Compile Include="Neural\Enums.cs" />
     <Compile Include="Neural\INeuralConfiguration.cs" />
     <Compile Include="Neural\Normalization\Normalizer.cs" />
@@ -251,7 +255,16 @@
     <Compile Include="UI\RailML\Views\VisualizationView.xaml.cs">
       <DependentUpon>VisualizationView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\Statistics\ViewModel\DelayStatisticsViewModel.cs" />
+    <Compile Include="UI\Statistics\ViewModel\MainStatisticsViewModel.cs" />
+    <Compile Include="UI\Statistics\ViewModel\Messages.cs" />
     <Compile Include="UI\Statistics\ViewModel\NetworkStatisticsViewModel.cs" />
+    <Compile Include="UI\Statistics\View\DelayStatisticsView.xaml.cs">
+      <DependentUpon>DelayStatisticsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Statistics\View\MainStatisticsView.xaml.cs">
+      <DependentUpon>MainStatisticsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\Statistics\View\NetworkStatisticsView.xaml.cs">
       <DependentUpon>NetworkStatisticsView.xaml</DependentUpon>
     </Compile>
@@ -372,6 +385,14 @@
     <Page Include="UI\Skins\WhistlerBlue.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\Statistics\View\DelayStatisticsView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Statistics\View\MainStatisticsView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI\Statistics\View\NetworkStatisticsView.xaml">
       <SubType>Form</SubType>

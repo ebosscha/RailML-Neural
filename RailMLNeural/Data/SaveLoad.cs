@@ -1,6 +1,7 @@
 ﻿using Encog.Neural.Networks;
 using Encog.Neural.NeuralData;
 using ProtoBuf;
+using RailMLNeural.Neural;
 using RailMLNeural.RailML;
 using System;
 using System.Collections.Generic;
@@ -55,7 +56,7 @@ namespace RailMLNeural.Data
             SaveLoadData data = Serializer.Deserialize<SaveLoadData>(stream);
             XElement elem = XElement.Parse(data.railml);
             DataContainer.model = XML.FromXElement<railml>(elem);
-            DataContainer.NeuralNetworks = DeserializeNetwork(data.NN);
+            DataContainer.NeuralConfigurations = DeserializeNetwork(data.NN);
             DataContainer.Settings = data.settings;
             DataContainer.HeaderRoutes = data.HeaderRoutes;
             DataContainer.DelayCombinations = data.DelayCombinations;
@@ -81,24 +82,24 @@ namespace RailMLNeural.Data
             string output = string.Empty;
             using (MemoryStream stream = new MemoryStream())
             {
-                formatter.Serialize(stream, DataContainer.NeuralNetworks);
+                formatter.Serialize(stream, DataContainer.NeuralConfigurations);
                 output = Convert.ToBase64String(stream.ToArray());
             }
             return output;
             
         }
 
-        private static List<NeuralNetwork> DeserializeNetwork(string input)
+        private static List<INeuralConfiguration> DeserializeNetwork(string input)
         {
             IFormatter formatter = new BinaryFormatter();
             //byte[] b = System.Text.Encoding.UTF8.GetBytes(input);
             byte[] b = Convert.FromBase64String(input);
-            List<NeuralNetwork> output = new List<NeuralNetwork>();
+            List<INeuralConfiguration> output = new List<INeuralConfiguration>();
             using (MemoryStream stream = new MemoryStream(b, 0, b.Length))
             {
                 stream.Write(b, 0, b.Length);
                 stream.Position = 0;
-                output = formatter.Deserialize(stream) as List<NeuralNetwork>;
+                output = formatter.Deserialize(stream) as List<INeuralConfiguration>;
                 stream.Close();
             }
             return output;

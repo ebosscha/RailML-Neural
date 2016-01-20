@@ -11,25 +11,25 @@ namespace RailMLNeural.Neural
     static class BatchManager
     {
         #region Variables
-        private static List<NeuralNetwork> _queue = new List<NeuralNetwork>();
+        private static List<INeuralConfiguration> _queue = new List<INeuralConfiguration>();
 
-        public static List<NeuralNetwork> Queue { get { return _queue; } }
+        public static List<INeuralConfiguration> Queue { get { return _queue; } }
 
         public static event EventHandler QueueChanged;
         #endregion Variables
 
         #region Public
         /// <summary>
-        /// Adds a NeuralNetwork to train to the Queue
+        /// Adds a INeuralConfiguration to train to the Queue
         /// </summary>
         /// <param name="N"></param>
-        public static void Add(NeuralNetwork N)
+        public static void Add(INeuralConfiguration N)
         {
             _queue.Add(N);
             OnChanged();
         }
 
-        public static void Remove(NeuralNetwork N)
+        public static void Remove(INeuralConfiguration N)
         {
             if(_queue.Contains(N))
             {
@@ -42,7 +42,7 @@ namespace RailMLNeural.Neural
         {
             while(_queue.Count > 0)
             {
-                NeuralNetwork N = _queue[0];
+                INeuralConfiguration N = _queue[0];
                 _queue.RemoveAt(0);
                 OnChanged();
                 ThreadPool.QueueUserWorkItem(N.TrainNetwork);

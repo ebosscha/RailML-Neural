@@ -1,4 +1,5 @@
-﻿using RailMLNeural.RailML;
+﻿using RailMLNeural.Neural;
+using RailMLNeural.RailML;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace RailMLNeural.Data
     static class DataContainer
     {
         private static railml _model;
-        private static List<NeuralNetwork> _neuralnetworks;
+        private static List<INeuralConfiguration> _neuralConfigurations;
         private static Hashtable _idlist = new Hashtable();
         private static PathContainer _pathcontainer;
         private static Settings _settings = new Settings();
@@ -35,14 +36,14 @@ namespace RailMLNeural.Data
             set { _settings = value; }
         }
 
-        public static List<NeuralNetwork> NeuralNetworks
+        public static List<INeuralConfiguration> NeuralConfigurations
         {
             get
             {
-                if (_neuralnetworks == null) { _neuralnetworks = new List<NeuralNetwork>(); }
-                return _neuralnetworks;
+                if (_neuralConfigurations == null) { _neuralConfigurations = new List<INeuralConfiguration>(); }
+                return _neuralConfigurations;
             }
-            set { _neuralnetworks = value; }
+            set { _neuralConfigurations = value; }
         }
 
         public static MetaData MetaData

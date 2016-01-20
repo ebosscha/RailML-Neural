@@ -1,6 +1,8 @@
 ﻿using CsvFiles;
+using GalaSoft.MvvmLight.Messaging;
 using ProtoBuf;
 using RailMLNeural.Data;
+using RailMLNeural.UI.Statistics.ViewModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -98,6 +100,7 @@ namespace RailMLNeural.Neural.PreProcessing
 
             }
             reader.Dispose();
+            Messenger.Default.Send<DelayCombinationsChangedMessage>(new DelayCombinationsChangedMessage());
         }
         public static void ImportHeaderHistory(object sender, DoWorkEventArgs e)
         {
@@ -292,6 +295,7 @@ namespace RailMLNeural.Neural.PreProcessing
     {
         public DateTime date { get; set; }
         public Dictionary<string, Delay> delays { get; set; }
+        static List<char> Unwanted = new List<char>() { 'C', 'F', 'G', 'H', 'I', 'J', 'O', 'Q', 'U', 'V', 'X', 'Y' };
 
         public DelayDay()
         {
@@ -301,6 +305,8 @@ namespace RailMLNeural.Neural.PreProcessing
         public List<DelayCombination> FormCombinations()
         {
             List<DelayCombination> list = new List<DelayCombination>();
+            
+            //Remove delays without actualarrival or actualdeparture value
             while(delays.Values.Any(x => x.ActualArrival == default(DateTime) || x.ActualDeparture == default(DateTime)))
             {
                 var key = delays.Where(pair => pair.Value.ActualArrival == default(DateTime) || pair.Value.ActualDeparture == default(DateTime))
@@ -311,6 +317,19 @@ namespace RailMLNeural.Neural.PreProcessing
                     delays.Remove(key);
                 }
             }
+
+            //Remove Shunting runs and Empty runs from the list based on header code prefix
+            while (delays.Values.Any(x => Unwanted.Contains(x.traincode[0])))
+            {
+                var key = delays.Where(pair => Unwanted.Contains(pair.Value.traincode[0]))
+                    .Select(pair => pair.Key)
+                    .FirstOrDefault();
+                if (key != null)
+                {
+                    delays.Remove(key);
+                }
+            }
+
 
 
             foreach (Delay delay in delays.Values)
@@ -333,7 +352,6 @@ namespace RailMLNeural.Neural.PreProcessing
                     combination.primarydelays.Add(delay);
                     combination.secondarydelays.AddRange(delay.GetSecondaries());
                     list.Add(combination);
-
                 }
             }
 
