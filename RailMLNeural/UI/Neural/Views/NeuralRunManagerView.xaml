@@ -4,11 +4,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ignore="http://www.galasoft.ch/ignore"
+        xmlns:rs="clr-namespace:RailMLNeural.UI.Resources"
         mc:Ignorable="d ignore"
         DataContext="{Binding NeuralRunManagerVM, Source={StaticResource Locator}}">
+    <UserControl.Resources>
+        <rs:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+    </UserControl.Resources>
 
-    <Grid Visibility="{Binding Visibility}"
-          IsEnabled="{Binding IsEnabled}">
+    <Grid Visibility="{Binding Visibility}">
         <GroupBox Header="MetaData"
                   Margin="10,10,25,35"
                   Width="150"
@@ -27,7 +30,8 @@
                   Margin="200,10,25,35"
                   Width="300"
                   HorizontalAlignment="Left"
-                  VerticalAlignment="Top">
+                  VerticalAlignment="Top"
+                  IsEnabled="{Binding Path=Network.IsRunning, Converter={StaticResource InverseBooleanConverter}}">
             
             <StackPanel>
                 <Grid>
@@ -38,24 +42,86 @@
                               Margin="125,5,0,0"
                               Height="20"/>
                 </Grid>
-                <Grid>
+                <Grid Visibility="{Binding LearningRateVisible}">
                     <TextBlock Text="Learning Rate :"
                            Margin="10,5,0,0"/>
-                    <xctk:DoubleUpDown Value="{Binding Path=Network.Settings.LearningRate}" 
+                    <xctk:DoubleUpDown Value="{Binding LearningRate}" 
                                        Margin="195,5,0,0"
                                        Minimum="0"
                                        Maximum="1"
                                        Increment="0.05"/>
                            
                 </Grid>
-                <Grid>
+                <Grid Visibility="{Binding MomentumVisible}">
                     <TextBlock Text="Momentum :"
                            Margin="10,5,0,0"/>
-                    <xctk:DoubleUpDown Value="{Binding Path=Network.Settings.Momentum}" 
+                    <xctk:DoubleUpDown Value="{Binding Momentum}" 
                                        Margin="195,5,0,0"
                                        Minimum="0"
                                        Maximum="1"
                                        Increment="0.05"/>
+                </Grid>
+                <Grid Visibility="{Binding RPropTypeVisible}">
+                    <TextBlock Text="RProp Type :"
+                               Margin="10,5,0,0"/>
+                    <ComboBox SelectedItem="{Binding ResilientPropType}"
+                              ItemsSource="{Binding RPROPTypeValues}"
+                              Margin="195,5,0,0"/>
+                </Grid>
+                <Grid Visibility="{Binding EndTempVisible}">
+                    <TextBlock Text="EndTemp :"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding EndTemp}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       Increment="1"/>
+                </Grid>
+                <Grid Visibility="{Binding StartTempVisible}">
+                    <TextBlock Text="StartTemp :"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding StartTemp}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       Increment="1"/>
+                </Grid>
+                <Grid Visibility="{Binding CyclesVisible}">
+                    <TextBlock Text="Cycles :"
+                           Margin="10,5,0,0"/>
+                    <xctk:IntegerUpDown Value="{Binding Cycles}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"/>
+                </Grid>
+                <Grid Visibility="{Binding PSOVisible}">
+                    <TextBlock Text="Max Velocity :"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding MaxVelocity}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       DefaultValue="2.0"/>
+                </Grid>
+                <Grid Visibility="{Binding PSOVisible}">
+                    <TextBlock Text="Inertia :"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding Inertia}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       DefaultValue="0.4"/>
+                </Grid>
+                <Grid Visibility="{Binding PSOVisible}">
+                    <TextBlock Text="Social Learning Rate :"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding C2}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       DefaultValue="2.0"/>
+                </Grid>
+                <Grid Visibility="{Binding PSOVisible}">
+                    <TextBlock Text="Cognitive Learning Rate :"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding C1}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       DefaultValue="2.0"/>
                 </Grid>
                 <Grid>
                     <TextBlock Text="Maximum Epochs :"
@@ -64,6 +130,31 @@
                                        Margin="195,5,0,0"
                                        Minimum="0"/>
                 </Grid>
+                <Grid>
+                    <TextBlock Text="Batch Size (0 for pure batch) :"
+                           Margin="10,5,0,0"/>
+                    <xctk:IntegerUpDown Value="{Binding BatchSize}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"/>
+                </Grid>
+                <Grid>
+                    <TextBlock Text="Greedy Strategy? :"
+                               Margin="10,5,0,0"/>
+                    <CheckBox IsChecked="{Binding Greedy}"
+                              Margin="195,5,0,0"/>
+                </Grid>
+                <Grid>
+                    <Button Content="Add Learning Method"
+                            Command="{Binding AddTrainingCommand}"
+                            Margin="0,0,0,0"
+                            Width="130"
+                            HorizontalAlignment="Left"/>
+                    <Button Content="Add Alternate Method"
+                            Command="{Binding AddAlternateTrainingCommand}"
+                            Margin="150,0,0,0"
+                            Width="130"
+                            HorizontalAlignment="Right"/>
+                </Grid>
                 
             </StackPanel>
         </GroupBox>
@@ -71,7 +162,9 @@
         <xcdg:DataGridControl
             ItemsSource="{Binding BatchCollection}"
             AutoCreateColumns="False"
-            Margin="10,140,25,40">
+            VerticalAlignment="Bottom"
+            Height="Auto"
+            Margin="10,200,25,40">
             <xcdg:DataGridControl.View>
                 <xcdg:TableView>
                     <xcdg:TableView.FixedHeaders>
@@ -100,14 +193,16 @@
                 VerticalAlignment="Bottom"
                 Margin="0,0,10,10"
                 Width="80"
-                Height="20"/>
+                Height="20"
+                IsEnabled="{Binding Path=Network.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
         <Button Content="Add to Batch"
                 Command="{Binding AddToBatchCommand}"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 Margin="0,0,100,10"
                 Width="80"
-                Height="20"/>
+                Height="20"
+                IsEnabled="{Binding Path=Network.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
         <Button Content="Run Batch"
                 Command="{Binding RunBatchCommand}"
                 HorizontalAlignment="Right"
@@ -115,6 +210,21 @@
                 Margin="0,0,190,10"
                 Width="80"
                 Height="20"/>
+        <Button Content="Stop Training"
+                Command="{Binding StopTrainingCommand}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,280,10"
+                Width="80"
+                Height="20"/>
+        <Button Content="Reset Weights"
+                Command="{Binding ResetNetworkCommand}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,370,10"
+                Width="80"
+                Height="20"
+                IsEnabled="{Binding Path=Network.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
         <TextBlock Visibility="{Binding StatusTextVisibility}">
             <TextBlock.Text>
                 <MultiBinding StringFormat="{} Running... Epoch: {0}     Error: {1}">

@@ -20,8 +20,10 @@ namespace RailMLNeural.Neural.PreProcessing
         int LowerIndex { get; }
         Normalization.NormalizationTypeEnum NormalizationType { get; set; }
         string Name { get; }
+        bool IsInput { get; }
     }
 
+    [Serializable]
     public enum InputDataProviderEnum
     {
         PerLineExactInput,
@@ -30,12 +32,14 @@ namespace RailMLNeural.Neural.PreProcessing
         LineClassificationInput
     }
 
+    [Serializable]
     public enum OutputDataProviderEnum
     {
         PerLineExactOutput,
         PerLineClassificationOutput
     }
 
+    [Serializable]
     public enum DataProviderEnum
     {
         InitialDelayInput,

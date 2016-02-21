@@ -26,10 +26,10 @@ namespace RailMLNeural.UI.Dialog.View
             InitializeComponent();
         }
 
-        private void Recurrent_Click(object sender, RoutedEventArgs e)
+        private void GraphRecurrent_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = true;
-            AlgorithmType = AlgorithmEnum.Recurrent;
+            AlgorithmType = AlgorithmEnum.GraphRecurrent;
             this.Close();
         }
 
@@ -39,6 +39,21 @@ namespace RailMLNeural.UI.Dialog.View
             AlgorithmType = AlgorithmEnum.FeedForward;
             this.Close();
         }
+
+        private void Recursive_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = true;
+            AlgorithmType = AlgorithmEnum.Recursive;
+            this.Close();
+        }
+
+        private void Convolutional_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = true;
+            AlgorithmType = AlgorithmEnum.Convolutional;
+            this.Close();
+        }
+
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {

@@ -75,6 +75,7 @@
                     <MenuItem Header="RailML View" Command="{Binding RailMLViewCommand}"/>
                     <MenuItem Header="Neural Network View" Command="{Binding NeuralViewCommand}"/>
                     <MenuItem Header="Statistics View" Command="{Binding StatisticsViewCommand}"/>
+                    <MenuItem Header="Logger" Command="{Binding LogViewCommand}"/>
                 </MenuItem>
 
 

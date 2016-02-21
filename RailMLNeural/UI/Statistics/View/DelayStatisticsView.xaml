@@ -8,5 +8,27 @@
         DataContext="{Binding DelayStatisticsVM, Source={StaticResource Locator}}">
 
     <Grid>
+        <StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Delay Combination Count :"/>
+                <TextBlock Text="{Binding DelayCombinationCount}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Total Delay Count :"/>
+                <TextBlock Text="{Binding TotalDelayCount}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Average Trains Per Combination :"/>
+                <TextBlock Text="{Binding AverageCountPerCombination}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Average Combination Count Per Day :"/>
+                <TextBlock Text="{Binding AverageCombinationsPerDay}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Average Destination Delay :"/>
+                <TextBlock Text="{Binding AverageDestinationDelay}"/>
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </UserControl>

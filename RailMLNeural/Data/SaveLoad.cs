@@ -1,8 +1,10 @@
 ﻿using Encog.Neural.Networks;
 using Encog.Neural.NeuralData;
+using GalaSoft.MvvmLight.Messaging;
 using ProtoBuf;
 using RailMLNeural.Neural;
 using RailMLNeural.RailML;
+using RailMLNeural.UI.Neural.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -101,6 +103,10 @@ namespace RailMLNeural.Data
                 stream.Position = 0;
                 output = formatter.Deserialize(stream) as List<INeuralConfiguration>;
                 stream.Close();
+            }
+            for (int i = 0; i < output.Count; i++ )
+            {
+                Messenger.Default.Send<AddNeuralNetworkMessage>(new AddNeuralNetworkMessage() { NeuralNetwork = output[i] });
             }
             return output;
         }

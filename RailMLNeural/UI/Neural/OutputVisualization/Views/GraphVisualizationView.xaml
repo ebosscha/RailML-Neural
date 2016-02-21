@@ -1,0 +1,155 @@
+﻿<UserControl x:Class="RailMLNeural.UI.Neural.OutputVisualization.Views.GraphVisualizationView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ignore="http://www.galasoft.ch/ignore"
+        xmlns:graph="clr-namespace:RailMLNeural.Data"
+        xmlns:zc="clr-namespace:System.Windows.Controls"
+        xmlns:shape="clr-namespace:RailMLNeural.UI.Neural.OutputVisualization.RenderObjects"
+        xmlns:this="clr-namespace:RailMLNeural.UI.Neural.OutputVisualization.Views"
+        mc:Ignorable="d ignore"
+        DataContext="{Binding GraphVisualizationVM, Source={StaticResource Locator}}">
+
+    <Grid>
+        <ListBox ItemsSource="{Binding Collection}" 
+                 ClipToBounds="False"
+                 Name="MyListBox"
+                 zc:ZoomableCanvas.VirtualizationMode="Recycling"
+                 Panel.ZIndex="0">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <zc:ZoomableCanvas IsVirtualizing="False"
+                                       RealizationPriority="ContextIdle"
+                                       Loaded="Canvas_Loaded">
+                    </zc:ZoomableCanvas>
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Canvas.Top"
+                        Value="{Binding Top}"/>
+
+                    <Setter Property="Canvas.Left"
+                        Value="{Binding Left}"/>
+                    <Setter Property="FocusVisualStyle"
+                            Value="{x:Null}"/>
+                    <Setter Property="Focusable"
+                            Value="False"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <ContentPresenter />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Resources>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Transparent" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="Transparent" />
+                    </Style.Resources>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding DataType}"
+                                     Value="SimplifiedGraphEdge">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <shape:RenderEdge Edge="{Binding Item}"
+                                                          StrokeThickness="2"
+                                                          Stroke="Black"
+                                                          Scale="{Binding Path=Scale, RelativeSource={RelativeSource AncestorType=zc:ZoomableCanvas}}">
+                                        </shape:RenderEdge>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding DataType}"
+                                     Value="SimplifiedGraphVertex">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+        <ItemsControl ItemsSource="{Binding Collection}" ClipToBounds="False"
+                 zc:ZoomableCanvas.VirtualizationMode="Recycling"
+                 Panel.ZIndex="0">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <zc:ZoomableCanvas
+                                    Scale="{Binding Path=Canvas.Scale, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
+                                    Offset="{Binding Path=Canvas.Offset, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
+                                       RealizationPriority="ContextIdle"
+                                       IsVirtualizing="False"
+                                       ApplyTransform="False">
+                    </zc:ZoomableCanvas>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Canvas.Top"
+                        Value="{Binding Top}"/>
+                    <Setter Property="Canvas.Left"
+                        Value="{Binding Left}"/>
+                    <Setter Property="FocusVisualStyle"
+                            Value="{x:Null}"/>
+                    <Setter Property="Focusable"
+                            Value="False"/>
+                    <Style.Resources>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Transparent" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="Transparent" />
+                    </Style.Resources>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding DataType}"
+                                     Value="SimplifiedGraphEdge">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding DataType}"
+                                     Value="SimplifiedGraphVertex">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <shape:RenderVertex Width="10"
+                                                   Height="10"
+                                                   Fill="Blue"
+                                                   Vertex="{Binding Item}"/>                                     
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+        </ItemsControl>
+        <Grid Panel.ZIndex="2">
+            <this:GraphPropertiesView Width="200" HorizontalAlignment="Right"
+                                  VerticalContentAlignment="Stretch"
+                                  Background="White">
+
+            </this:GraphPropertiesView>
+        </Grid>
+        <Grid Height="30" VerticalAlignment="Bottom"
+              HorizontalAlignment="Stretch"
+              Panel.ZIndex="1">
+            <Button Content="Run"
+                    Command="{Binding RunVerificationCommand}"
+                    HorizontalAlignment="Left"
+                    Width="100"
+                    />
+            
+        </Grid>
+    </Grid>
+</UserControl>

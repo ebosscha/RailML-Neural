@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.Data
 {
+    [Serializable]
     class RecurrentDataSet : IMLDataSet
     {
-        private RecurrentConfiguration _owner;
+        private GRNNConfiguration _owner;
         public int Count { get; set; }
         public int IdealSize { get; set; }
         public int InputSize { get; set; }

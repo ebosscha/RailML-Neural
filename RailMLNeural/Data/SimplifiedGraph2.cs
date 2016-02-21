@@ -1,9 +1,11 @@
 ﻿using RailMLNeural.Neural.PreProcessing;
 using RailMLNeural.RailML;
+using RailMLNeural.UI.Logger;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RailMLNeural.Data
@@ -12,13 +14,23 @@ namespace RailMLNeural.Data
     /// Class describing a simplified graph model of the network topology. OCP's are stored in vertices, 
     /// and a matrix of edges describes the connections between the vertices.
     /// </summary>
-    class SimplifiedGraph
+    [Serializable]
+    public class SimplifiedGraph
     {
         #region Parameters
         private List<SimplifiedGraphVertex> _vertices;
         private List<SimplifiedGraphEdge> _edges;
-        private Dictionary<string, int> _vertexindices;
+        private Dictionary<string, SimplifiedGraphVertex> _vertexDict;
         private DateTime _currentDate;
+        private List<char> UnwantedHeaders = new List<char>() { 'C', 'F', 'G', 'H', 'I', 'J', 'O', 'Q', 'U', 'V', 'X', 'Y' };
+        public int RunningThreads
+        {
+            get
+            {
+                return Edges.Sum(x => x.ThreadRunning);
+            }
+        }
+
 
         public List<SimplifiedGraphVertex> Vertices
         {
@@ -46,13 +58,20 @@ namespace RailMLNeural.Data
         /// </summary>
         public SimplifiedGraph()
         {
-            _vertexindices = new Dictionary<string, int>();
             _edges = new List<SimplifiedGraphEdge>();
             _vertices = new List<SimplifiedGraphVertex>();
+            _vertexDict = new Dictionary<string, SimplifiedGraphVertex>();
             GenerateTopology();
         }
 
-        public void GenerateGraph(DelayCombination DC)
+        private SimplifiedGraph(object state)
+        {
+            _edges = new List<SimplifiedGraphEdge>();
+            _vertices = new List<SimplifiedGraphVertex>();
+            _vertexDict = new Dictionary<string, SimplifiedGraphVertex>();
+        }
+
+        public void GenerateGraph(DelayCombination DC, bool Iterative)
         {
             if(DC.GetDate() == _currentDate)
             {
@@ -63,6 +82,7 @@ namespace RailMLNeural.Data
                 _currentDate = DC.GetDate();
                 ClearTimeTable();
                 GenerateTimeTable(_currentDate);
+                UpdateVertices();
             }
             foreach(Delay d in DC.primarydelays)
             {
@@ -70,9 +90,41 @@ namespace RailMLNeural.Data
             }
             foreach(Delay d in DC.secondarydelays)
             {
-                AddDelay(d, false);
+                AddDelay(d, !Iterative);
             }
-            UpdateVertices();
+            //TODO
+            //foreach(var edge in Edges.Where(x => x.IsAltered))
+            //{
+            //    edge.Sort();
+            //}
+        }
+
+        public SimplifiedGraph Clone()
+        {
+            SimplifiedGraph result = new SimplifiedGraph(0);
+            
+            foreach(var vertex in Vertices)
+            {
+                SimplifiedGraphVertex v = new SimplifiedGraphVertex(vertex.OCP);
+                v.Index = vertex.Index;
+                v.TrackCount = vertex.TrackCount;
+                result.Vertices.Add(v);
+                result._vertexDict.Add(v.OCP.id, v);
+            }
+            foreach(var edge in Edges)
+            {
+                SimplifiedGraphEdge e = new SimplifiedGraphEdge(result.Vertices[edge.Origin.Index], result.Vertices[edge.Destination.Index], false);
+                e.AverageSpeed = edge.AverageSpeed;
+                e.Distance = edge.Distance;
+                e.Index = edge.Index;
+                e.PercentageDoubleTrack = edge.PercentageDoubleTrack;
+                e.Route = edge.Route;
+                e.SignalCount = edge.SignalCount;
+                e.SpeedHomogenity = edge.SpeedHomogenity;
+                e.SwitchCount = edge.SwitchCount;
+                result.Edges.Add(e);
+            }
+            return result;
         }
 
         #endregion Public
@@ -82,12 +134,17 @@ namespace RailMLNeural.Data
         #region Topology
         private void GenerateTopology()
         {
+            List<string> NorthernIrelandOcpCodes = new List<string>(){ "228", "238", "241", "242", "260" };
             int n = 0;
             foreach (eOcp ocp in DataContainer.model.infrastructure.operationControlPoints)
             {
-                _vertices.Add(new SimplifiedGraphVertex() { OCP = ocp });
-                _vertexindices.Add(ocp.code, n);
-                n++;
+                if (!NorthernIrelandOcpCodes.Contains(ocp.id))
+                {
+                    _vertices.Add(new SimplifiedGraphVertex(ocp));
+                    _vertexDict.Add(ocp.id, Vertices[n]);
+                    _vertices[n].Index = n;
+                    n++;
+                }
             }
 
             CreateEdges();
@@ -95,7 +152,7 @@ namespace RailMLNeural.Data
 
         private void CreateEdges()
         {
-            foreach (eTrainPart trainPart in DataContainer.model.timetable.trainParts)
+            foreach (eTrainPart trainPart in DataContainer.model.timetable.trainParts.Where(x => !UnwantedHeaders.Contains(x.trainNumber[0])))
             {
                 for (int i = 0; i < trainPart.ocpsTT.Count - 1; i++)
                 {
@@ -116,13 +173,15 @@ namespace RailMLNeural.Data
             {
                 return;
             }
+            //check wether both ocp's have vertices
+            if(!Vertices.Any(x => x.OCP.id == OCP1) || !Vertices.Any(x => x.OCP.id == OCP2))
+            {
+                return;
+            }
 
-            SimplifiedGraphEdge edge = new SimplifiedGraphEdge();
-            edge.Origin = Vertices.Single(x => x.OCP.id == OCP1);
-            edge.Destination = Vertices.Single(x => x.OCP.id == OCP2);
+            SimplifiedGraphEdge edge = new SimplifiedGraphEdge(Vertices.Single(x => x.OCP.id == OCP1),Vertices.Single(x => x.OCP.id == OCP2) );
             _edges.Add(edge);
-            edge.Origin.Edges.Add(edge);
-            edge.Destination.Edges.Add(edge);
+            edge.Index = _edges.IndexOf(edge);            
         }
 
         #endregion Topology
@@ -131,24 +190,38 @@ namespace RailMLNeural.Data
         private void GenerateTimeTable(DateTime Date)
         {
             List<eTrainPart> TrainPartList = DataContainer.model.timetable.GetTrainsByDay(Date);
-            foreach(var trainpart in TrainPartList)
+            foreach(var trainpart in TrainPartList.Where(x => !UnwantedHeaders.Contains(x.trainNumber[0])))
             {
+                EdgeTrainRepresentation Previous = null;
                 for (int i = 0; i < trainpart.ocpsTT.Count - 1; i++)
                 {
-                    AddToEdge(trainpart.trainNumber, trainpart.ocpsTT[i], trainpart.ocpsTT[i + 1]);
+                    var p = AddToEdge(trainpart.trainNumber, trainpart.ocpsTT[i], trainpart.ocpsTT[i + 1], Previous);
+                    if (p != null) { Previous = p; }
                 }
             }
+            
+            //Order Trains by time
+            foreach(var edge in Edges)
+            {
+                edge.Sort();
+            }
+
+            //foreach(var vertex in Vertices)
+            //{
+            //    vertex.Sort();
+            //}
         }
 
-        public void AddToEdge(string HeaderCode, eOcpTT ocpTT1, eOcpTT ocpTT2)
+        public EdgeTrainRepresentation AddToEdge(string HeaderCode, eOcpTT ocpTT1, eOcpTT ocpTT2, EdgeTrainRepresentation Previous)
         {
-            if(ocpTT1.ocpRef == ocpTT2.ocpRef)
+            if (ocpTT1.ocpRef == ocpTT2.ocpRef || !_vertexDict.ContainsKey(ocpTT1.ocpRef) || !_vertexDict.ContainsKey(ocpTT2.ocpRef))
             {
-                return;
+                return null;
             }
-            SimplifiedGraphVertex v1 = Vertices.Single(x => x.OCP.id == ocpTT1.ocpRef);
+            SimplifiedGraphVertex v1 = _vertexDict[ocpTT1.ocpRef];
             SimplifiedGraphEdge Edge = v1.Edges.Single(x => x.Destination.OCP.id == ocpTT2.ocpRef || x.Origin.OCP.id == ocpTT2.ocpRef);
-            EdgeTrainRepresentation Rep = new EdgeTrainRepresentation();
+            EdgeTrainRepresentation Rep = new EdgeTrainRepresentation(Edge);
+            Rep.Previous = Previous;
             Rep.TrainHeaderCode = HeaderCode;
             if (Edge.Origin.OCP.id == ocpTT1.ocpRef) { Rep.Direction = DirectionEnum.Down; }
             else { Rep.Direction = DirectionEnum.Up; }
@@ -157,8 +230,9 @@ namespace RailMLNeural.Data
             Rep.IdealDepartureTime = ocpTT1.times[0].departure;
             Rep.ScheduledArrivalTime = ocpTT2.times[0].arrival;
             Rep.PredictedArrivalTime = ocpTT2.times[0].arrival;
-            Rep.IdealDepartureTime = ocpTT2.times[0].arrival;
+            Rep.IdealArrivalTime = ocpTT2.times[0].arrival;
             Edge.Trains.Add(Rep);
+            return Rep;
         }
         #endregion BuildTimeTable
 
@@ -170,7 +244,7 @@ namespace RailMLNeural.Data
             }
             foreach(var vertex in Vertices)
             {
-                vertex.Trains = new List<VertexTrainRepresentation>();
+                vertex.Clear();
             }
         }
 
@@ -186,6 +260,15 @@ namespace RailMLNeural.Data
                     rep.PredictedDepartureTime = rep.ScheduledDepartureTime;
                 }
             }
+            foreach(var vertex in Vertices)
+            {
+                vertex.IsSubGraph = false;
+            }
+            //foreach(var edge in Edges.Where(x => x.IsAltered == true))
+            //{
+            //    edge.Sort();
+            //    edge.IsAltered = false;
+            //}
         }
 
         #region AddDelay
@@ -208,6 +291,10 @@ namespace RailMLNeural.Data
 
         private void AddDelayEdge(string HeaderCode, string origin, double departuredelay, string destination, double arrivaldelay, bool IsPrimary)
         {
+            if(!Vertices.Any(x => x.OCP.code == origin) || !Vertices.Any(x => x.OCP.code == destination))
+            {
+                return;
+            }
             var vertex = Vertices.Single(x => x.OCP.code == origin);
             var edge = vertex.Edges.Single(x => x.Origin.OCP.code == destination || x.Destination.OCP.code == destination);
             var rep = edge.Trains.First(x => x.TrainHeaderCode == HeaderCode);
@@ -218,6 +305,9 @@ namespace RailMLNeural.Data
                 rep.PredictedArrivalTime = rep.ScheduledArrivalTime + TimeSpan.FromSeconds(arrivaldelay);
                 rep.PredictedDepartureTime = rep.ScheduledDepartureTime + TimeSpan.FromSeconds(departuredelay);
             }
+                //edge.IsAltered = true;
+            edge.Destination.IsSubGraph = true;
+            edge.Origin.IsSubGraph = true;
 
         }
         #endregion AddDelay
@@ -236,8 +326,10 @@ namespace RailMLNeural.Data
     /// Class describing an edge(connection) in the simplified graph object.
     /// Built to contain data about infrastructure as well as traversing trains.
     /// </summary>
+    [Serializable]
     public class SimplifiedGraphEdge
     {
+        public int Index { get; set; }
         public double PercentageDoubleTrack { get; set; }
         public double Distance { get; set; }
         public double SwitchCount { get; set; }
@@ -247,10 +339,54 @@ namespace RailMLNeural.Data
         public SimplifiedGraphVertex Origin { get; set; }
         public SimplifiedGraphVertex Destination { get; set; }
         public List<EdgeTrainRepresentation> Trains { get; set; }
+        public Route Route { get; set; }
+        public int ThreadRunning;
+        public bool IsSubGraph { get { return Origin.IsSubGraph || Destination.IsSubGraph; } }
 
-        public SimplifiedGraphEdge()
+        public SimplifiedGraphEdge(SimplifiedGraphVertex origin, SimplifiedGraphVertex destination)
         {
             Trains = new List<EdgeTrainRepresentation>();
+            Origin = origin;
+            Destination = destination;
+            Origin.Edges.Add(this);
+            Destination.Edges.Add(this);
+            ThreadPool.QueueUserWorkItem(SetRoute);
+        }
+
+        public SimplifiedGraphEdge(SimplifiedGraphVertex origin, SimplifiedGraphVertex destination, bool setRoute)
+        {
+            Trains = new List<EdgeTrainRepresentation>();
+            Origin = origin;
+            Destination = destination;
+            Origin.Edges.Add(this);
+            Destination.Edges.Add(this);
+            if(setRoute)
+            {
+                ThreadPool.QueueUserWorkItem(SetRoute);
+            }
+        }
+
+        public void Sort()
+        {
+            Trains = new List<EdgeTrainRepresentation>(Trains.OrderBy(x => x.ScheduledDepartureTime));
+        }
+
+        private void SetRoute(object state)
+        {
+            Interlocked.Increment(ref ThreadRunning);
+            Route = DataContainer.PathContainer.GetRoute(Origin.OCP, Destination.OCP);
+            if (Route != null)
+            {
+                PercentageDoubleTrack = Route.PercentageDoubleTrack();
+                SwitchCount = Route.SwitchCount();
+                Distance = (double)Route.distance;
+                if(Route.distance > 100)
+                {
+                    int i = 0;
+                }
+            }
+            Logger.AddEntry("Created Edge between " + Origin.OCP.name + " and " + Destination.OCP.name + ".");
+            Interlocked.Decrement(ref ThreadRunning);
         }
     }
 
@@ -258,12 +394,16 @@ namespace RailMLNeural.Data
     /// Class describing a Vertex(Node) in the SimplifiedGraph Object
     /// Contains data about OCP itself and passing traffic.
     /// </summary>
+    [Serializable]
     public class SimplifiedGraphVertex
     {
+        public int Index { get; set; }
         public eOcp OCP { get; set; }
         public int TrackCount { get; set; }
         public List<SimplifiedGraphEdge> Edges { get; set; }
-        public List<VertexTrainRepresentation> Trains { get; set; }
+        public IEnumerable<VertexTrainRepresentation> Trains { get { return _trainDict.Values; } }
+        private Dictionary<string, VertexTrainRepresentation> _trainDict;
+        public bool IsSubGraph { get; set; }
 
         public bool IsStation
         {
@@ -271,42 +411,60 @@ namespace RailMLNeural.Data
             { return OCP.type == "station"; }
         }
 
-        public SimplifiedGraphVertex()
+        public SimplifiedGraphVertex(eOcp ocp)
         {
             Edges = new List<SimplifiedGraphEdge>();
-            Trains = new List<VertexTrainRepresentation>();
+            _trainDict = new Dictionary<string, VertexTrainRepresentation>();
+            OCP = ocp;
+            TrackCount = OCP.StationTrackCount();
+            IsSubGraph = false;
+        }
+
+        public void Clear()
+        {
+            _trainDict = new Dictionary<string, VertexTrainRepresentation>();
+            IsSubGraph = false;
         }
 
         public void Update()
         {
-            Trains = new List<VertexTrainRepresentation>();
+            _trainDict = new Dictionary<string, VertexTrainRepresentation>();
             foreach(var edge in Edges)
             {
-                foreach(var rep in edge.Trains.Where(x => x.Direction == DirectionEnum.Down))
+                foreach(var rep in edge.Trains)
                 {
-                    VertexTrainRepresentation Vrep = new VertexTrainRepresentation() {TrainHeaderCode = rep.TrainHeaderCode};
-                    if(Trains.Any(x => x.TrainHeaderCode == rep.TrainHeaderCode))
+                    if ((edge.Origin.OCP.id == this.OCP.id && rep.Direction == DirectionEnum.Down) ||
+                        (edge.Destination.OCP.id == this.OCP.id && rep.Direction == DirectionEnum.Up))
                     {
-                        Vrep = Trains.First(x => x.TrainHeaderCode == rep.TrainHeaderCode);
+                        VertexTrainRepresentation Vrep = new VertexTrainRepresentation(this) { TrainHeaderCode = rep.TrainHeaderCode };
+                        if (_trainDict.ContainsKey(rep.TrainHeaderCode))
+                        {
+                            Vrep = _trainDict[rep.TrainHeaderCode];
+                        }
+                        else { _trainDict.Add(rep.TrainHeaderCode,Vrep); }
+                        Vrep.ScheduledDepartureTime = rep.ScheduledDepartureTime;
+                        Vrep.IdealDepartureTime = rep.IdealDepartureTime;
+                        Vrep.PredictedDepartureTime = rep.PredictedDepartureTime;
                     }
-                    else { Trains.Add(Vrep);}
-                    Vrep.ScheduledDepartureTime = rep.ScheduledDepartureTime;
-                    Vrep.IdealDepartureTime = rep.IdealDepartureTime;
-                    Vrep.PredictedDepartureTime = rep.PredictedDepartureTime;
-                }
-                foreach(var rep in edge.Trains.Where(x => x.Direction == DirectionEnum.Up))
-                {
-                    VertexTrainRepresentation Vrep = new VertexTrainRepresentation() { TrainHeaderCode = rep.TrainHeaderCode };
-                    Trains.Add(Vrep);
-                    Vrep.ScheduledDepartureTime = rep.ScheduledDepartureTime;
-                    Vrep.IdealDepartureTime = rep.IdealDepartureTime;
-                    Vrep.PredictedDepartureTime = rep.PredictedDepartureTime;
+                    else
+                    {
+                        VertexTrainRepresentation Vrep = new VertexTrainRepresentation(this) { TrainHeaderCode = rep.TrainHeaderCode };
+                        if (_trainDict.ContainsKey(rep.TrainHeaderCode))
+                        {
+                            Vrep = _trainDict[rep.TrainHeaderCode];
+                        }
+                        else { _trainDict.Add(rep.TrainHeaderCode, Vrep); }
+                        Vrep.ScheduledArrivalTime = rep.ScheduledArrivalTime;
+                        Vrep.IdealArrivalTime = rep.IdealArrivalTime;
+                        Vrep.PredictedArrivalTime = rep.PredictedArrivalTime;
+                    }
                 }
             }
         }
         
     }
 
+    [Serializable]
     public class VertexTrainRepresentation
     {
         public string TrainHeaderCode { get; set; }
@@ -316,8 +474,15 @@ namespace RailMLNeural.Data
         public DateTime ScheduledDepartureTime { get; set; }
         public DateTime PredictedDepartureTime { get; set; }
         public DateTime IdealDepartureTime { get; set; }
+        public SimplifiedGraphVertex Vertex { get; private set; }
+
+        public VertexTrainRepresentation(SimplifiedGraphVertex Owner)
+        {
+            Vertex = Owner;
+        }
     }
 
+    [Serializable]
     public class EdgeTrainRepresentation
     {
         public string TrainHeaderCode { get; set; }
@@ -328,11 +493,42 @@ namespace RailMLNeural.Data
         public DateTime PredictedDepartureTime { get; set; }
         public DateTime IdealDepartureTime { get; set; }
         public DirectionEnum Direction { get; set; }
+        public SimplifiedGraphEdge Edge { get; private set; }
+        public EdgeTrainRepresentation Previous { get; set; }
+
+
+        public EdgeTrainRepresentation(SimplifiedGraphEdge Owner)
+        {
+            Edge = Owner;
+        }
+
     }
 
     public enum DirectionEnum
     {
         Up,
         Down
+    }
+
+    public static class Extentions2
+    {
+        public static int StationTrackCount(this eOcp OCP)
+        {
+            return DataContainer.model.infrastructure.tracks
+                .SelectMany(x => x.trackTopology.crossSections)
+                .Where(x => x.ocpRef == OCP.id)
+                .Count();
+        }
+
+        public static int SwitchCount(this Route route)
+        {
+            int count = 0;
+            foreach(RoutePart part in route.route)
+            {
+                count += part.track.trackTopology.connections
+                        .Where(x => x.pos > Math.Min(part.begin, part.end) && x.pos < Math.Max(part.begin, part.end)).Count();
+            }
+            return count;
+        }
     }
 }

@@ -70337,6 +70337,13 @@ namespace RailMLNeural.RailML
             }
         }
 
+        [System.Xml.Serialization.XmlIgnore()]
+        public tConnectionData refConnection
+        {
+            get;
+            set;
+        }
+
         private static XmlSerializer Serializer
         {
             get

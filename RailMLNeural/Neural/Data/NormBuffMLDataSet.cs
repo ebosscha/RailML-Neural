@@ -72,8 +72,26 @@ namespace RailMLNeural.Neural.Data
 
         public void Normalize(List<IDataProvider> inputproviders, List<IDataProvider> outputproviders)
         {
-            Normalizer.Generate(inputproviders, outputproviders);
+            this.TryEndLoad();
+            this.TryOpen();
+            Normalizer.Analyze(this);
             EGB.Close();
+            Normalizer.Generate(inputproviders, outputproviders);
+            Normalize();
+        }
+
+        public void Normalize(List<IRecurrentDataProvider> inputproviders, List<IRecurrentDataProvider> outputproviders)
+        {
+            this.TryEndLoad();
+            this.TryOpen();
+            Normalizer.Analyze(this);
+            EGB.Close();
+            Normalizer.Generate(inputproviders, outputproviders);
+            Normalize();
+        }
+
+        private void Normalize()
+        {
             _stream = new FileStream(BinaryFile, FileMode.Open, FileAccess.ReadWrite);
             _writer = new BinaryWriter(_stream);
             _reader = new BinaryReader(_stream);
@@ -109,6 +127,23 @@ namespace RailMLNeural.Neural.Data
             return result;
         }
 
+        public void TryOpen()
+        {
+            try
+            {
+                this.Open();
+            }
+            catch { }
+        }
+
+        public void TryEndLoad()
+        {
+            try
+            {
+                this.EndLoad();
+            }
+            catch { }
+        }
         #endregion Public
         
         #region Private
@@ -190,6 +225,14 @@ namespace RailMLNeural.Neural.Data
             base.Add(pair);
             Normalizer.Add(pair);
             _recordCount++;
+        }
+
+        public void Add(IMLDataSet Set)
+        {
+            foreach(IMLDataPair pair in Set)
+            {
+                Add(pair);
+            }
         }
 
         public new void BeginLoad(int inputSize, int idealSize)

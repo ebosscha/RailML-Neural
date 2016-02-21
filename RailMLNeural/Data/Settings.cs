@@ -7,6 +7,7 @@ using ProtoBuf;
 
 namespace RailMLNeural.Data
 {
+    [Serializable]
     [ProtoContract]
     public class Settings
     {   

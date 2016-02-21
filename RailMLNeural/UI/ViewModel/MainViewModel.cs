@@ -160,6 +160,7 @@ namespace RailMLNeural.UI.ViewModel
             Mouse.OverrideCursor = null;
             StatusText = null;
             SaveLoad.worker = null;
+            DataContainer.PathContainer = new PathContainer();
         }
         #endregion LoadButton
 
@@ -231,6 +232,7 @@ namespace RailMLNeural.UI.ViewModel
                 // Load document
                 string filename = dlg.FileName;
                 DataContainer.model = XML.ImportFile(filename);
+                DataContainer.PathContainer = new PathContainer();
             }
         }
 
@@ -269,6 +271,8 @@ namespace RailMLNeural.UI.ViewModel
                 // Load document
                 string filename = dlg.FileName;
                 DataContainer.model.infrastructure = XML.ImportFile(filename).infrastructure;
+                DataContainer.model = DataContainer.model;
+                DataContainer.PathContainer = new PathContainer();
             }
         }
 
@@ -287,6 +291,7 @@ namespace RailMLNeural.UI.ViewModel
                 // Load document
                 string filename = dlg.FileName;
                 DataContainer.model.rollingstock = XML.ImportFile(filename).rollingstock;
+                DataContainer.model = DataContainer.model;
             }
         }
 
@@ -305,6 +310,7 @@ namespace RailMLNeural.UI.ViewModel
                 // Load document
                 string filename = dlg.FileName;
                 DataContainer.model.timetable = XML.ImportFile(filename).timetable;
+                DataContainer.model = DataContainer.model;
             }
         }
 
@@ -661,12 +667,15 @@ namespace RailMLNeural.UI.ViewModel
         public ICommand RailMLViewCommand { get; private set; }
         public ICommand NeuralViewCommand { get; private set; }
         public ICommand StatisticsViewCommand { get; private set; }
+        public ICommand LogViewCommand { get; private set; }
 
         private void InitializeViewCommands()
         {
             RailMLViewCommand = new RelayCommand(ExecuteRailMLView);
             NeuralViewCommand = new RelayCommand(ExecuteNeuralView);
             StatisticsViewCommand = new RelayCommand(ExecuteStatisticsView);
+            LogViewCommand = new RelayCommand(ExecuteLogView);
+
         }
 
         private void ExecuteRailMLView()
@@ -682,6 +691,23 @@ namespace RailMLNeural.UI.ViewModel
         private void ExecuteStatisticsView()
         {
             CurrentViewModel = _statisticsView;
+        }
+
+        private void ExecuteLogView()
+        {
+            Thread LogThread = new Thread(() =>
+                {
+                    if (!Logger.Logger.View.IsActive)
+                    {
+                        Logger.Logger.View.Show();
+                        Logger.Logger.View.Closed += (sender2, e2) =>
+                            Logger.Logger.View.Dispatcher.InvokeShutdown();
+                        System.Windows.Threading.Dispatcher.Run();
+                    }
+                }
+            );
+            LogThread.SetApartmentState(ApartmentState.STA);
+            LogThread.Start();
         }
 
         #endregion ViewCommands

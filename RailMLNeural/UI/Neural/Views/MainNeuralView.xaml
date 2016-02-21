@@ -34,7 +34,7 @@
                                     Content="{Binding NeuralOutput}"/>
                             </xcad:LayoutDocument>
                     </xcad:LayoutDocumentPane>
-                    <xcad:LayoutAnchorablePaneGroup DockWidth="Auto">
+                    <!--<xcad:LayoutAnchorablePaneGroup DockWidth="Auto">
                         <xcad:LayoutAnchorablePane>
                             <xcad:LayoutAnchorable
                                 Title="Neural Network Properties" CanClose="False" CanHide="False">
@@ -42,7 +42,7 @@
                                     Content="{Binding NeuralProperties}"/>
                             </xcad:LayoutAnchorable>
                         </xcad:LayoutAnchorablePane>
-                    </xcad:LayoutAnchorablePaneGroup>
+                    </xcad:LayoutAnchorablePaneGroup>-->
                 </xcad:LayoutPanel>
             </xcad:LayoutRoot>
         </xcad:DockingManager>

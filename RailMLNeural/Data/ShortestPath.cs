@@ -5,7 +5,8 @@ using System.Linq;
 
 namespace RailMLNeural.Data
 {
-    class PathContainer
+    [Serializable]
+    public class PathContainer
     {
         private Dictionary<string, Dictionary<string, Route>> dict;
         public PathContainer()
@@ -19,6 +20,7 @@ namespace RailMLNeural.Data
             foreach (eOcp ocp in DataContainer.model.infrastructure.operationControlPoints)
             {
                 Dictionary<string, Route> tempdict = new Dictionary<string, Route>();
+                dict.Add(ocp.id, tempdict);
 
             }
         }
@@ -37,15 +39,19 @@ namespace RailMLNeural.Data
             else
             {
                 Route r = new Route(originid, destinationid);
-                dict[originid].Add(destinationid, r);
+                lock (dict)
+                {
+                    dict[originid].Add(destinationid, r);
+                }
                 return r;
             }
         }
     }
 
-    class Route
+    [Serializable]
+    public class Route
     {
-        private List<Vertex> vertices { get; set; }
+        private Dictionary<string, Vertex> vertices { get; set; }
 
         private infrastructure inf { get; set; }
         public eOcp origin { get; set; }
@@ -54,21 +60,24 @@ namespace RailMLNeural.Data
         public decimal distance { get; set; }
         public Route(string originid, string destinationid)
         {
-            vertices = new List<Vertex>();
+            vertices = new Dictionary<string, Vertex>();
             route = new List<RoutePart>();
             inf = DataContainer.model.infrastructure;
             origin = inf.operationControlPoints.Single(x => x.id == originid);
             destination = inf.operationControlPoints.Single(x => x.id == destinationid);
+            if (origin.geoCoord.coord.Count == 2 && destination.geoCoord.coord.Count == 2)
+            {
 
-            CalculateRoute();
+                CalculateRoute();
+            }
         }
 
 
-        // TODO: Alter algorithm to calculate route to all OCP's at once. Faster than individual shortest path calculation.
         private void CalculateRoute()
         {
 
             // Set up vertices
+            int n = 0;
             for (int i = 0; i < inf.tracks.Count; i++)
             {
                 Vertex v = new Vertex { track = inf.tracks[i] };
@@ -77,38 +86,43 @@ namespace RailMLNeural.Data
                 {
                     v.pos = v.track.trackTopology.crossSections.Single(e => e.ocpRef == origin.id).pos;
                     v.dist = 0;
+                    n++;
                 }
                 else { v.dist = (decimal)99999999999999999; }
-                vertices.Add(v);
-
+                vertices.Add(v.track.id, v);
+            }
+            if(n == 0)
+            {
+                return;
             }
 
             while (vertices.Count > 0)
             {
-                Vertex v = vertices.Find(x => x.dist == vertices.Min(e => e.dist));
-                if (HandleVertex(v))
+                Vertex v = vertices.Values.First(x => x.dist == vertices.Values.Min(e => e.dist));
+                if (HandleVertex(ref v))
                 {
                     break;
                 }
-                vertices.RemoveAt(vertices.IndexOf(v));
+                vertices.Remove(v.track.id);
             }
         }
 
-        private bool HandleVertex(Vertex v)
+        private bool HandleVertex(ref Vertex v)
         {
             decimal lowerbound = -9999999999999999;
             decimal upperbound = 9999999999999999;
-            switch (v.track.mainDir)
-            {
-                case tExtendedDirection.up:
-                    upperbound = v.pos;
-                    break;
-                case tExtendedDirection.down:
-                    lowerbound = v.pos;
-                    break;
-                default:
-                    break;
-            }
+            //TODO:: Implement driving direction in ShortestPath
+            //switch (v.track.mainDir)
+            //{
+            //    case tExtendedDirection.up:
+            //        upperbound = v.pos;
+            //        break;
+            //    case tExtendedDirection.down:
+            //        lowerbound = v.pos;
+            //        break;
+            //    default:
+            //        break;
+            //}
             foreach (tCrossSection c in v.track.trackTopology.crossSections)
             {
                 if (c.pos > lowerbound && c.pos < upperbound)
@@ -123,71 +137,109 @@ namespace RailMLNeural.Data
                 }
             }
 
-            foreach (eSwitch sw in v.track.trackTopology.connections)
+            foreach (eSwitch sw in v.track.trackTopology.connections.Where(x => x is eSwitch))
             {
                 if (sw.pos > lowerbound && sw.pos < upperbound)
                 {
                     foreach (var c in sw.connection)
                     {
-                        Vertex vert = vertices.Single(e => e.ContainsConnection(c.@ref).Successful);
-                        decimal dist = v.dist + Math.Abs(v.pos - sw.pos);
+                        
+                        string trackid = c.refConnection.FindParent(typeof(eTrack)).id;
+                        if (vertices.ContainsKey(trackid))
+                        {
+                            Vertex vert = vertices[trackid];
+                            decimal dist = v.dist + Math.Abs(v.pos - sw.pos);
+                            if (dist < vert.dist)
+                            {
+                                vert.prev = v;
+                                vert.prevpos = sw.pos;
+                                vert.dist = dist;
+                                vert.pos = c.GetParent().pos;
+                                vert.route = v.route;
+                                vert.route.Add(new RoutePart { track = vert.track, begin = v.pos, end = sw.pos });
+                            }
+                        }
+                       
+                    }
+                }
+            }
+            //if (v.track.mainDir != tExtendedDirection.down)
+            //{
+                if(v.track.trackTopology.trackBegin.Item is tConnectionData)
+                { 
+                    tConnectionData c = ((tConnectionData)v.track.trackTopology.trackBegin.Item);
+                    string trackid = c.refConnection.FindParent(typeof(eTrack)).id;
+                    if (vertices.ContainsKey(trackid))
+                    {
+                        Vertex vert = vertices[trackid];
+                        decimal dist = v.dist + Math.Abs(v.pos - v.track.trackTopology.trackBegin.pos);
                         if (dist < vert.dist)
                         {
                             vert.prev = v;
-                            vert.prevpos = sw.pos;
+                            vert.prevpos = v.track.trackTopology.trackBegin.pos;
                             vert.dist = dist;
-                            vert.pos = vert.ContainsConnection(c.@ref).pos;
+                            vert.pos = c.GetParent().pos;
                             vert.route = v.route;
-                            vert.route.Add(new RoutePart { track = vert.track, begin = v.pos, end = sw.pos });
+                            vert.route.Add(new RoutePart { track = vert.track, begin = v.pos, end = v.track.trackTopology.trackBegin.pos });
                         }
                     }
                 }
-            }
-            if (v.track.mainDir != tExtendedDirection.down)
-            {
-                try
+                
+                
+            //}
+            //if (v.track.mainDir != tExtendedDirection.up)
+            //{
+                if (v.track.trackTopology.trackEnd.Item is tConnectionData)
                 {
-                    string cref = ((tConnectionData)v.track.trackTopology.trackBegin.Item).@ref;
-                    Vertex vert = vertices.Single(e => e.ContainsConnection(cref).Successful);
-                    decimal dist = v.dist + Math.Abs(v.pos - v.track.trackTopology.trackBegin.pos);
-                    if (dist < vert.dist)
+                    tConnectionData c = ((tConnectionData)v.track.trackTopology.trackEnd.Item);
+                    string trackid = c.refConnection.FindParent(typeof(eTrack)).id;
+                    if (vertices.ContainsKey(trackid))
                     {
-                        vert.prev = v;
-                        vert.prevpos = v.track.trackTopology.trackBegin.pos;
-                        vert.dist = dist;
-                        vert.pos = vert.ContainsConnection(cref).pos;
-                        vert.route = v.route;
-                        vert.route.Add(new RoutePart { track = vert.track, begin = v.pos, end = v.track.trackTopology.trackBegin.pos });
+                        Vertex vert = vertices[trackid];
+                        decimal dist = v.dist + Math.Abs(v.pos - v.track.trackTopology.trackEnd.pos);
+                        if (dist < vert.dist)
+                        {
+                            vert.prev = v;
+                            vert.prevpos = v.track.trackTopology.trackEnd.pos;
+                            vert.dist = dist;
+                            vert.pos = c.GetParent().pos;
+                            vert.route = v.route;
+                            vert.route.Add(new RoutePart { track = vert.track, begin = v.pos, end = v.track.trackTopology.trackEnd.pos });
+                        }
                     }
                 }
-                catch { }
-            }
-            if (v.track.mainDir != tExtendedDirection.up)
-            {
-                try
-                {
-                    string cref = ((tConnectionData)v.track.trackTopology.trackEnd.Item).@ref;
-                    Vertex vert = vertices.Single(e => e.ContainsConnection(cref).Successful);
-                    decimal dist = v.dist + Math.Abs(v.pos - v.track.trackTopology.trackEnd.pos);
-                    if (dist < vert.dist)
-                    {
-                        vert.prev = v;
-                        vert.prevpos = v.track.trackTopology.trackEnd.pos;
-                        vert.dist = dist;
-                        vert.pos = vert.ContainsConnection(cref).pos;
-                        vert.route = v.route;
-                        vert.route.Add(new RoutePart { track = vert.track, begin = v.pos, end = v.track.trackTopology.trackEnd.pos });
-                    }
-                }
-                catch { }
-            }
+               
+            //}
 
             return false;
         }
 
+        public double PercentageDoubleTrack()
+        {
+            if(route.Count == 0)
+            {
+                return 0;
+            }
+            decimal totallength = 0;
+            decimal doublelength = 0;
+            foreach (var p in route)
+            {
+                totallength += Math.Abs(p.begin - p.end);
+                if (p.track.mainDir == RailML.tExtendedDirection.up || p.track.mainDir == RailML.tExtendedDirection.down)
+                {
+                    doublelength += Math.Abs(p.begin - p.end);
+                }
+            }
+            if (totallength > 0)
+            {
+                return (double)(doublelength / totallength);
+            }
+            return 0;
+        }
+
     }
 
-    class Vertex : IEquatable<Vertex>
+    public class Vertex : IEquatable<Vertex>
     {
         public eTrack track { get; set; }
         public decimal dist { get; set; }
@@ -211,40 +263,10 @@ namespace RailMLNeural.Data
         {
             return (int)dist;
         }
-
-        public QueryResult ContainsConnection(string id)
-        {
-            try
-            {
-                if (((tConnectionData)track.trackTopology.trackBegin.Item).id == id)
-                {
-                    return new QueryResult() { Successful = true, pos = track.trackTopology.trackBegin.pos };
-                }
-            }
-            catch { }
-            try
-            {
-                if (((tConnectionData)track.trackTopology.trackBegin.Item).id == id)
-                {
-                    return new QueryResult() { Successful = true, pos = track.trackTopology.trackEnd.pos };
-                }
-            }
-            catch { }
-            foreach (eSwitch sw in track.trackTopology.connections)
-            {
-                if (sw.connection.Any(e => e.id == id)) { return new QueryResult() { Successful = true, pos = sw.pos }; }
-            }
-            return new QueryResult() { Successful = false };
-        }
     }
 
-    class QueryResult
-    {
-        public bool Successful;
-        public decimal pos;
-    }
-
-    class RoutePart
+    [Serializable]
+    public class RoutePart
     {
         public eTrack track { get; set; }
         public decimal begin { get; set; }

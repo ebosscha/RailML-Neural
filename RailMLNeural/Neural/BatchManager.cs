@@ -45,7 +45,7 @@ namespace RailMLNeural.Neural
                 INeuralConfiguration N = _queue[0];
                 _queue.RemoveAt(0);
                 OnChanged();
-                ThreadPool.QueueUserWorkItem(N.TrainNetwork);
+                N.TrainNetwork();
             }
         }
         #endregion Public

@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.PreProcessing.DataProviders
 {
+    [Serializable]
     class InitialDelaySizeInputProvider : IDataProvider
     {
+        public bool IsInput { get { return true; } }
         public NormalizationTypeEnum NormalizationType { get; set; }
 
         private const string name = "InitialDelaySize";

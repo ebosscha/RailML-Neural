@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.Data
 {
+    [Serializable]
     class BufferedSubDataSet : IMLDataSet
     {
         #region Parameters
@@ -86,6 +87,7 @@ namespace RailMLNeural.Neural.Data
 
     }
 
+    [Serializable]
     class SubDataSetEnumerator : IEnumerator<IMLDataPair>
     {
         private readonly BufferedSubDataSet _owner;

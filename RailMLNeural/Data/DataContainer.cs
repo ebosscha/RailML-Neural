@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Windows;
+using System.Linq;
 
 namespace RailMLNeural.Data
 {
@@ -14,11 +15,13 @@ namespace RailMLNeural.Data
     {
         private static railml _model;
         private static List<INeuralConfiguration> _neuralConfigurations;
-        private static Hashtable _idlist = new Hashtable();
+        private static Dictionary<string, dynamic> _idlist = new Dictionary<string, dynamic>();
         private static PathContainer _pathcontainer;
         private static Settings _settings = new Settings();
         private static MetaData _metadata = new MetaData();
-        public static DelayCombinationCollection DelayCombinations { get; set; }
+        private static DelayCombinationCollection _delayCombinations = new DelayCombinationCollection();
+        
+       
         public static Dictionary<string, Dictionary<DateTime, string>> HeaderRoutes { get; set; }
         static public event EventHandler ModelChanged;
 
@@ -28,6 +31,17 @@ namespace RailMLNeural.Data
             set { _model = value;
                 PrepareData(); 
                 OnModelChanged("model"); }
+        }
+
+        public static DelayCombinationCollection DelayCombinations {
+            get
+            {
+                return _delayCombinations;
+            }
+            set
+            {
+                _delayCombinations = value;
+            }
         }
 
         public static Settings Settings
@@ -52,7 +66,7 @@ namespace RailMLNeural.Data
             set { _metadata = value; }
         }
 
-        public static Hashtable IDList { get { return _idlist; } }
+        public static Dictionary<string, dynamic> IDList { get { return _idlist; } }
 
         public static PathContainer PathContainer
         {
@@ -82,6 +96,10 @@ namespace RailMLNeural.Data
         {
             _idlist.Clear();
             RecurrentPrepareData(_model);
+            foreach(tConnectionData conn in _idlist.Values.Where(x => x is tConnectionData))
+            {
+                conn.refConnection = _idlist[conn.@ref];
+            }
         }
 
         //Sets ID list and Parent Structure
@@ -90,8 +108,13 @@ namespace RailMLNeural.Data
             PropertyInfo[] properties = item.GetType().GetProperties();
             foreach (PropertyInfo prop in properties)
             {
+                if(prop.Name == "refConnection")
+                {
+                    continue;
+                }
                 if (prop.Name == "id" && item.id != null)
                 {
+                    
                     if (_idlist.ContainsKey(item.id))
                     {
                         throw new Exception("Error: Duplicate ID");
@@ -229,13 +252,13 @@ namespace RailMLNeural.Data
             }
 
             return list;
-
-
         }
     }
 
+    [Serializable]
     public class ParentContainer
     {
+        [NonSerialized]
         private dynamic _parent;
 
         public dynamic GetParent()

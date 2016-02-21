@@ -16,6 +16,7 @@ using Encog.Neural.Networks.Layers;
 using Encog.Engine.Network.Activation;
 using RailMLNeural.Neural.Normalization;
 using RailMLNeural.Neural.PreProcessing.DataProviders;
+using RailMLNeural.Neural.Configurations;
 
 namespace RailMLNeural.UI.Neural.ViewModel
 {
@@ -113,15 +114,6 @@ namespace RailMLNeural.UI.Neural.ViewModel
 
         private PreProcesser pproc;
 
-        private LayerSize _inputLayerSize = new LayerSize();
-
-        public LayerSize InputLayerSize
-        { get { return _inputLayerSize; }
-            set { _inputLayerSize = value;
-            RaisePropertyChanged("InputLayerSize");
-            }
-        }
-
         private LayerSize _outputLayerSize = new LayerSize();
 
         public LayerSize OutputLayerSize
@@ -165,7 +157,6 @@ namespace RailMLNeural.UI.Neural.ViewModel
         public CreateFeedForwardViewModel()
         {
             Network = new FeedForwardConfiguration();
-            Network.Type = AlgorithmEnum.FeedForward;
             HiddenLayerSize = new ObservableCollection<LayerSize>();
             InputDataProviders = new ObservableCollection<IDataProvider>();
             OutputDataProviders = new ObservableCollection<IDataProvider>();
@@ -212,7 +203,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
         {
 
             BasicNetwork N = new BasicNetwork();
-            N.AddLayer(InputLayerSize.CreateLayer(Network.Data.InputSize));
+            N.AddLayer(new BasicLayer(null, true, Network.Data.InputSize));
             for (int i = 0; i < HiddenLayerSize.Count; i++ )
             {
                 N.AddLayer(HiddenLayerSize[i].CreateLayer());
@@ -227,11 +218,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
         {
             FeedForwardConfiguration NewNetwork = new FeedForwardConfiguration();
             Network = NewNetwork;
-            Network.Type = AlgorithmEnum.FeedForward;
             HiddenLayerSize = new ObservableCollection<LayerSize>();
             InputDataProviders = new ObservableCollection<IDataProvider>();
             OutputDataProviders = new ObservableCollection<IDataProvider>();
-            InputLayerSize = new LayerSize();
             OutputLayerSize = new LayerSize();
         }
 
@@ -244,15 +233,13 @@ namespace RailMLNeural.UI.Neural.ViewModel
         /// </summary>
         public ICommand CreateNeuralCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
-        public ICommand AddInputDataProviderCommand { get; set; }
-        public ICommand AddOutputDataProviderCommand { get; set; }
+        public ICommand AddDataProviderCommand { get; set; }
 
         private void InitializeCommands()
         {
             CreateNeuralCommand = new RelayCommand(ExecuteCreateNeural, canExecuteCreateNeural);
             CancelCommand = new RelayCommand<object>((param) => ExecuteCancel(param));
-            AddInputDataProviderCommand = new RelayCommand(ExecuteAddInputDataProvider);
-            AddOutputDataProviderCommand = new RelayCommand(ExecuteAddOutputDataProvider);
+            AddDataProviderCommand = new RelayCommand(ExecuteAddDataProvider);
         }
 
         /// <summary>
@@ -312,40 +299,18 @@ namespace RailMLNeural.UI.Neural.ViewModel
             }
         }
 
-        private void ExecuteAddInputDataProvider()
+        private void ExecuteAddDataProvider()
         {
-            switch(DataProvider)
+            IDataProvider provider = DataProviderFactory.CreateDataProvider(DataProvider);
+            if(provider != null && provider.IsInput)
             {
-                case DataProviderEnum.PerLineExactInput:
-                    InputDataProviders.Add(new PerLineExactInputProvider());
-                    break;
-                case DataProviderEnum.TimeOfDayInput:
-                    InputDataProviders.Add(new TimeInputProvider(24));
-                    break;
-                case DataProviderEnum.InitialDelayInput:
-                    InputDataProviders.Add(new InitialDelaySizeInputProvider());
-                    break;
-                case DataProviderEnum.LineClassificationInput:
-                    InputDataProviders.Add(new LineClassificationInputProvider());
-                    break;
-                default:
-                    break;
+                InputDataProviders.Add(provider);
             }
-        }
+            else if(provider != null)
+            {
+                OutputDataProviders.Add(provider);
+            }
 
-        private void ExecuteAddOutputDataProvider()
-        {
-            switch (DataProvider)
-            {
-                case DataProviderEnum.PerLineClassificationOutput:
-                    OutputDataProviders.Add(new PerLineClassificationOutputProvider());
-                    break;
-                case DataProviderEnum.PerLineExactOutput:
-                    OutputDataProviders.Add(new PerLineExactOutputProvider());
-                    break;
-                default:
-                    break;
-            }
         }
 
         #endregion Commands
@@ -371,41 +336,8 @@ namespace RailMLNeural.UI.Neural.ViewModel
 
         public BasicLayer CreateLayer(int layersize)
         {
-            switch (ActivationFunction)
-            {
-                case ActivationFunctionEnum.None:
-                    return new BasicLayer(null, HasBias, layersize);
-                case ActivationFunctionEnum.BiPolar:
-                    return new BasicLayer(new ActivationBiPolar(), HasBias, layersize);
-                case ActivationFunctionEnum.BiPolarSteepenedSigmoid:
-                    return new BasicLayer(new ActivationBipolarSteepenedSigmoid(), HasBias, layersize);
-                case ActivationFunctionEnum.ClippedLinear:
-                    return new BasicLayer(new ActivationClippedLinear(), HasBias, layersize);
-                case ActivationFunctionEnum.Competitive:
-                    return new BasicLayer(new ActivationCompetitive(), HasBias, layersize);
-                case ActivationFunctionEnum.Elliott:
-                    return new BasicLayer(new ActivationElliott(), HasBias, layersize);
-                case ActivationFunctionEnum.ElliottSymmetric:
-                    return new BasicLayer(new ActivationElliottSymmetric(), HasBias, layersize);
-                case ActivationFunctionEnum.Linear:
-                    return new BasicLayer(new ActivationLinear(), HasBias, layersize);
-                case ActivationFunctionEnum.LOG:
-                    return new BasicLayer(new ActivationLOG(), HasBias, layersize);
-                case ActivationFunctionEnum.Ramp:
-                    return new BasicLayer(new ActivationRamp(), HasBias, layersize);
-                case ActivationFunctionEnum.Sigmoid:
-                    return new BasicLayer(new ActivationSigmoid(), HasBias, layersize);
-                case ActivationFunctionEnum.SIN:
-                    return new BasicLayer(new ActivationSIN(), HasBias, layersize);
-                case ActivationFunctionEnum.SoftMax:
-                    return new BasicLayer(new ActivationSoftMax(), HasBias, layersize);
-                case ActivationFunctionEnum.SteepenedSigmoid:
-                    return new BasicLayer(new ActivationSteepenedSigmoid(), HasBias, layersize);
-                case ActivationFunctionEnum.TANH:
-                    return new BasicLayer(new ActivationTANH(), HasBias, layersize);
-                default:
-                    return null;
-            }
+            IActivationFunction act = ActivationFactory.Create(ActivationFunction);
+            return new BasicLayer(act, HasBias, layersize);
         }
 
         public BasicLayer CreateLayer()

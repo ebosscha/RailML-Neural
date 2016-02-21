@@ -74,14 +74,18 @@ namespace RailMLNeural.UI.Neural.ViewModel
 
         private void ProgressChanged(object sender, EventArgs e)
         {
-            ErrorHistory = new ObservableDataSource<Point>();
-            for(int i = 0; i < SelectedNetwork.ErrorHistory.Count; i++)
+            if(ErrorHistory == null || ErrorHistory.Collection.Count != SelectedNetwork.ErrorHistory.Count - 1)
+            {
+                ErrorHistory = new ObservableDataSource<Point>();
+                VerificationHistory = new ObservableDataSource<Point>();
+            }
+            for(int i = ErrorHistory.Collection.Count; i < SelectedNetwork.ErrorHistory.Count; i++)
             {
                 ErrorHistory.Collection.Add(new Point(i + 1, SelectedNetwork.ErrorHistory[i]));
             }
             ErrorHistory.SetXYMapping(p => p);
-            VerificationHistory = new ObservableDataSource<Point>();
-            for (int i = 0; i < SelectedNetwork.VerificationHistory.Count; i++)
+
+            for (int i = VerificationHistory.Collection.Count; i < SelectedNetwork.VerificationHistory.Count; i++)
             {
                 VerificationHistory.Collection.Add(new Point(i + 1, SelectedNetwork.VerificationHistory[i]));
             }

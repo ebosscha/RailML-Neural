@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Data
 {
+    [Serializable]
     [ProtoContract]
     class MetaData
     {

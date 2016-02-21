@@ -47,7 +47,7 @@
                     
                 </GroupBox>
                 
-                <GroupBox Width="350"
+                <GroupBox Width="500"
                           HorizontalAlignment="Left"
                           Margin="320,60,10,10"
                           Header="Data">
@@ -106,21 +106,15 @@
                                 </ItemsControl.ItemsPanel>
                             </ItemsControl>
                         </Grid>
-                        <Grid>
-                            <Button Content="Add Input"
-                                    Width="80"
-                                    HorizontalAlignment="Left"
-                                    Command="{Binding AddInputDataProviderCommand}"/>
-                            <Button Content="Add Output"
-                                    Width="80"
-                                    HorizontalAlignment="Right"
-                                    Command="{Binding AddOutputDataProviderCommand}"/>
-                        </Grid>
                         <StackPanel Orientation="Horizontal">
                             <Label Content="DataProvider :"/>
                             <ComboBox ItemsSource="{Binding DataProviderEnumValues}"
                                       SelectedItem="{Binding DataProvider}"
                                       Width="120"/>
+                            <Button Content="Add DataProvider"
+                                    Width="120"
+                                    HorizontalAlignment="Left"
+                                    Command="{Binding AddDataProviderCommand}"/>
                         </StackPanel>
                     </StackPanel>
 
@@ -143,17 +137,6 @@
                             Maximum="10"
                             />
                         </Grid>
-                        <Grid Margin="5,0,0,0"
-                                  Height="35">
-                                <TextBlock Text="Input Layer :"/>
-                                <TextBlock Margin="30,15,0,0"
-                                                       Text="Activation Function"/>
-                                <ComboBox Margin="150,15,0,0"
-                                                      ItemsSource="{Binding Path=DataContext.ActivationFunctionEnumValues, 
-                                                RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                      SelectedItem="{Binding Path=InputLayerSize.ActivationFunction}"
-                                                      Height="20"/>
-                            </Grid>
                             <ItemsControl ItemsSource="{Binding HiddenLayerSize}"
                                       AlternationCount="{Binding Path=HiddenLayerSize.Count}"
                                       Margin="0,5,0,0">

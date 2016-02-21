@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using RailMLNeural.UI.ViewModel;
+using System;
 
 namespace RailMLNeural.UI
 {
@@ -15,6 +16,12 @@ namespace RailMLNeural.UI
         {
             InitializeComponent();
             Closing += (s, e) => ViewModelLocator.Cleanup();
+        }
+
+        protected override void OnClosed(System.EventArgs e)
+        {
+            base.OnClosed(e);
+            Environment.Exit(0);
         }
     }
 }

@@ -6,12 +6,16 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural
 {
+    [Serializable]
     public enum AlgorithmEnum
     {
-        Recurrent,
-        FeedForward
+        GraphRecurrent,
+        Recursive,
+        FeedForward,
+        Convolutional
     }
 
+    [Serializable]
     public enum ActivationFunctionEnum
     {
         None,
@@ -28,15 +32,20 @@ namespace RailMLNeural.Neural
         SIN,
         SoftMax,
         SteepenedSigmoid,
-        TANH
+        TANH,
+        Gaussian
     }
 
+    [Serializable]
     public enum LearningAlgorithmEnum
     {
         BackPropagation,
         ResilientPropagation,
         QuickPropagation,
         ManhattanPropagation,
-        ScaledConjugateGradient
+        ScaledConjugateGradient,
+        SimulatedAnnealing,
+        ParticleSwarmOptimization,
+
     }
 }

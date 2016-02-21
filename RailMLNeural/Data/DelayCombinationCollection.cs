@@ -40,7 +40,11 @@ namespace RailMLNeural.Data
         {
             get
             {
-                return dict.Values.Average(x => x.Sum(y => y.primarydelays.Count + y.secondarydelays.Count));
+                if (dict.Values.Count > 0)
+                {
+                    return dict.Values.Average(x => x.Sum(y => y.primarydelays.Count + y.secondarydelays.Count));
+                }
+                return 0;
             }
         }
 
@@ -48,15 +52,20 @@ namespace RailMLNeural.Data
         {
             get
             {
-                int[] array = new int[dict.Values.Max(x => x.Sum(y => y.secondarydelays.Count))];
-                foreach(var x in dict.Values)
+                if (dict.Values.Count > 0)
                 {
-                    foreach(var y in x)
+
+                    int[] array = new int[dict.Values.Max(x => x.Sum(y => y.secondarydelays.Count))];
+                    foreach (var x in dict.Values)
                     {
-                        array[y.secondarydelays.Count]++;
+                        foreach (var y in x)
+                        {
+                            array[y.secondarydelays.Count]++;
+                        }
                     }
+                    return array.ToList();
                 }
-                return array.ToList();
+                return null;
             }
         }
 
@@ -64,7 +73,11 @@ namespace RailMLNeural.Data
         {
             get
             {
-                return dict.Values.Average(x => x.Count);
+                if (dict.Values.Count > 0)
+                {
+                    return dict.Values.Average(x => x.Count);
+                }
+                return 0;
             }
         }
 
@@ -72,7 +85,11 @@ namespace RailMLNeural.Data
         {
             get
             {
-                return dict.Values.Average(x => x.Average(y => (y.primarydelays.Average(z => z.destinationdelay) + y.secondarydelays.Average(z => z.destinationdelay))/2));
+                if (dict.Values.Count > 0)
+                {
+                    return dict.Values.Average(x => x.Average(y => (y.primarydelays.Average(z => z.destinationdelay) + y.secondarydelays.Average(z => z.destinationdelay)) / 2));
+                }
+                return 0;
             }
         }
 

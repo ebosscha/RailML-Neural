@@ -130,26 +130,51 @@
     <Compile Include="Data\ImportInfrastructure.cs" />
     <Compile Include="Data\ImportTimetable.cs" />
     <Compile Include="Data\MetaData.cs" />
-    <Compile Include="Data\FeedForwardConfiguration.cs" />
+    <Compile Include="Neural\Algorithms\Training\BatchNeuralSimulatedAnnealing.cs" />
+    <Compile Include="Neural\Algorithms\Training\GNResilientPropagation.cs" />
+    <Compile Include="Neural\Algorithms\Training\GraphNeuralGradientWorker.cs" />
+    <Compile Include="Neural\Algorithms\Training\GraphNeuralPropagation.cs" />
+    <Compile Include="Neural\Algorithms\Training\GraphNeuralPSO.cs" />
+    <Compile Include="Neural\Algorithms\Training\GraphNeuralPSOWorker.cs" />
+    <Compile Include="Neural\Algorithms\Training\GRNNSubGradientWorker.cs" />
+    <Compile Include="Neural\Configurations\FeedForwardConfiguration.cs" />
     <Compile Include="Data\SaveLoad.cs" />
     <Compile Include="Data\Settings.cs" />
     <Compile Include="Data\ShortestPath.cs" />
     <Compile Include="Data\SimplifiedGraph.cs" />
     <Compile Include="Data\SimplifiedGraph2.cs" />
     <Compile Include="Data\XML.cs" />
+    <Compile Include="Neural\Algorithms\DataSetCalculateScore.cs" />
+    <Compile Include="Neural\Algorithms\FlatGRNN.cs" />
+    <Compile Include="Neural\Algorithms\GraphRecurrentNeuralNetwork.cs" />
+    <Compile Include="Neural\Algorithms\Propagators\FollowTrainPropagator.cs" />
     <Compile Include="Neural\Algorithms\Propagators\ChronologicalPropagator.cs" />
     <Compile Include="Neural\Algorithms\Propagators\IPropagator.cs" />
     <Compile Include="Neural\Algorithms\RecurrentCalculateScore.cs" />
-    <Compile Include="Neural\Algorithms\RecurrentNetwork.cs" />
-    <Compile Include="Neural\Algorithms\RecurrentTraining.cs" />
     <Compile Include="Neural\BatchManager.cs" />
-    <Compile Include="Neural\Configurations\RecurrentConfiguration.cs" />
+    <Compile Include="Neural\Configurations\ConvolutionalConfiguration.cs" />
+    <Compile Include="Neural\Configurations\GRNNConfiguration.cs" />
+    <Compile Include="Neural\Configurations\RecursiveConfiguration.cs" />
     <Compile Include="Neural\Data\BufferedSubDataSet.cs" />
+    <Compile Include="Neural\Data\DelayCombinationSet.cs" />
     <Compile Include="Neural\Data\NormBuffMLDataSet.cs" />
     <Compile Include="Neural\Data\IRecurrentDataProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\DelaySizeInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\SwitchCountInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\StationTracksInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\VertexDepartureCountInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\EdgeDepartureCountInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\RouteLengthInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\DoubleTrackInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\ScheduledTimesInputRecurrentProvider .cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\VerticesHeadwayInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\EdgeDelaysInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\EdgeHeadwayInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\DelaySizeOutputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\PreviousDelaySizeInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataSet.cs" />
     <Compile Include="Neural\Enums.cs" />
+    <Compile Include="Neural\Factories.cs" />
     <Compile Include="Neural\INeuralConfiguration.cs" />
     <Compile Include="Neural\Normalization\Normalizer.cs" />
     <Compile Include="Neural\PreProcessing\DataProviders\InitialDelaySizeInputProvider.cs" />
@@ -176,9 +201,25 @@
     <Compile Include="UI\Dialog\View\ProjectOptionsView.xaml.cs">
       <DependentUpon>ProjectOptionsView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\Logger\Logger.cs" />
+    <Compile Include="UI\Logger\LogViewer.xaml.cs">
+      <DependentUpon>LogViewer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\Model\DataItem.cs" />
     <Compile Include="UI\Model\DataService.cs" />
     <Compile Include="UI\Model\IDataService.cs" />
+    <Compile Include="UI\Neural\OutputVisualization\RenderObjects\RenderEdge.cs" />
+    <Compile Include="UI\Neural\OutputVisualization\RenderObjects\RenderVertex.cs" />
+    <Compile Include="UI\Neural\OutputVisualization\ViewModel\GraphPropertiesViewModel.cs" />
+    <Compile Include="UI\Neural\OutputVisualization\ViewModel\GraphVisualizationViewModel.cs" />
+    <Compile Include="UI\Neural\OutputVisualization\ViewModel\Messages.cs" />
+    <Compile Include="UI\Neural\OutputVisualization\Views\GraphPropertiesView.xaml.cs">
+      <DependentUpon>GraphPropertiesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Neural\OutputVisualization\Views\GraphVisualizationView.xaml.cs">
+      <DependentUpon>GraphVisualizationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Neural\ViewModel\CreateRecursiveNetworkViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\CreateFeedForwardViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\CreateRecurrentNetworkViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\MainNeuralViewModel.cs" />
@@ -188,6 +229,9 @@
     <Compile Include="UI\Neural\ViewModel\NeuralPropertiesViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralResultsViewModel.cs" />
     <Compile Include="UI\Neural\ViewModel\NeuralRunManagerViewModel.cs" />
+    <Compile Include="UI\Neural\Views\CreateRecursiveNetworkView.xaml.cs">
+      <DependentUpon>CreateRecursiveNetworkView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\Neural\Views\CreateFeedForwardView.xaml.cs">
       <DependentUpon>CreateFeedForwardView.xaml</DependentUpon>
     </Compile>
@@ -255,6 +299,7 @@
     <Compile Include="UI\RailML\Views\VisualizationView.xaml.cs">
       <DependentUpon>VisualizationView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\Resources\ValueConverters.cs" />
     <Compile Include="UI\Statistics\ViewModel\DelayStatisticsViewModel.cs" />
     <Compile Include="UI\Statistics\ViewModel\MainStatisticsViewModel.cs" />
     <Compile Include="UI\Statistics\ViewModel\Messages.cs" />
@@ -282,6 +327,10 @@
       <SubType>Form</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="UI\Logger\LogViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -294,6 +343,18 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="UI\Neural\OutputVisualization\Views\GraphPropertiesView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Neural\OutputVisualization\Views\GraphVisualizationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Neural\Views\CreateRecursiveNetworkView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="UI\Neural\Views\CreateFeedForwardView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

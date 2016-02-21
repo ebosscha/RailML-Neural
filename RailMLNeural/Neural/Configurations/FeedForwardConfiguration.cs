@@ -15,15 +15,17 @@ using RailMLNeural.UI.Neural.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
+using System.Threading;
 using System.Windows;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
-namespace RailMLNeural.Data
+namespace RailMLNeural.Neural.Configurations
 {
     [Serializable]
-    public class FeedForwardConfiguration : INeuralConfiguration
+    public class FeedForwardConfiguration : BaseNeuralConfiguration, INeuralConfiguration
     {
-        private NeuralSettings _settings = new NeuralSettings { LearningRate = 0.1, Momentum = 0 };
+        private NeuralSettings _settings = new NeuralSettings();
         [Category("Neural Network Settings")]
         [ExpandableObject]
         public NeuralSettings Settings
@@ -33,7 +35,7 @@ namespace RailMLNeural.Data
         }
         [Category("Neural Network")]
         [ExpandableObject]
-        public IContainsFlat Network { get; set; }
+        public BasicNetwork Network { get; set; }
         [ExpandableObject]
         public NormBuffMLDataSet Data { get; set; }
         public IMLTrain Training { get; set; }
@@ -42,57 +44,29 @@ namespace RailMLNeural.Data
         [Category("General")]
         public string Description { get; set; }
         [Category("General"), ReadOnly(true)]
-        public AlgorithmEnum Type { get; set; }
+        public AlgorithmEnum Type { get { return AlgorithmEnum.FeedForward; } }
         [Category("Neural Network")]
         public List<LayerSize> HiddenLayerSize { get; set; }
-        public bool IsRunning { get; set; }
-        public string filefolder { get; set; }
-        public List<double> ErrorHistory { get; set; }
-        public List<double> VerificationHistory { get; set; }
         public List<IDataProvider> InputDataProviders { get; set; }
         public List<IDataProvider> OutputDataProviders { get; set; }
-        public event EventHandler ProgressChanged;
 
-        public FeedForwardConfiguration()
+        public FeedForwardConfiguration() : base()
         {
             HiddenLayerSize = new List<LayerSize>();
-            ErrorHistory = new List<Double>();
-            VerificationHistory = new List<Double>();
             InputDataProviders = new List<IDataProvider>();
             OutputDataProviders = new List<IDataProvider>();
         }
 
-        public void TrainNetwork(object state)
+        public void Reset()
         {
-            Data.Open();
-            IsRunning = true;
-            if(ErrorHistory.Count == 0)
+            if (!IsRunning)
             {
-                if (Network is IContainsFlat)
-                {
-                    ((IContainsFlat)Network).Flat.Randomize();
-                }
+                Network.Reset();
             }
-            for(int i = 0; i < Settings.Epochs; i++)
+            else
             {
-                Training.Iteration();
-                ErrorHistory.Add(Training.Error);
-                RunVerificationSet();
-                OnProgressChanged();
+                MessageBox.Show("Error: Network still running.");
             }
-            IsRunning = false;
-        }
-
-        private void OnProgressChanged()
-        {
-            Application.Current.Dispatcher.Invoke((Action)(() =>
-            {
-                EventHandler handler = ProgressChanged;
-                if (handler != null)
-                {
-                    handler(ErrorHistory, new PropertyChangedEventArgs("ErrorHistory"));
-                }
-            }));
         }
 
         
@@ -114,16 +88,13 @@ namespace RailMLNeural.Data
             return null;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             Data.Close();
             Data = null;
-            Training = null;
             Network = null;
             HiddenLayerSize = null;
-            ErrorHistory = null;
-            VerificationHistory = null;
-            ProgressChanged = null;
         }
 
         public int InputSize
@@ -181,16 +152,15 @@ namespace RailMLNeural.Data
         #endregion Mapping
 
         #region Serialization
-        public void Serialize()
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-
+            info.AddValue("Name", Name);
         }
 
-        public void Deserialize()
+        protected FeedForwardConfiguration(SerializationInfo info, StreamingContext context)
         {
-
+            Name = info.GetString("Name");
         }
-
         #endregion Serialization
 
     }
@@ -199,16 +169,10 @@ namespace RailMLNeural.Data
     [ProtoContract]
     public class NeuralSettings
     {
-        [ProtoMember(1)]
-        public double LearningRate { get; set; }
-        [ProtoMember(2)]
-        public double Momentum { get; set; }
         [ProtoMember(3)]
         public int Epochs { get; set; }
         [ProtoMember(4)]
         public double VerificationSize { get; set; }
-
-
     }
 
     

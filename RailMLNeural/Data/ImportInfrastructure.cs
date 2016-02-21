@@ -88,6 +88,10 @@ namespace RailMLNeural.Data
                         id = (row["Serial Number"] as string) ?? null,
                         description = (row["Description"] as string) ?? null
                     };
+                    if(track.id == null)
+                    {
+                        DataContainer.IDGenerator(track);
+                    }
                     track.trackTopology.trackBegin.pos = (decimal)(((row["StartMiles"] as double?) ?? 0) + ((row["StartYards"] as double?) ?? 0) / 1760);
                     track.trackTopology.trackEnd.pos = (decimal)(((row["EndMiles"] as double?) ?? 0) + ((row["EndYards"] as double?) ?? 0) / 1760);
                     if ((string)row["Type"] == "UR") { track.mainDir = tExtendedDirection.up; }
@@ -201,10 +205,10 @@ namespace RailMLNeural.Data
                     {
                         DataContainer.IDGenerator(tempswitch);
                     }
-                    tempswitch.pos = (decimal)(((row["Miles"] as double?) ?? 0) + ((row["Yards"] as double?) ?? 0) / 1760);
                     tempswitch.description = row["Description"] as string;
                     tempswitch.geoCoord.coord.Add((double)row["INGEasting"]); tempswitch.geoCoord.coord.Add((double)row["INGNorthing"]);
-                    tempswitch = FindConnections(tempswitch);
+                    eTrack hostline = FindConnections(ref tempswitch);
+                    tempswitch.pos = GetPos(tempswitch.geoCoord.coord, hostline);
                 }
 
                 else if ((string)row["Type"] == "Fixed Diamond") { FixedDiamond(row); }
@@ -224,7 +228,7 @@ namespace RailMLNeural.Data
         /// <param name="tempswitch"></param>
         /// <returns></returns>
 
-        private static eSwitch FindConnections(eSwitch tempswitch)
+        private static eTrack FindConnections(ref eSwitch tempswitch)
         {
             Point switchlocation = new Point(tempswitch.geoCoord.coord[0], tempswitch.geoCoord.coord[1]);
             eTrack hostline = null;
@@ -288,7 +292,7 @@ namespace RailMLNeural.Data
             tempswitch.connection[0].orientation = orientation[0];
             tempswitch.connection[0].course = orientation[1];
 
-            return tempswitch;
+            return hostline;
         }
 
         /// <summary>
@@ -324,7 +328,9 @@ namespace RailMLNeural.Data
         /// <returns></returns>
         private static double GetDistance(Point a, Point p)
         {
-            return Math.Sqrt((a - p).LengthSquared);
+            double X = (a.X - p.X)*(a.X - p.X);
+            double Y = (a.Y - p.Y)*(a.Y - p.Y);
+            return Math.Sqrt(X + Y);
         }
 
         /// <summary>
@@ -535,28 +541,28 @@ namespace RailMLNeural.Data
                 buffer.id = row["SerialNo"] as string;
                 buffer.description = row["Description"] as string;
 
-                eTrackNode besttrack = null;
-                double bestdist = 99999999999999999;
+                eTrackNode bestnode = null;
+                double bestdist = double.PositiveInfinity;
                 double x = (row["INGEasting"] as double?) ?? 0;
                 double y = (row["INGNorthing"] as double?) ?? 0;
-                foreach (eTrack track in DataContainer.model.infrastructure.tracks)
+                Point location = new Point(x,y);
+                foreach(eTrackNode node in DataContainer.model.infrastructure.tracks.SelectMany(e => e.GetTrackNodes())
+                    .Where(e => e.Item == null))
                 {
-                    double x2 = track.trackTopology.trackBegin.geoCoord.coord[0];
-                    double y2 = track.trackTopology.trackBegin.geoCoord.coord[1];
-                    if (Math.Sqrt(Math.Pow(x - x2, 2) + Math.Pow(y - y2, 2)) < bestdist)
+                    Point nodelocation = new Point(node.geoCoord.coord[0], node.geoCoord.coord[1]);
+                    double dist = GetDistance(location, nodelocation);
+                    if(dist < bestdist)
                     {
-                        bestdist = Math.Sqrt(Math.Pow(x - x2, 2) + Math.Pow(y - y2, 2));
-                        besttrack = track.trackTopology.trackBegin;
+                        bestdist = dist;
+                        bestnode = node;
                     }
-                    x2 = track.trackTopology.trackEnd.geoCoord.coord[0];
-                    y2 = track.trackTopology.trackEnd.geoCoord.coord[1];
-                    if (Math.Sqrt(Math.Pow(x - x2, 2) + Math.Pow(y - y2, 2)) < bestdist)
-                    {
-                        bestdist = Math.Sqrt(Math.Pow(x - x2, 2) + Math.Pow(y - y2, 2));
-                        besttrack = track.trackTopology.trackEnd;
-                    }
+
                 }
-                besttrack.Item = buffer;
+
+                if(bestdist < 10)
+                {
+                    bestnode.Item = buffer;
+                }
             }
             DataContainer.model = DataContainer.model;
 
@@ -658,7 +664,7 @@ namespace RailMLNeural.Data
                 else { return; }
             }
             CoordinateSystemFactory c = new CoordinateSystemFactory();
-            StreamReader coordstream = new StreamReader("C:/Users/Edwin/OneDrive/Afstuderen/Irish Grid Conversion/Irish Grid WTK.txt");
+            StreamReader coordstream = new StreamReader("C:/Users/Edwin/OneDrive/Afstuderen/Irish Grid Conversion/Irish Grid WKT.txt");
             string wtk = coordstream.ReadLine();
             ICoordinateSystem target = c.CreateFromWkt(wtk);
 
@@ -731,22 +737,11 @@ namespace RailMLNeural.Data
                     }
                     if (bestdist < margin)
                     {
-                        double pos = 0;
-                        for (int i = 0; i < index - 1; i++)
-                        {
-                            pos += GetDistance(nodelist[i], nodelist[i + 1]);
-                        }
-                        if ((a - b).LengthSquared != 0.0)
-                        {
-                            var t = (location - a) * (b - a) / (a - b).LengthSquared;
-                            pos += t * GetDistance(a, b);
-                        }
-
                         tCrossSection crosssection = new tCrossSection();
                         crosssection.ocpRef = ocp.id;
                         crosssection.name = ocp.name;
                         Data.DataContainer.IDGenerator(crosssection);
-                        crosssection.pos = track.trackTopology.trackBegin.pos + (decimal)(pos * 0.000621371);
+                        crosssection.pos = GetPos(new List<double>(){location.X, location.Y}, track);
                         track.trackTopology.crossSections.Add(crosssection);
                     }
                 }
@@ -852,7 +847,17 @@ namespace RailMLNeural.Data
                 pos += t * GetDistance(a, b);
             }
 
-            return track.trackTopology.trackBegin.pos + (decimal)(pos * 0.000621371);
+            pos = (double)track.trackTopology.trackBegin.pos + (pos * 0.000621371);
+            if((decimal)pos >= track.trackTopology.trackEnd.pos)
+            {
+                pos = (double)track.trackTopology.trackEnd.pos - 0.001; 
+            }
+
+            if((decimal)pos <= track.trackTopology.trackBegin.pos)
+            {
+                pos = (double)track.trackTopology.trackBegin.pos + 0.001;
+            }
+            return (decimal)pos;
         }
 
         /// <summary>
@@ -940,37 +945,25 @@ namespace RailMLNeural.Data
         {
             foreach (eTrack track in DataContainer.model.infrastructure.tracks)
             {
-                if(track.trackTopology.trackBegin.Item == null)
+                foreach (eTrackNode node in track.GetTrackNodes().Where(x => x.Item == null))
                 {
-                    Point tracknodelocation = new Point(track.trackTopology.trackBegin.geoCoord.coord[0], track.trackTopology.trackBegin.geoCoord.coord[1]);
-                    double lowestdist = double.PositiveInfinity;
+                    double bestdist = double.PositiveInfinity;
                     eTrackNode bestnode = null;
-                    foreach(eTrack othertrack in DataContainer.model.infrastructure.tracks.Where(x => x.id != track.id 
-                        && ( x.trackTopology.trackBegin.Item == null || x.trackTopology.trackEnd == null)))
+                    Point location = new Point(node.geoCoord.coord[0], node.geoCoord.coord[1]);
+                    foreach (eTrackNode othernode in DataContainer.model.infrastructure.tracks.Where(x => x.id != track.id)
+                        .SelectMany(x => x.GetTrackNodes())
+                        .Where(x => x.Item == null))
                     {
-                        if(othertrack.trackTopology.trackBegin.Item == null)
+                        Point otherlocation = new Point(othernode.geoCoord.coord[0], othernode.geoCoord.coord[1]);
+                        double dist = GetDistance(location, otherlocation);
+                        if (dist < bestdist)
                         {
-                            Point p = new Point(othertrack.trackTopology.trackBegin.geoCoord.coord[0], othertrack.trackTopology.trackBegin.geoCoord.coord[1]);
-                            double dist = GetDistance(tracknodelocation, p);
-                            if (dist < lowestdist) 
-                            { 
-                                lowestdist = dist;
-                                bestnode = othertrack.trackTopology.trackBegin;
-                            }
-                        }
-                        if (othertrack.trackTopology.trackEnd.Item == null)
-                        {
-                            Point p = new Point(othertrack.trackTopology.trackEnd.geoCoord.coord[0], othertrack.trackTopology.trackEnd.geoCoord.coord[1]);
-                            double dist = GetDistance(tracknodelocation, p);
-                            if (dist < lowestdist)
-                            {
-                                lowestdist = dist;
-                                bestnode = othertrack.trackTopology.trackEnd;
-                            }
+                            bestdist = dist;
+                            bestnode = othernode;
                         }
                     }
 
-                    if (lowestdist < 3)
+                    if (bestdist < 2)
                     {
 
                         tConnectionData c1 = new tConnectionData();
@@ -979,55 +972,26 @@ namespace RailMLNeural.Data
                         DataContainer.IDGenerator(c2);
                         c1.@ref = c2.id;
                         c2.@ref = c1.id;
-                        track.trackTopology.trackBegin.Item = c1;
-                        bestnode.Item = c2;
-                    }
-                }
-                if(track.trackTopology.trackEnd.Item == null)
-                {
-                    Point tracknodelocation = new Point(track.trackTopology.trackEnd.geoCoord.coord[0], track.trackTopology.trackEnd.geoCoord.coord[1]);
-                    double lowestdist = double.PositiveInfinity;
-                    eTrackNode bestnode = null;
-                    foreach (eTrack othertrack in DataContainer.model.infrastructure.tracks.Where(x => x.id != track.id
-                        && (x.trackTopology.trackBegin.Item == null || x.trackTopology.trackEnd == null)))
-                    {
-                        if (othertrack.trackTopology.trackBegin.Item == null)
-                        {
-                            Point p = new Point(othertrack.trackTopology.trackBegin.geoCoord.coord[0], othertrack.trackTopology.trackBegin.geoCoord.coord[1]);
-                            double dist = GetDistance(tracknodelocation, p);
-                            if (dist < lowestdist)
-                            {
-                                lowestdist = dist;
-                                bestnode = othertrack.trackTopology.trackBegin;
-                            }
-                        }
-                        if (othertrack.trackTopology.trackEnd.Item == null)
-                        {
-                            Point p = new Point(othertrack.trackTopology.trackEnd.geoCoord.coord[0], othertrack.trackTopology.trackEnd.geoCoord.coord[1]);
-                            double dist = GetDistance(tracknodelocation, p);
-                            if (dist < lowestdist)
-                            {
-                                lowestdist = dist;
-                                bestnode = othertrack.trackTopology.trackEnd;
-                            }
-                        }
-                    }
-
-                    if (lowestdist < 2)
-                    {
-                        tConnectionData c1 = new tConnectionData();
-                        tConnectionData c2 = new tConnectionData();
-                        DataContainer.IDGenerator(c1);
-                        DataContainer.IDGenerator(c2);
-                        c1.@ref = c2.id;
-                        c2.@ref = c1.id;
-                        track.trackTopology.trackEnd.Item = c1;
+                        node.Item = c1;
                         bestnode.Item = c2;
                     }
                 }
             }
+
+            DataContainer.model = DataContainer.model;
         }
 
+    }
+
+    public static class Extentions
+    {
+        public static List<eTrackNode> GetTrackNodes(this eTrack track)
+        {
+            List<eTrackNode> result = new List<eTrackNode>();
+            result.Add(track.trackTopology.trackBegin);
+            result.Add(track.trackTopology.trackEnd);
+            return result;
+        }
     }
 
 

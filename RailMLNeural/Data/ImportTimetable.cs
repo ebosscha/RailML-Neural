@@ -2,9 +2,11 @@
 using RailMLNeural.Neural.PreProcessing;
 using RailMLNeural.RailML;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 
 namespace RailMLNeural.Data
 {
@@ -14,10 +16,15 @@ namespace RailMLNeural.Data
         //static List<TrainVariations> totalvariations = new List<TrainVariations>();
         static TrainVariations trainvariations;
         static DateTime date = new DateTime();
+        static ManualResetEvent mre = new ManualResetEvent(true);
+        static ConcurrentQueue<TimetableEntry> queue = new ConcurrentQueue<TimetableEntry>();
+        static CsvFileReader<TimetableEntry> reader;
+        static DateTime ThresholdDateLower;
+        static DateTime ThresholdDateUpper;
         public static void TimetableFromCsv(object sender, DoWorkEventArgs e)
         {
-            DateTime ThresholdDateLower;
-            DateTime ThresholdDateUpper;
+            
+            
 
             if (DataContainer.Settings.UseDateFilter)
             {
@@ -36,17 +43,29 @@ namespace RailMLNeural.Data
             BackgroundWorker worker = sender as BackgroundWorker;
 
             CsvDefinition def = new CsvDefinition() { FieldSeparator = ',' };
-            CsvFileReader<TimetableEntry> reader = new CsvFileReader<TimetableEntry>(filename, def);
+            reader = new CsvFileReader<TimetableEntry>(filename, def);
             int count = 0;
             RuntimeRep rep = new RuntimeRep();
             List<StopDelay> stopdelays = new List<StopDelay>();
             string traincode = "";
             double origindelay = 0;
-            foreach (TimetableEntry entry in reader)
+            ThreadPool.QueueUserWorkItem(QueueCSV);
+            while(true)
             {
+                if (reader.Eof && queue.IsEmpty ) { break; }
+                TimetableEntry entry;
+                if(!queue.TryDequeue(out entry))
+                {
+                    continue;
+                }
                 if(!DataContainer.model.infrastructure.operationControlPoints.Any(x => x.code == entry.LocationCode))
                 { 
                     continue; 
+                }
+                //Only continue if location has geocoord.
+                if (DataContainer.model.infrastructure.operationControlPoints.Single(x => x.code == entry.LocationCode).geoCoord.coord.Count != 2)
+                {
+                    continue;
                 }
                 entry.TrainCode = entry.TrainCode.Trim();
                 if (entry.TrainDate < ThresholdDateLower || entry.TrainDate > ThresholdDateUpper ) { count++; continue; }
@@ -66,9 +85,18 @@ namespace RailMLNeural.Data
 
                 if (entry.TrainDate != date || entry.TrainCode != traincode)
                 {
-                    AddStopDelays(stopdelays, traincode, date);
+                    
+                    
+                    if (rep.traincode != null && rep.state == 2) 
+                    { 
+                        trainvariations.AddRep(rep, date); 
+                        AddStopDelays(stopdelays, traincode, date);
+                    }
+                    else
+                    {
+                        InvalidateDelay(traincode, date);
+                    }
                     stopdelays = new List<StopDelay>();
-                    if (rep.traincode != null) { trainvariations.AddRep(rep, date); }
                     if (entry.TrainCode != traincode)
                     {
                         if (trainvariations != null)
@@ -103,16 +131,20 @@ namespace RailMLNeural.Data
 
                 }
 
+                
+
                 if (entry.LocationType == "O") 
                 { 
                     rep.departuretime = default(DateTime).Add(entry.ScheduledDeparture.TimeOfDay); 
                     origindelay = (entry.Departure - entry.ScheduledDeparture).TotalSeconds;
+                    rep.origin = entry.LocationCode;
                     rep.state = 1;
                 }
                 else if (entry.LocationType == "D" && rep.state == 1) 
                 { 
                     rep.arrivaltime = default(DateTime).Add(entry.ScheduledArrival.TimeOfDay);
                     rep.state = 2;
+                    rep.destination = entry.LocationCode;
                 }
                 else if (rep.state == 1 && (entry.LocationType == "S" || entry.LocationType == "T"))
                 {
@@ -211,6 +243,20 @@ namespace RailMLNeural.Data
 
         }
 
+        private static void MoveNext(object state)
+        {
+            reader.MoveNext();
+            mre.Set();
+        }
+
+        private static void QueueCSV(object state)
+        {
+            foreach(var entry in reader.Where(x => x.TrainDate >= ThresholdDateLower && x.TrainDate <= ThresholdDateUpper))
+            {
+                queue.Enqueue(entry);
+            }
+        }
+
         private static void AddStopDelays(List<StopDelay> stopdelays, string traincode, DateTime date)
         {
             if (stopdelays.Count > 0 && DataContainer.DelayCombinations.dict.ContainsKey(date) && DataContainer.DelayCombinations.dict[date] != null)
@@ -222,6 +268,14 @@ namespace RailMLNeural.Data
             }
         }
 
+        private static void InvalidateDelay(string traincode, DateTime date)
+        {
+            if(DataContainer.DelayCombinations.dict.ContainsKey(date) && DataContainer.DelayCombinations.dict[date] != null)
+            {
+                DataContainer.DelayCombinations.dict[date].RemoveAll(x => x.HasTrain(traincode));
+                
+            }
+        }
 
         private static void ProcessTimetableVariations(TrainVariations variations)
         {
@@ -393,6 +447,7 @@ namespace RailMLNeural.Data
 
     }
 
+    [Serializable]
     class RuntimeRep : IEquatable<RuntimeRep>
     {
         public DateTime departuretime { get; set; }
@@ -418,6 +473,7 @@ namespace RailMLNeural.Data
 
     }
 
+    [Serializable]
     class Stop
     {
         public string location { get; set; }

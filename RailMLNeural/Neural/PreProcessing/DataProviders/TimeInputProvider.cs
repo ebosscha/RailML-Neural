@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.PreProcessing.DataProviders
 {
+    [Serializable]
     class TimeInputProvider : IDataProvider
     {
         private const string name = "TimeInputProvider";
+        public bool IsInput { get { return true; } }
         public string Name { get { return name; } }
         /// <summary>
         /// Integer representing the node count of this module

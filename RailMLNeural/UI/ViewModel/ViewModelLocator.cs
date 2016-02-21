@@ -14,6 +14,7 @@ using GalaSoft.MvvmLight.Ioc;
 using Microsoft.Practices.ServiceLocation;
 using RailMLNeural.UI.Dialog.ViewModel;
 using RailMLNeural.UI.Model;
+using RailMLNeural.UI.Neural.OutputVisualization.ViewModel;
 using RailMLNeural.UI.Neural.ViewModel;
 using RailMLNeural.UI.RailML.ViewModel;
 using RailMLNeural.UI.Statistics.ViewModel;
@@ -62,6 +63,9 @@ namespace RailMLNeural.UI.ViewModel
             SimpleIoc.Default.Register<CreateRecurrentNetworkViewModel>();
             SimpleIoc.Default.Register<DelayStatisticsViewModel>();
             SimpleIoc.Default.Register<MainStatisticsViewModel>();
+            SimpleIoc.Default.Register<CreateRecursiveNetworkViewModel>();
+            SimpleIoc.Default.Register<GraphVisualizationViewModel>();
+            SimpleIoc.Default.Register<GraphPropertiesViewModel>();
         }
 
         /// <summary>
@@ -220,6 +224,30 @@ namespace RailMLNeural.UI.ViewModel
             get
             {
                 return ServiceLocator.Current.GetInstance<MainStatisticsViewModel>();
+            }
+        }
+
+        public CreateRecursiveNetworkViewModel CreateRecursiveNetworkVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<CreateRecursiveNetworkViewModel>();
+            }
+        }
+
+        public GraphVisualizationViewModel GraphVisualizationVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<GraphVisualizationViewModel>();
+            }
+        }
+
+        public GraphPropertiesViewModel GraphPropertiesVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<GraphPropertiesViewModel>();
             }
         }
            

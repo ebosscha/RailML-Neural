@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.PreProcessing.DataProviders
 {
+    [Serializable]
     class PerLineClassificationOutputProvider : IDataProvider
     {
+        public bool IsInput { get { return false; } }
         private const string name = "PerLineClassificationOutputProvider";
         public string Name { get { return name; } }
         /// <summary>

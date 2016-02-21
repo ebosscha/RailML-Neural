@@ -115,7 +115,7 @@ namespace RailMLNeural.UI.Statistics.ViewModel
                     {
                         _otherTrackLength += track.trackTopology.trackEnd.pos - track.trackTopology.trackBegin.pos;
                     }
-                    foreach(eSwitch sw in track.trackTopology.connections)
+                    foreach(eSwitch sw in track.trackTopology.connections.Where(x => x is eSwitch))
                     {
                         _switchCount++;
                     }

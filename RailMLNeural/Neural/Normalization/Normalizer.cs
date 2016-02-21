@@ -1,5 +1,6 @@
 ﻿using Encog.ML.Data;
 using Encog.ML.Data.Basic;
+using RailMLNeural.Neural.Data;
 using RailMLNeural.Neural.PreProcessing;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,7 @@ namespace RailMLNeural.Neural.Normalization
         private List<double> _minValues = new List<double>();
         private List<double> _maxValues = new List<double>();
         private List<double> _mean = new List<double>();
+        private List<double> _stddev = new List<double>();
         List<Func<double, double>> NormalizationFunctions = new List<Func<double, double>>();
         List<Func<double, double>> DeNormalizationFunctions = new List<Func<double, double>>();
 
@@ -59,6 +61,43 @@ namespace RailMLNeural.Neural.Normalization
                         case NormalizationTypeEnum.None:
                             GenerateNone(i);
                             break;
+                        case NormalizationTypeEnum.LinearStdDev:
+                            GenerateLinearStdDev(i);
+                            break;    
+                        default:
+                            break;
+                    }
+                    i++;
+                }
+            }
+        }
+
+        public void Generate(List<IRecurrentDataProvider> inputproviders, List<IRecurrentDataProvider> outputproviders)
+        {
+            NormalizationFunctions.Clear();
+            DeNormalizationFunctions.Clear();
+            var AllProviders = new List<IRecurrentDataProvider>(inputproviders.Count + outputproviders.Count);
+            AllProviders.AddRange(inputproviders);
+            AllProviders.AddRange(outputproviders);
+            int i = 0;
+            foreach (IRecurrentDataProvider provider in AllProviders)
+            {
+                for (int n = 0; n < provider.Size; n++)
+                {
+                    switch (provider.NormalizationType)
+                    {
+                        case NormalizationTypeEnum.Linear:
+                            GenerateLinear(i);
+                            break;
+                        case NormalizationTypeEnum.Quadratic:
+                            GenerateQuadratic(i);
+                            break;
+                        case NormalizationTypeEnum.None:
+                            GenerateNone(i);
+                            break;
+                        case NormalizationTypeEnum.LinearStdDev:
+                            GenerateLinearStdDev(i);
+                            break;    
                         default:
                             break;
                     }
@@ -108,6 +147,36 @@ namespace RailMLNeural.Neural.Normalization
                 }
                 n++;
             }
+        }
+
+        public void Analyze(IMLDataSet Data)
+        {
+            double[] variances = new double[_mean.Count];
+            foreach(IMLDataPair pair in Data)
+            {
+                for(int i = 0; i < _mean.Count; i++)
+                {
+                    double value;
+                    if(i < pair.Input.Count)
+                    {
+                        value = pair.Input[i];
+                    }
+                    else
+                    {
+                        value = pair.Ideal[i - pair.Input.Count];
+                    }
+
+                    variances[i] = (variances[i]*i + ((value - _mean[i]) * (value - _mean[i])))/(i+1);
+                }
+            }
+
+            _stddev.Clear();
+            //TODO werkt niet
+            for(int i = 0; i < variances.Length; i++)
+            {
+                _stddev.Add(Math.Sqrt(variances[i]));
+            }
+            
         }
 
         public IMLDataPair Normalize(IMLDataPair pair)
@@ -213,16 +282,34 @@ namespace RailMLNeural.Neural.Normalization
             return ((value - minvalue) * (maxrange - minrange)) / Diff(minvalue, maxvalue) + minrange;
         }
 
+        private double LinearNormalizer(double value, double mean, double stddev)
+        {
+            return (value - mean) / stddev;
+        }
 
         private double LinearDeNormalizer(double value, double minvalue, double maxvalue, double minrange, double maxrange)
         {
             return (value + minrange) * Diff(minvalue, maxvalue) / (maxrange - minrange) + minvalue;
         }
 
+        private double LinearDeNormalizer(double value, double mean, double stddev)
+        {
+            return (value * stddev) + mean;
+        }
+
         private void GenerateNone(int i)
         {
             NormalizationFunctions.Add((x) => x);
             DeNormalizationFunctions.Add((x) => x);
+        }
+
+        private void GenerateLinearStdDev(int i)
+        {
+            double mean = _mean[i];
+            double stddev = _stddev[i];
+            NormalizationFunctions.Add(x => LinearNormalizer(x, mean, stddev));
+            DeNormalizationFunctions.Add(x => LinearDeNormalizer(x, mean, stddev));
+
         }
         
         /// <summary>
@@ -263,10 +350,12 @@ namespace RailMLNeural.Neural.Normalization
 
     }
 
+    [Serializable]
     public enum NormalizationTypeEnum
     {
         Linear,
         Quadratic,
+        LinearStdDev,
         None
     }
 }

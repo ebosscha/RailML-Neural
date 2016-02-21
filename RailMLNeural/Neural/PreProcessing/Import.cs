@@ -75,7 +75,7 @@ namespace RailMLNeural.Neural.PreProcessing
                             ((Delay)day.delays[record.trainCode]).delaycode = record.delayCode;
                             ((Delay)day.delays[record.trainCode]).destination = record.locationSemaName;
                             ((Delay)day.delays[record.trainCode]).ActualArrival = record.actualTime;
-                            ((Delay)day.delays[record.trainCode]).ScheduledArrival = record.scheduledtime;
+                            ((Delay)day.delays[record.trainCode]).ScheduledArrival = record.scheduledTime;
                         }
                     }
                 }
@@ -89,7 +89,7 @@ namespace RailMLNeural.Neural.PreProcessing
                     delay.origindelay = record.difference;
                     delay.origin = record.locationSemaName;
                     delay.ActualDeparture = record.actualTime;
-                    delay.ScheduledDeparture = record.scheduledtime;
+                    delay.ScheduledDeparture = record.scheduledTime;
                     day.delays.Add(delay.traincode, delay);
                 }
 
@@ -136,7 +136,7 @@ namespace RailMLNeural.Neural.PreProcessing
         public string trainCode { get; set; }
         public string locationSemaName { get; set; }
         public string locationType { get; set; }
-        public DateTime scheduledtime { get; set; }
+        public DateTime scheduledTime { get; set; }
         public DateTime actualTime { get; set; }
         public int threshold { get; set; }
         public int difference { get; set; }
@@ -145,6 +145,7 @@ namespace RailMLNeural.Neural.PreProcessing
         public string comments { get; set; }
     }
 
+    [Serializable]
     public class HeaderHistory
     {
         public string trainCode { get; set; }
@@ -199,6 +200,13 @@ namespace RailMLNeural.Neural.PreProcessing
             { d.stopdelays = stopdelays; return; }
             foreach (Delay d in secondarydelays.Where(d => d.traincode == traincode))
             { d.stopdelays = stopdelays; return; }
+        }
+
+        public DateTime GetEndTime()
+        {
+            List<Delay> allDelays = new List<Delay>(primarydelays);
+            allDelays.AddRange(secondarydelays);
+            return allDelays.Max(x => x.ActualArrival);
         }
 
     }
@@ -372,16 +380,21 @@ namespace RailMLNeural.Neural.PreProcessing
         public string TrainCode { get; set; }
         public DateTime TrainDate { get; set; }
         public string LocationCode { get; set; }
-        public string LocationFullName { get; set; }
-        public int LocationOrder { get; set; }
+        //public string LocationFullName { get; set; }
+        //public int LocationOrder { get; set; }
         public string LocationType { get; set; }
         public string TrainOrigin { get; set; }
         public string TrainDestination { get; set; }
         public DateTime ScheduledArrival { get; set; }
         public DateTime ScheduledDeparture { get; set; }
-        public DateTime ExpectedArrival { get; set; }
-        public DateTime ExpectedDeparture { get; set; }
+        //public DateTime ExpectedArrival { get; set; }
+        //public DateTime ExpectedDeparture { get; set; }
         public DateTime Arrival { get; set; }
         public DateTime Departure { get; set; }
+
+        public TimetableEntry Clone()
+        {
+            return (TimetableEntry)this.MemberwiseClone();
+        }
     }
 }

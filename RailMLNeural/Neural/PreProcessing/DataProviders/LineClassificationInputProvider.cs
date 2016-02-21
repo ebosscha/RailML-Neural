@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.PreProcessing.DataProviders
 {
+    [Serializable]
     class LineClassificationInputProvider : IDataProvider
     {
-        private const string name = "LineClassificatio";
+        public bool IsInput { get { return true; } }
+        private const string name = "LineClassification";
         public string Name { get { return name; } }
         /// <summary>
         /// Integer representing the node count of this module
