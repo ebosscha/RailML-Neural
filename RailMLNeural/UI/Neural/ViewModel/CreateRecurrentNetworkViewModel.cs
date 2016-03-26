@@ -75,11 +75,21 @@ namespace RailMLNeural.UI.Neural.ViewModel
             }
         }
 
+        public IEnumerable<PropagatorEnum> PropagatorEnumValues
+        {
+            get
+            {
+                return Enum.GetValues(typeof(PropagatorEnum)).Cast<PropagatorEnum>();
+            }
+        }
+
         public RecurrentDataProviderEnum DataProvider { get; set; }
 
         public ObservableCollection<LayerSize> EdgeHiddenLayerSize {get; set;}
 
         public ObservableCollection<LayerSize> VertexHiddenLayerSize { get; set; }
+
+        public PropagatorEnum PropagatorType { get; set; }
 
         private string _statustext;
 
@@ -201,9 +211,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
                 Thread.Sleep(1);
             }
             StatusText = "Creating Network...";
-            Configuration.DataSet = new DelayCombinationSet(DataContainer.DelayCombinations.dict.Keys, Configuration.PerDay);
+            Configuration.DataSet = new DelayCombinationSet(DataContainer.DelayCombinations.dict.Keys, Configuration.PerDay, Configuration.ExcludeEmpty);
             Configuration.DataSet.Split(Configuration.Settings.VerificationSize);
-            Configuration.Propagator = new ChronologicalPropagator(Configuration, false);
+            Configuration.Propagator = PropagatorFactory.Create(Configuration, PropagatorType, true);
             CreateNetwork();
             Messenger.Default.Send<AddNeuralNetworkMessage>(new AddNeuralNetworkMessage() { NeuralNetwork = Configuration });
             IsHitTest = true;
@@ -221,9 +231,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
             for(int i = 0; i < EdgeHiddenLayerSize.Count; i++)
             {
                 BasicLayer hiddenlayer = EdgeHiddenLayerSize[i].CreateLayer();
-                if(i == 0)
+                if(EdgeHiddenLayerSize[i].IsRecurrent)
                 {
-                    edgelayers[0].ContextFedBy = hiddenlayer;
+                    edgelayers[i].ContextFedBy = hiddenlayer;
                 }
                 edgelayers.Add(hiddenlayer);
             }
@@ -240,9 +250,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
             for (int i = 0; i < VertexHiddenLayerSize.Count; i++)
             {
                 BasicLayer hiddenlayer = VertexHiddenLayerSize[i].CreateLayer();
-                if (i == 0)
+                if (VertexHiddenLayerSize[i].IsRecurrent)
                 {
-                    vertexlayers[0].ContextFedBy = hiddenlayer;
+                    vertexlayers[i].ContextFedBy = hiddenlayer;
                 }
                 vertexlayers.Add(hiddenlayer);
             }

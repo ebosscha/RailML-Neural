@@ -1,16 +1,19 @@
 ﻿using Encog.MathUtil.Error;
 using Encog.ML;
 using Encog.ML.Data;
+using Encog.ML.Data.Basic;
 using Encog.Neural.Networks.Training;
 using RailMLNeural.Data;
 using RailMLNeural.Neural.Algorithms.Propagators;
 using RailMLNeural.Neural.Configurations;
 using RailMLNeural.Neural.Data;
+using RailMLNeural.Neural.Data.RecurrentDataProviders;
 using RailMLNeural.Neural.PreProcessing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.Algorithms
@@ -34,21 +37,28 @@ namespace RailMLNeural.Neural.Algorithms
             }
         }
 
-        private GRNNConfiguration _owner;
+        private IContainsGraph _owner;
+        private int BatchSize;
         private DelayCombinationSet _data;
         private int _startIndex;
         private int _iterationNumber;
+        private ThreadLocal<SimplifiedGraph> _graph; 
 
-        public RecurrentCalculateScore(GRNNConfiguration Owner, DelayCombinationSet Data)
+        public RecurrentCalculateScore(IContainsGraph Owner, DelayCombinationSet Data, int batchSize)
         {
+            BatchSize = batchSize;
             _owner = Owner;
             _data = Data;
+            _graph = new ThreadLocal<SimplifiedGraph>(() =>
+            {
+                return _owner.Graph.Clone();
+            });
         }
 
         public double CalculateScore(IMLMethod Network)
         {
             FlatGRNN _network = Network as FlatGRNN;
-            SimplifiedGraph Graph = _owner.Graph.Clone();
+            SimplifiedGraph Graph = _graph.Value;
             IPropagator Propagator = _owner.Propagator.OpenAdditional();
             ErrorCalculation calc = new ErrorCalculation();
             int BatchSize = 0;
@@ -74,20 +84,21 @@ namespace RailMLNeural.Neural.Algorithms
                     }
 
                 }
-                for(int i = _startIndex; i < _startIndex + BatchSize; i++)
+                for (int i = _startIndex; i < _startIndex + BatchSize; i++)
                 {
-                    if(i >= _data.Count)
+                    if (n >= _data.Count)
                     {
                         n = 0;
                     }
                     l.Add(_data[n]);
+                    n++;
                 }
             }
                     
             foreach (var dc in l)
             {
                 Graph.GenerateGraph(dc, true);
-                Propagator.NewCycle(Graph, dc, false);
+                Propagator.NewCycle(Graph, dc, true);
                 _network.ClearContexts();
                 while (Propagator.HasNext)
                 {
@@ -101,6 +112,7 @@ namespace RailMLNeural.Neural.Algorithms
                     IMLData output = _network.Process(pair.Input, rep.Edge.Index, Reverse);
                     if (!Propagator.IgnoreCurrent)
                     {
+                        Propagator.PreProcess(ref output, ref pair);
                         calc.UpdateError(output, pair.Ideal, pair.Significance);
                         Propagator.Update(output);
                     }

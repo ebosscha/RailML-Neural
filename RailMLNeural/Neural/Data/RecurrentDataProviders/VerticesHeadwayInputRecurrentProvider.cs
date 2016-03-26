@@ -27,29 +27,23 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
         public double[] Process(EdgeTrainRepresentation rep)
         {
             double[] result = new double[Size];
-            //result[0] = 3600; result[1] = 3600;
-            //SimplifiedGraphVertex v1;
-            //SimplifiedGraphVertex v2;
-            //if(rep.Direction == DirectionEnum.Down)
-            //{
-            //    v1 = rep.Edge.Origin;
-            //    v2 = rep.Edge.Destination;
-            //}
-            //else
-            //{
-            //    v1 = rep.Edge.Destination;
-            //    v2 = rep.Edge.Origin;
-            //}
-            //int index = v1.Trains.FindIndex(x => x.TrainHeaderCode == rep.TrainHeaderCode);
-            //if(index > 0)
-            //{
-            //    result[0] = (rep.ScheduledDepartureTime - v1.Trains[index - 1].PredictedDepartureTime).TotalSeconds;
-            //}
-            //index = v2.Trains.FindIndex(x => x.TrainHeaderCode == rep.TrainHeaderCode);
-            //if(index > 0)
-            //{
-            //    result[1] = (rep.ScheduledArrivalTime - v2.Trains[index - 1].PredictedArrivalTime).TotalSeconds;
-            //}
+            result[0] = 1;
+            result[1] = 1;
+            //var other = rep.Origin.Trains.Where(x => x.TrainHeaderCode != rep.TrainHeaderCode)
+            //    .Where(x => (x.Arrival != null && x.ForecastedArrivalTime < rep.ForecastedDepartureTime) ||
+            //        (x.Departure != null && x.ForecastedDepartureTime < rep.ForecastedDepartureTime))
+            //        .OrderBy(x => x.Arrival != null ? x.ForecastedArrivalTime : x.ForecastedDepartureTime)
+            //        .LastOrDefault();
+            var other = rep.Origin.Trains.Where(x => x.IsRelevant && x.TrainHeaderCode != rep.TrainHeaderCode)
+                .SelectMany(x => new DateTime[]{x.ForecastedArrivalTime, x.ForecastedDepartureTime})
+                .Where(x => x != default(DateTime) && x < rep.ForecastedDepartureTime)
+                .DefaultIfEmpty().Max();
+            result[0] = other == default(DateTime) ? 1 : (rep.ForecastedDepartureTime - other).TotalHours;
+            other = rep.Destination.Trains.Where(x => x.IsRelevant && x.TrainHeaderCode != rep.TrainHeaderCode)
+                .SelectMany(x => new DateTime[] { x.ForecastedArrivalTime, x.ForecastedDepartureTime })
+                .Where(x => x != default(DateTime) && x < rep.ForecastedArrivalTime)
+                .DefaultIfEmpty().Max();
+            result[1] = other == default(DateTime) ? 1 : (rep.ForecastedArrivalTime - other).TotalHours;
             return result;
 
 

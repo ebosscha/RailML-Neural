@@ -14,25 +14,29 @@
           IsHitTestVisible="{Binding IsHitTest}">
         <GroupBox Margin="25,40,25,55">
             <Grid>
-                <GroupBox Height="40"
+                <GroupBox Height="45"
                           Header="MetaData"
                           Margin="10,10,10,10"
                           VerticalAlignment="Top">
-                    <Grid>
+                    <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Name :"/>
                         <TextBox Text="{Binding Path=Configuration.Name}"
-                                Margin="45,0,0,0"
                                  Width="90"
                                  HorizontalAlignment="Left"/>
                         <TextBlock Text="Description :"
-                                   Margin="180,0,0,0"
+                                   Margin="10,0,0,0"
                                    HorizontalAlignment="Left"/>
                         <TextBox Text="{Binding Path=Configuration.Description}"
-                                 Margin="250,0,0,0"
+                                 Margin="10,0,0,0"
                                  HorizontalAlignment="Left"
                                  Width="300"/>
+                        <TextBox Text="Propagator Type :"
+                                 Margin="10,0,0,0"/>
+                        <ComboBox SelectedItem="{Binding PropagatorType}"
+                                  ItemsSource="{Binding PropagatorEnumValues}"
+                                  Width="100"/>
 
-                    </Grid>
+                    </StackPanel>
 
 
                 </GroupBox>
@@ -87,11 +91,15 @@
                                                 VerticalAlignment="Top"/>
                                             <TextBlock Margin="30,30,0,0"
                                                        Text="Activation Function"/>
-                                            <ComboBox Margin="150,30,0,0"
+                                            <ComboBox Margin="150,25,0,0"
                                                       ItemsSource="{Binding Path=DataContext.ActivationFunctionEnumValues, 
                                                 RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                                                       SelectedItem="{Binding Path=ActivationFunction}"
                                                       Height="25"/>
+                                            <TextBlock Text="Recurrent :"
+                                                       Margin="30,55,0,0"/>
+                                            <CheckBox Margin="200,55,0,0"
+                                                      IsChecked="{Binding IsRecurrent}"/>
 
                                         </Grid>
                                     </DataTemplate>
@@ -150,13 +158,17 @@
                                                 Minimum="0"
                                                 Height="25"
                                                 VerticalAlignment="Top"/>
-                                            <TextBlock Margin="30,30,0,0"
+                                            <TextBlock Margin="30,25,0,0"
                                                        Text="Activation Function"/>
-                                            <ComboBox Margin="150,30,0,0"
+                                            <ComboBox Margin="150,25,0,0"
                                                       ItemsSource="{Binding Path=DataContext.ActivationFunctionEnumValues, 
                                                 RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                                                       SelectedItem="{Binding Path=ActivationFunction}"
                                                       Height="25"/>
+                                            <TextBlock Text="Recurrent :"
+                                                       Margin="30,55,0,0"/>
+                                            <CheckBox Margin="200,55,0,0"
+                                                      IsChecked="{Binding IsRecurrent}"/>
 
                                         </Grid>
                                     </DataTemplate>
@@ -166,14 +178,20 @@
 
                         </StackPanel>
                     </GroupBox>
-                    <GroupBox Width="350"
+                    <GroupBox Width="600"
                           HorizontalAlignment="Left"
                           Margin="10,10,10,10"
                           Header="Data">
-                        <StackPanel>
-                            <Grid Width="150" HorizontalAlignment="Left">
-                                <Label Content="Data Split :"/>
-                                <xctk:DoubleUpDown
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0">
+                                <Grid Width="150" HorizontalAlignment="Left">
+                                    <Label Content="Data Split :"/>
+                                    <xctk:DoubleUpDown
                             Margin="0,5,0,0"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top"
@@ -182,57 +200,74 @@
                             Maximum="1"
                             Minimum="0"
                             Increment="0.05"/>
-                            </Grid>
-                            <Grid>
-                                <TextBlock Text="Combine All Combinations in Day :"
+                                </Grid>
+                                <Grid>
+                                    <TextBlock Text="Combine All Combinations in Day :"
                                    Margin="0,0,0,0"
                                    HorizontalAlignment="Left"/>
-                                <CheckBox Margin="200,0,0,0"
+                                    <CheckBox Margin="200,0,0,0"
                                       IsChecked="{Binding Configuration.PerDay}"/>
-                            </Grid>
-
-                            <Grid Grid.IsSharedSizeScope="True">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" SharedSizeGroup="group1"/>
-                                    <ColumnDefinition Width="Auto" SharedSizeGroup="group1"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.Resources>
-                                    <DataTemplate x:Key="DataProviderTemplate">
-                                        <Border BorderBrush="Black" BorderThickness="1">
-                                            <StackPanel>
-                                                <Label Content="{Binding Name}"/>
-                                                <Grid>
-                                                    <Label Content="Normalization :"/>
-                                                    <ComboBox ItemsSource="{Binding Path=DataContext.NormalizationTypeEnumValues, 
+                                </Grid>
+                                <Grid>
+                                    <TextBlock Text="Exclude Singular Delays :"
+                                           HorizontalAlignment="Left"/>
+                                    <CheckBox Margin="200,0,0,0"
+                                          IsChecked="{Binding Configuration.ExcludeEmpty}"/>
+                                </Grid>
+                                <Grid>
+                                    <TextBlock Text="Just first order delays :"
+                                           HorizontalAlignment="Left"/>
+                                    <CheckBox Margin="200,0,0,0"
+                                          IsChecked="{Binding Configuration.JustFirstOrder}"/>
+                                </Grid>
+                            </StackPanel>
+                            <Grid Grid.Row="1">
+                                <Grid Grid.IsSharedSizeScope="True">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="group1"/>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="group1"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.Resources>
+                                        <DataTemplate x:Key="DataProviderTemplate">
+                                            <Border BorderBrush="Black" BorderThickness="1">
+                                                <StackPanel>
+                                                    <Label Content="{Binding Name}"/>
+                                                    <Grid>
+                                                        <Label Content="Normalization :"/>
+                                                        <ComboBox ItemsSource="{Binding Path=DataContext.NormalizationTypeEnumValues, 
                                                               RelativeSource={RelativeSource AncestorType={x:Type this:CreateRecurrentNetworkView}}}"
                                                               SelectedItem="{Binding NormalizationType}"
                                                               Width="80"
                                                               HorizontalAlignment="Right"/>
-                                                </Grid>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </Grid.Resources>
-                                <ItemsControl ItemsSource="{Binding InputDataProviders}"
-                                          ItemTemplate="{StaticResource DataProviderTemplate}"
-                                          Grid.Column="0">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-                                <ItemsControl ItemsSource="{Binding OutputDataProviders}"
-                                          ItemTemplate="{StaticResource DataProviderTemplate}"
-                                          Grid.Column="1">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </Grid.Resources>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Column="0">
+                                        <ItemsControl ItemsSource="{Binding InputDataProviders}"
+                                              ItemTemplate="{StaticResource DataProviderTemplate}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Column="1">
+                                        <ItemsControl ItemsSource="{Binding OutputDataProviders}"
+                                              ItemTemplate="{StaticResource DataProviderTemplate}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </Grid>
                             </Grid>
-                            <StackPanel Orientation="Horizontal">
+
+                            <StackPanel Orientation="Horizontal" Grid.Row="2">
                                 <Label Content="DataProvider :"/>
                                 <ComboBox ItemsSource="{Binding DataProviderEnumValues}"
                                       SelectedItem="{Binding DataProvider}"
@@ -242,7 +277,7 @@
                                     HorizontalAlignment="Left"
                                     Command="{Binding AddDataProviderCommand}"/>
                             </StackPanel>
-                        </StackPanel>
+                        </Grid>
 
                     </GroupBox>
 

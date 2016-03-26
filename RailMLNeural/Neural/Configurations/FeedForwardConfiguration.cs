@@ -163,6 +163,12 @@ namespace RailMLNeural.Neural.Configurations
         }
         #endregion Serialization
 
+
+
+        public double RunVerification()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Serializable]

@@ -33,7 +33,7 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
             }
             else
             {
-                result[0] = (rep.Previous.PredictedArrivalTime - rep.Previous.ScheduledArrivalTime).TotalSeconds;
+                result[0] = (rep.Previous.PredictedArrivalTime - rep.Previous.ScheduledArrivalTime).TotalHours;
             }
             return result;
         }

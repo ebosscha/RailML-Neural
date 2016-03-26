@@ -22,7 +22,10 @@ namespace RailMLNeural.Neural.Algorithms.Propagators
         private SimplifiedGraph _graph { get; set; }
         public List<string> PrimaryHeaderCodes;
         public List<string> SecondaryHeaderCodes;
-        public bool UseSubGraph;
+        public bool UseSubGraph { get; private set; }
+        public IMLDataPair PreprocessedPair { get; set; }
+        public double[] PreprocessedOutput { get; set; }
+        public bool CurrentCorrupted { get; set; }
 
         private List<IRecurrentDataProvider> _inputDataProviders
         {
@@ -44,27 +47,30 @@ namespace RailMLNeural.Neural.Algorithms.Propagators
         {
             get
             {
-                return false;
+                return _EdgeTrainRepresentations.Any();
             }
         }
 
         public object Current { get { return _currentRep; } }
-        public bool IgnoreCurrent { get { return PrimaryHeaderCodes.Contains(_currentRep.TrainHeaderCode); } }
+        public bool IgnoreCurrent { get { return _currentRep.Next != null; } }
         private EdgeTrainRepresentation _currentRep { get; set; }
 
         private List<EdgeTrainRepresentation> _EdgeTrainRepresentations;
         #endregion Parameters
 
         #region Public
-        public FollowTrainPropagator(IContainsGraph Owner)
+        public FollowTrainPropagator(IContainsGraph Owner, bool useSubGraph)
         {
             _owner = Owner;
+            UseSubGraph = useSubGraph;
         }
 
         public void NewCycle(SimplifiedGraph Graph, DelayCombination DelayCombination, bool LimitTime)
         {
             _graph = Graph;
-            _graph.GenerateGraph(DelayCombination, false);
+            _graph.GenerateGraph(DelayCombination, true);
+            PrimaryHeaderCodes = new List<string>();
+            SecondaryHeaderCodes = new List<string>();
             foreach (Delay d in DelayCombination.primarydelays)
             {
                 PrimaryHeaderCodes.Add(d.traincode);
@@ -73,30 +79,70 @@ namespace RailMLNeural.Neural.Algorithms.Propagators
             {
                 SecondaryHeaderCodes.Add(d.traincode);
             }
-            BeginCycle();
+            _EdgeTrainRepresentations = new List<EdgeTrainRepresentation>();
+            Graph.SetSubGraph(UseSubGraph);
+
+            foreach (var Edge in _graph.Edges.Where(x => !UseSubGraph || x.IsSubGraph))
+            {
+                _EdgeTrainRepresentations.AddRange(Edge.Trains);
+            }
+            _EdgeTrainRepresentations = _EdgeTrainRepresentations.Where(x => PrimaryHeaderCodes.Contains(x.TrainHeaderCode)).ToList();
+            _EdgeTrainRepresentations = new List<EdgeTrainRepresentation>(_EdgeTrainRepresentations.OrderBy(x => x.ForecastedDepartureTime));
         }
 
         public IMLDataPair MoveNext()
-        {         
+        {
+            CurrentCorrupted = false;
+            EdgeTrainRepresentation rep = null;
+            if(HasNext)
+            {
+                List<double> inputlist = new List<double>();
+                List<double> ideallist = new List<double>();
+                //_currentIndex++;
+                rep = _EdgeTrainRepresentations[0];
+                _EdgeTrainRepresentations.RemoveAt(0);
+                _currentRep = rep;
+                foreach(var provider in _inputDataProviders)
+                {
+                    inputlist.AddRange(provider.Process(rep));
+                }
+                foreach(var provider in _outputDataProviders)
+                {
+                    ideallist.AddRange(provider.Process(rep));
+                }
+                IMLData input = new BasicMLData(inputlist.ToArray());
+                IMLData ideal = new BasicMLData(ideallist.ToArray());
+                if(ideallist.Concat(inputlist).Any(x => x == double.PositiveInfinity || x == double.NegativeInfinity || x == double.NaN))
+                {
+                    CurrentCorrupted = true;
+                }
+                _currentRep.IsHandled = true;
+                return new BasicMLDataPair(input, ideal);
+            }
+
             throw new Exception("Propagator can't move to next object");
         }
+        
 
         public void Update(IMLData Data)
         {
-            //TODO!!!
+            return;
+        }
+
+        public void PreProcess(ref IMLData Output, ref IMLDataPair Pair)
+        {
+            //TODO !!
         }
 
         public IPropagator OpenAdditional()
         {
-            throw new NotImplementedException();
+            FollowTrainPropagator result = new FollowTrainPropagator(_owner, UseSubGraph);
+            return result;
         }
         #endregion Public
 
         #region Private
-        private void BeginCycle()
-        {
-
-        }
+        
         #endregion Private
     }
 }

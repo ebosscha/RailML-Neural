@@ -66,6 +66,7 @@ namespace RailMLNeural.UI.ViewModel
             SimpleIoc.Default.Register<CreateRecursiveNetworkViewModel>();
             SimpleIoc.Default.Register<GraphVisualizationViewModel>();
             SimpleIoc.Default.Register<GraphPropertiesViewModel>();
+            SimpleIoc.Default.Register<EdgeStatisticsViewModel>();
         }
 
         /// <summary>
@@ -248,6 +249,14 @@ namespace RailMLNeural.UI.ViewModel
             get
             {
                 return ServiceLocator.Current.GetInstance<GraphPropertiesViewModel>();
+            }
+        }
+
+        public EdgeStatisticsViewModel EdgeStatisticsVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<EdgeStatisticsViewModel>();
             }
         }
            

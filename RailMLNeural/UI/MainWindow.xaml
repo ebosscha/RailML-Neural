@@ -44,6 +44,8 @@
                         <MenuItem Header="Import Excel Dataset" Command="{Binding ExcelTracksCommand}"/>
                         <MenuItem Header="Add from Excel">
                             <MenuItem Header="Add Switches from Excel" Command="{Binding ExcelSwitchesCommand}"/>
+                            <MenuItem Header="Add Signals from Excel" Command="{Binding ExcelSignalsCommand}"/>
+                            <MenuItem Header="Add Speed Restrictions from Excel" Command="{Binding ExcelSpeedRestrictionsCommand}"/>
                             <MenuItem Header="Add Bridges from Excel" Command="{Binding ExcelBridgesCommand}"/>
                             <MenuItem Header="Add Buffer Stops from Excel" Command="{Binding ExcelBufferStopsCommand}"/>
                             <MenuItem Header="Add Tunnels from Excel" Command="{Binding ExcelTunnelsCommand}"/>
@@ -56,6 +58,7 @@
 
                     </MenuItem>
                     <MenuItem Header="Rolling Stock">
+                        <MenuItem Header="Import Train Types" Command="{Binding ExcelRollingstockCommand}"/>
 
                     </MenuItem>
                     <MenuItem Header="Timetable">

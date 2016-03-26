@@ -9,26 +9,16 @@
 
     <Grid>
         <StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Delay Combination Count :"/>
-                <TextBlock Text="{Binding DelayCombinationCount}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Total Delay Count :"/>
-                <TextBlock Text="{Binding TotalDelayCount}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Average Trains Per Combination :"/>
-                <TextBlock Text="{Binding AverageCountPerCombination}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Average Combination Count Per Day :"/>
-                <TextBlock Text="{Binding AverageCombinationsPerDay}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Average Destination Delay :"/>
-                <TextBlock Text="{Binding AverageDestinationDelay}"/>
-            </StackPanel>
+            <TextBlock Text="{Binding DelayCombinationCount,
+                    StringFormat=Delay Combination Count : {0:N2}}"/>
+            <TextBlock Text="{Binding TotalDelayCount,
+                    StringFormat=Total Delay Count : {0:N2} }"/>
+            <TextBlock Text="{Binding AverageCountPerCombination,
+                    StringFormat=Average Trains Per Combination : {0:N2} }"/>
+            <TextBlock Text="{Binding AverageCombinationsPerDay,
+                    StringFormat=Average Combination Count Per Day : {0:N2}}"/>
+            <TextBlock Text="{Binding AverageDestinationDelay, 
+                    StringFormat=Average Destination Delay : {0:N2} s }"/>
         </StackPanel>
     </Grid>
 </UserControl>

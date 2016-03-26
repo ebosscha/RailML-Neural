@@ -1,12 +1,16 @@
 ﻿using CsvFiles;
+using Excel;
 using RailMLNeural.Neural.PreProcessing;
 using RailMLNeural.RailML;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Windows;
 
 namespace RailMLNeural.Data
 {
@@ -291,6 +295,14 @@ namespace RailMLNeural.Data
                 {
                     eTrainPart trainpart = new eTrainPart() { id = train.id + "-" + i.ToString() };
                     trainpart.trainNumber = train.id;
+                    trainpart.formationTT = new eFormationTT();
+                    eFormation form = DataContainer.model.rollingstock.formations
+                        .SingleOrDefault(x => x.additionalName
+                            .Any(y => y.name == DataContainer.TrainTypes[train.id]));
+                    trainpart.formationTT.formationRef = form.id;
+                    trainpart.formationTT.speed = form.speed;
+                    trainpart.formationTT.length = form.length;
+                    trainpart.formationTT.weight = form.weight;
 
                     var operatingperiod = CreateOperatingPeriod(variations.dates[i]);
                     trainpart.operatingPeriodRef = new eOperatingPeriodRef() { @ref = operatingperiod.id };
@@ -369,6 +381,44 @@ namespace RailMLNeural.Data
             DataContainer.model.timetable.trains.Add(train);
             DataContainer.model.timetable.trainParts.AddRange(trainparts);
 
+        }
+
+        public static void ImportTrainTypesExcel(string filepath)
+        {
+            FileStream stream;
+        Loop:
+            try { stream = File.Open(filepath, FileMode.Open, FileAccess.Read); }
+            catch
+            {
+                MessageBoxResult result = MessageBox.Show("Error. Please close the excel document. Retry?", "Error", MessageBoxButton.OKCancel);
+                if (result == MessageBoxResult.OK) { goto Loop; }
+                else { return; }
+            }
+
+            IExcelDataReader excelreader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+            excelreader.IsFirstRowAsColumnNames = true;
+
+            var _dataset = excelreader.AsDataSet();
+            var _maintable = _dataset.Tables[0];
+            foreach(DataRow row in _maintable.Rows)
+            {
+                eFormation form = new eFormation();
+                form.id = row["Name"] as string;
+                form.length = (decimal)((row["Length"] as double?) ?? 0);
+                form.weight = (decimal)((row["Unloaded Mass"] as double?) ?? 0);
+                form.speed = (decimal)((row["Max service speed (km/h)"] as double?) ?? 0);
+                tTrainEngine eng = new tTrainEngine();
+                eng.trainMaxAcceleration = (decimal)((row["Max Acceleration"] as double?) ?? 0);
+                form.trainEngine = eng;
+                string additional = row["AdditionalNames"] != DBNull.Value ? row["AdditionalNames"] as string : string.Empty;
+                var additionalarray = additional.Split(',');
+                foreach(var add in additionalarray)
+                {
+                    form.additionalName.Add(new tAdditionalName() { name = add.Trim() });
+                }
+                DataContainer.model.rollingstock.formations.Add(form);
+                eFormationTT formTT = new eFormationTT();
+            }
         }
 
 

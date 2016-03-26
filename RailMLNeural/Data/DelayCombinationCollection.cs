@@ -24,7 +24,7 @@ namespace RailMLNeural.Data
         {
             get
             {
-                return dict.Values.Sum(x => x.Count);
+                return dict.Values.Where(x => x != null).Sum(x => x.Count);
             }
         }
 
@@ -32,7 +32,7 @@ namespace RailMLNeural.Data
         {
             get
             {
-                return dict.Values.Sum(x => x.Sum(y => y.primarydelays.Count + y.secondarydelays.Count));
+                return dict.Values.Where(x => x != null).Sum(x => x.Sum(y => y.primarydelays.Count + y.secondarydelays.Count));
             }
         }
 
@@ -42,7 +42,9 @@ namespace RailMLNeural.Data
             {
                 if (dict.Values.Count > 0)
                 {
-                    return dict.Values.Average(x => x.Sum(y => y.primarydelays.Count + y.secondarydelays.Count));
+                    return dict.Values.Where(x => x != null)
+                        .SelectMany(x => x)
+                        .Average(x => x.primarydelays.Count + x.secondarydelays.Count);
                 }
                 return 0;
             }
@@ -55,8 +57,8 @@ namespace RailMLNeural.Data
                 if (dict.Values.Count > 0)
                 {
 
-                    int[] array = new int[dict.Values.Max(x => x.Sum(y => y.secondarydelays.Count))];
-                    foreach (var x in dict.Values)
+                    int[] array = new int[dict.Values.Where(x => x != null).Max(x => x.Sum(y => y.secondarydelays.Count))];
+                    foreach (var x in dict.Values.Where(x => x != null))
                     {
                         foreach (var y in x)
                         {
@@ -75,7 +77,7 @@ namespace RailMLNeural.Data
             {
                 if (dict.Values.Count > 0)
                 {
-                    return dict.Values.Average(x => x.Count);
+                    return dict.Values.Where(x => x != null).Average(x => x.Count);
                 }
                 return 0;
             }
@@ -87,7 +89,10 @@ namespace RailMLNeural.Data
             {
                 if (dict.Values.Count > 0)
                 {
-                    return dict.Values.Average(x => x.Average(y => (y.primarydelays.Average(z => z.destinationdelay) + y.secondarydelays.Average(z => z.destinationdelay)) / 2));
+                    return dict.Values.Where(x => x != null)
+                        .SelectMany(x => x
+                            .SelectMany(y => y.primarydelays.Union(y.secondarydelays))).
+                            Average(z => z.destinationdelay);
                 }
                 return 0;
             }

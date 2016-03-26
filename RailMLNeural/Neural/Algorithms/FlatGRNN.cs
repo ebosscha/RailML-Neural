@@ -41,7 +41,7 @@ namespace RailMLNeural.Neural.Algorithms
         {
             get
             {
-                return EdgeNetwork.Weights.Length + VertexNetwork.Weights.Length + VertexNetwork.LayerFeedCounts[1] * VertexNetwork.LayerCounts[0];
+                return EdgeNetwork.Weights.Length + VertexNetwork.Weights.Length + VertexNetwork.LayerFeedCounts[VertexNetwork.LayerCounts.Length-2] * VertexNetwork.LayerCounts[VertexNetwork.LayerCounts.Length-1];
             }
         }
 
@@ -84,7 +84,7 @@ namespace RailMLNeural.Neural.Algorithms
             Edges = new List<FlatGRNNEdge>();
         }
 
-        public void ResetWeights(int hi = 1, int lo = -1, int? seed = null)
+        public void ResetWeights(double hi = 1, double lo = -1, int? seed = null)
         {
             BasicRandomizer rand = new RangeRandomizer(lo, hi);
             rand.Randomize(VertexNetwork.Weights);
@@ -99,6 +99,10 @@ namespace RailMLNeural.Neural.Algorithms
             {
                 EngineArray.ArrayCopy(EdgeLayerOutputTemplate, edge._layerOutputs);
                 EngineArray.ArrayCopy(EdgeLayerOutputTemplate, edge._previousOutputs);
+                EngineArray.Fill(edge._layerSums, 0);
+                EngineArray.Fill(edge._previousSums, 0);
+                edge._previousOutputList = new List<double[]>();
+                edge._previousSumsList = new List<double[]>();
             }
             foreach (FlatGRNNVertex vertex in Vertices)
             {
@@ -106,6 +110,10 @@ namespace RailMLNeural.Neural.Algorithms
                 EngineArray.ArrayCopy(VertexLayerOutputTemplate, vertex._previousOutputs);
                 vertex._layerSums = new double[vertex._layerSums.Length];
                 vertex._previousSums = new double[vertex._previousSums.Length];
+                vertex._lastEdgeIndex = -1;
+                vertex._previousEdgeIndex = -1;
+                vertex._previousOutputList = new List<double[]>();
+                vertex._previousSumsList = new List<double[]>();
             }
         }
 
@@ -132,12 +140,15 @@ namespace RailMLNeural.Neural.Algorithms
                 Vertices.Add(new FlatGRNNVertex(this));
             }
 
+            int i = 0;
             foreach(var edge in Graph.Edges)
             {
                 FlatGRNNEdge Edge = new FlatGRNNEdge(this);
                 Edge.OriginIndex = edge.Origin.Index;
                 Edge.DestinationIndex = edge.Destination.Index;
+                Edge.Index = i;
                 Edges.Add(Edge);
+                i++;
             }
 
             ResetWeights();
@@ -176,13 +187,19 @@ namespace RailMLNeural.Neural.Algorithms
             VertexNetwork.CloneFlatNetwork(result.VertexNetwork);
             result.EdgeNetwork.Weights = EngineArray.ArrayCopy(EdgeNetwork.Weights);
             result.VertexNetwork.Weights = EngineArray.ArrayCopy(VertexNetwork.Weights);
+            result.SerializationEdgeNetwork = SerializationEdgeNetwork;
+            result.SerializationVertexNetwork = SerializationVertexNetwork;
+            result.SerializationEdgeToVertexLayerIndex = SerializationEdgeToVertexLayerIndex;
 
+            int i = 0;
             foreach(var edge in Edges)
             {
                 FlatGRNNEdge temp = new FlatGRNNEdge(result);
                 temp.DestinationIndex = edge.DestinationIndex;
                 temp.OriginIndex = edge.OriginIndex;
+                temp.Index = i;
                 result.Edges.Add(temp);
+                i++;
             }
             foreach(var vertex in Vertices)
             {
@@ -190,7 +207,6 @@ namespace RailMLNeural.Neural.Algorithms
                 result.Vertices.Add(temp);
             }
             
-
             return result;
 
         }
@@ -253,6 +269,10 @@ namespace RailMLNeural.Neural.Algorithms
             public double[] _previousOutputs { get; set; }
             public double[] _layerSums { get; set; }
             public double[] _previousSums { get; set; }
+            public int _lastEdgeIndex { get; set; }
+            public int _previousEdgeIndex { get; set; }
+            public List<double[]> _previousOutputList { get; set; }
+            public List<double[]> _previousSumsList { get; set; }
 
             public FlatGRNNVertex(FlatGRNN Network)
             {
@@ -261,7 +281,8 @@ namespace RailMLNeural.Neural.Algorithms
                 _previousOutputs = new double[_layerOutputs.Length];
                 _layerSums = new double[_network.VertexLayerOutputTemplate.Length];
                 _previousSums = new double[_layerSums.Length];
-
+                _previousOutputList = new List<double[]>();
+                _previousSumsList = new List<double[]>();
 
                 EngineArray.ArrayCopy(_network.VertexLayerOutputTemplate, _layerOutputs);
                 EngineArray.ArrayCopy(_network.VertexLayerOutputTemplate, _previousOutputs);
@@ -275,7 +296,7 @@ namespace RailMLNeural.Neural.Algorithms
                 return result;
             }
 
-            public void UpdateVertex(double[] layerOutputs, bool isOrigin)
+            public void UpdateVertex(double[] layerOutputs, bool isOrigin, int index)
             {
                 EngineArray.ArrayCopy(_layerOutputs, _network.VertexNetwork.LayerOutput);
                 if(isOrigin)
@@ -296,6 +317,42 @@ namespace RailMLNeural.Neural.Algorithms
                 EngineArray.ArrayCopy(_network.VertexNetwork.LayerOutput, _layerOutputs);
                 EngineArray.ArrayCopy(_layerSums, _previousSums);
                 EngineArray.ArrayCopy(_network.VertexNetwork.LayerSums, _layerSums);
+                _previousEdgeIndex = _lastEdgeIndex;
+                _lastEdgeIndex = index;
+                _previousOutputList.Add(EngineArray.ArrayCopy(_network.VertexNetwork.LayerOutput));
+                _previousSumsList.Add(EngineArray.ArrayCopy(_network.VertexNetwork.LayerSums));
+            }
+
+            public double[] GetPreviousEdgeLayerOutput()
+            {
+                if(_previousEdgeIndex == -1)
+                {
+                    return null;
+                }
+                else if(_previousEdgeIndex == _lastEdgeIndex)
+                {
+                    return _network.Edges[_previousEdgeIndex]._layerOutputs;
+                }
+                else
+                {
+                    return _network.Edges[_previousEdgeIndex]._previousOutputs;
+                }
+            }
+
+            public double[] GetPreviousEdgeLayerSums()
+            {
+                if (_previousEdgeIndex == -1)
+                {
+                    return null;
+                }
+                else if (_previousEdgeIndex == _lastEdgeIndex)
+                {
+                    return _network.Edges[_previousEdgeIndex]._layerSums;
+                }
+                else
+                {
+                    return _network.Edges[_previousEdgeIndex]._previousSums;
+                }
             }
         }
 
@@ -305,9 +362,13 @@ namespace RailMLNeural.Neural.Algorithms
             public double[] _layerOutputs { get; set; }
             public double[] _previousOutputs { get; set; }
             public double[] _layerSums { get; set; }
+            public double[] _previousSums { get; set; }
+            public List<double[]> _previousOutputList { get; set; }
+            public List<double[]> _previousSumsList { get; set; }
             private FlatGRNN _network { get; set; }
             public int OriginIndex { get; set; }
             public int DestinationIndex { get; set; }
+            public int Index { get; set; }
             public FlatGRNNVertex Origin { get { return _network.Vertices[OriginIndex]; } }
             public FlatGRNNVertex Destination { get { return _network.Vertices[DestinationIndex]; } }
 
@@ -317,6 +378,9 @@ namespace RailMLNeural.Neural.Algorithms
                 _layerOutputs = new double[_network.EdgeLayerOutputTemplate.Length];
                 _previousOutputs = new double[_layerOutputs.Length];
                 _layerSums = new double[_network.EdgeNetwork.LayerSums.Length];
+                _previousSums = new double[_network.EdgeNetwork.LayerSums.Length];
+                _previousOutputList = new List<double[]>();
+                _previousSumsList = new List<double[]>();
                 EngineArray.ArrayCopy(_network.EdgeLayerOutputTemplate, _layerOutputs);
                 EngineArray.ArrayCopy(_network.EdgeLayerOutputTemplate, _previousOutputs);
             }
@@ -344,10 +408,13 @@ namespace RailMLNeural.Neural.Algorithms
                 _network.EdgeNetwork.Compute(inputarray, output);
                 EngineArray.ArrayCopy(_layerOutputs, _previousOutputs);
                 EngineArray.ArrayCopy(_network.EdgeNetwork.LayerOutput, _layerOutputs);
+                EngineArray.ArrayCopy(_layerSums, _previousSums);
                 EngineArray.ArrayCopy(_network.EdgeNetwork.LayerSums, _layerSums);
+                _previousOutputList.Add(EngineArray.ArrayCopy(_network.EdgeNetwork.LayerOutput));
+                _previousSumsList.Add(EngineArray.ArrayCopy(_network.EdgeNetwork.LayerSums));
 
-                Origin.UpdateVertex(_layerOutputs, !Reverse);
-                Destination.UpdateVertex(_layerOutputs, Reverse);              
+                Origin.UpdateVertex(_layerOutputs, !Reverse, Index);
+                Destination.UpdateVertex(_layerOutputs, Reverse, Index);              
 
                 return output;
             }

@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RailMLNeural</RootNamespace>
     <AssemblyName>RailMLNeural</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -38,6 +38,26 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DynamicDataDisplay">
@@ -82,8 +102,12 @@
     <Reference Include="protobuf-net">
       <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
     </Reference>
+    <Reference Include="RNNSharp">
+      <HintPath>..\..\..\C#\RNNSharp-master\RNNSharp\bin\Release\RNNSharp.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\MvvmLightLibs.5.2.0.0\lib\net45\System.Windows.Interactivity.dll</HintPath>
     </Reference>
@@ -130,6 +154,29 @@
     <Compile Include="Data\ImportInfrastructure.cs" />
     <Compile Include="Data\ImportTimetable.cs" />
     <Compile Include="Data\MetaData.cs" />
+    <Compile Include="Neural\Algorithms\Activation\ActivationBiological.cs" />
+    <Compile Include="Neural\Algorithms\Activation\ActivationSteepFuzzyReLu.cs" />
+    <Compile Include="Neural\Algorithms\Activation\ActivationFuzzyReLu.cs" />
+    <Compile Include="Neural\Algorithms\Activation\ActivationReLu.cs" />
+    <Compile Include="Neural\Algorithms\Activation\ActivationSoftPlus.cs" />
+    <Compile Include="Neural\Algorithms\DataSetCollectionCalculateScore.cs" />
+    <Compile Include="Neural\Algorithms\DetermineWorkLoad.cs" />
+    <Compile Include="Neural\Algorithms\GraphCalculateScore .cs" />
+    <Compile Include="Neural\Algorithms\IErrorCalculation.cs" />
+    <Compile Include="Neural\Algorithms\RNNSharp\LSTM.cs" />
+    <Compile Include="Neural\Algorithms\Training\BackpropagationTT.cs" />
+    <Compile Include="Neural\Algorithms\Training\BatchSizeGeneticAlgorithm.cs" />
+    <Compile Include="Neural\Algorithms\Training\BPTTGradientWorker.cs" />
+    <Compile Include="Neural\Algorithms\Training\GNBackPropagation.cs" />
+    <Compile Include="Neural\Algorithms\Training\GNManhattanPropagation.cs" />
+    <Compile Include="Neural\Algorithms\Training\GNQuickPropagation.cs" />
+    <Compile Include="Neural\Algorithms\Training\GNScaledConjugateGradient.cs" />
+    <Compile Include="Neural\Algorithms\Training\GraphNeuralMSO.cs" />
+    <Compile Include="Neural\Algorithms\Training\PropagationThroughTime.cs" />
+    <Compile Include="Neural\Algorithms\Training\RPropTT.cs" />
+    <Compile Include="Neural\Algorithms\Training\Strategies.cs" />
+    <Compile Include="Neural\Algorithms\WeightedMSECalculateScore.cs" />
+    <Compile Include="Neural\Algorithms\ThresholdCalculateScore.cs" />
     <Compile Include="Neural\Algorithms\Training\BatchNeuralSimulatedAnnealing.cs" />
     <Compile Include="Neural\Algorithms\Training\GNResilientPropagation.cs" />
     <Compile Include="Neural\Algorithms\Training\GraphNeuralGradientWorker.cs" />
@@ -154,12 +201,26 @@
     <Compile Include="Neural\BatchManager.cs" />
     <Compile Include="Neural\Configurations\ConvolutionalConfiguration.cs" />
     <Compile Include="Neural\Configurations\GRNNConfiguration.cs" />
+    <Compile Include="Neural\Configurations\LSTMConfiguration.cs" />
     <Compile Include="Neural\Configurations\RecursiveConfiguration.cs" />
+    <Compile Include="Neural\Configurations\NEATConfiguration.cs" />
     <Compile Include="Neural\Data\BufferedSubDataSet.cs" />
     <Compile Include="Neural\Data\DelayCombinationSet.cs" />
+    <Compile Include="Neural\Data\GRNNDataPair.cs" />
     <Compile Include="Neural\Data\NormBuffMLDataSet.cs" />
     <Compile Include="Neural\Data\IRecurrentDataProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\EdgeSpeedHomogeneityInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\EdgeMaxSpeedInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\TotalDelayClassificationProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\InclusiveTotalDelayClassificationProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\InclusiveTotalDelayOutputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\TrainSpeedInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\DelaySizeInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\RelativeTotalDelayOutputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\TotalDelayOutputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\TrainDirectionInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\IsDelayedOutputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\ForecastedTimesInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\SwitchCountInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\StationTracksInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\VertexDepartureCountInputRecurrentProvider.cs" />
@@ -173,6 +234,7 @@
     <Compile Include="Neural\Data\RecurrentDataProviders\DelaySizeOutputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\PreviousDelaySizeInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataSet.cs" />
+    <Compile Include="Neural\Data\ValidationHelper.cs" />
     <Compile Include="Neural\Enums.cs" />
     <Compile Include="Neural\Factories.cs" />
     <Compile Include="Neural\INeuralConfiguration.cs" />
@@ -301,11 +363,15 @@
     </Compile>
     <Compile Include="UI\Resources\ValueConverters.cs" />
     <Compile Include="UI\Statistics\ViewModel\DelayStatisticsViewModel.cs" />
+    <Compile Include="UI\Statistics\ViewModel\EdgeStatisticsViewModel.cs" />
     <Compile Include="UI\Statistics\ViewModel\MainStatisticsViewModel.cs" />
     <Compile Include="UI\Statistics\ViewModel\Messages.cs" />
     <Compile Include="UI\Statistics\ViewModel\NetworkStatisticsViewModel.cs" />
     <Compile Include="UI\Statistics\View\DelayStatisticsView.xaml.cs">
       <DependentUpon>DelayStatisticsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Statistics\View\EdgeStatisticsView.xaml.cs">
+      <DependentUpon>EdgeStatisticsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\Statistics\View\MainStatisticsView.xaml.cs">
       <DependentUpon>MainStatisticsView.xaml</DependentUpon>
@@ -448,6 +514,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="UI\Statistics\View\DelayStatisticsView.xaml">
+      <SubType>Form</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Statistics\View\EdgeStatisticsView.xaml">
       <SubType>Form</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

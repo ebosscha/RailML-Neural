@@ -16,7 +16,7 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
         public String Name { get { return _name; } }
         public int Size { get { return 1; } }
         public int StartIndex { get; private set; }
-        public List<string> Map { get { return new List<string>() { "Route Length (Miles)" }; } }
+        public List<string> Map { get { return new List<string>() { "Route Length (10 Miles)" }; } }
         public NormalizationTypeEnum NormalizationType { get; set; }
 
         public RouteLengthInputRecurrentProvider()
@@ -27,7 +27,7 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
         public double[] Process(EdgeTrainRepresentation rep)
         {
             double[] result = new double[Size];
-            result[0] = (double)rep.Edge.Route.distance;
+            result[0] = (double)rep.Edge.Route.distance / 10;
             return result;
 
 

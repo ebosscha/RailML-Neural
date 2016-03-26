@@ -98,7 +98,7 @@ namespace RailMLNeural.Data
 
             while (vertices.Count > 0)
             {
-                Vertex v = vertices.Values.First(x => x.dist == vertices.Values.Min(e => e.dist));
+                Vertex v = vertices.Values.Aggregate((agg, item) => item.dist < agg.dist ? item : agg);
                 if (HandleVertex(ref v))
                 {
                     break;
@@ -130,6 +130,10 @@ namespace RailMLNeural.Data
                     if (c.ocpRef == destination.id)
                     {
                         distance = v.dist + Math.Abs(v.pos - c.pos);
+                        if(distance > 20)
+                        {
+                            int i = 0;
+                        }
                         route = v.route;
                         route.Add(new RoutePart() { track = v.track, begin = v.pos, end = c.pos });
                         return true;
@@ -154,7 +158,7 @@ namespace RailMLNeural.Data
                                 vert.prev = v;
                                 vert.prevpos = sw.pos;
                                 vert.dist = dist;
-                                vert.pos = c.GetParent().pos;
+                                vert.pos = c.refConnection.GetParent().pos;
                                 vert.route = v.route;
                                 vert.route.Add(new RoutePart { track = vert.track, begin = v.pos, end = sw.pos });
                             }
@@ -178,7 +182,7 @@ namespace RailMLNeural.Data
                             vert.prev = v;
                             vert.prevpos = v.track.trackTopology.trackBegin.pos;
                             vert.dist = dist;
-                            vert.pos = c.GetParent().pos;
+                            vert.pos = c.refConnection.GetParent().pos;
                             vert.route = v.route;
                             vert.route.Add(new RoutePart { track = vert.track, begin = v.pos, end = v.track.trackTopology.trackBegin.pos });
                         }
@@ -202,7 +206,7 @@ namespace RailMLNeural.Data
                             vert.prev = v;
                             vert.prevpos = v.track.trackTopology.trackEnd.pos;
                             vert.dist = dist;
-                            vert.pos = c.GetParent().pos;
+                            vert.pos = c.refConnection.GetParent().pos;
                             vert.route = v.route;
                             vert.route.Add(new RoutePart { track = vert.track, begin = v.pos, end = v.track.trackTopology.trackEnd.pos });
                         }
@@ -234,6 +238,46 @@ namespace RailMLNeural.Data
             {
                 return (double)(doublelength / totallength);
             }
+            return 0;
+        }
+
+        public double AverageSpeed(bool down)
+        {
+            if (route.Count == 0)
+            {
+                return 0;
+            }
+            decimal totaldist = 0;
+            decimal speedsum = 0;
+            foreach(var part in route)
+            {
+                tStrictDirection dir = tStrictDirection.down;
+                if(part.begin > part.end && !down || part.begin < part.end && down)
+                {
+                    dir = tStrictDirection.up;
+                }
+                decimal pos = Math.Min(part.begin, part.end);
+                decimal speed = part.track.trackElements.speedChanges
+                    .Where(x => x.pos <= pos && (x.dirSpecified == false || x.dir == dir)).Any() ? 
+                    part.track.trackElements.speedChanges
+                    .Where(x => x.pos <= pos && (x.dirSpecified == false || x.dir == dir))
+                    .Last().vMax : 0;
+                foreach(var rest in part.track.trackElements.speedChanges
+                    .Where(x => (x.dirSpecified == false || x.dir == dir) && x.pos > Math.Min(part.begin, part.end) && x.pos < Math.Max(part.begin, part.end)))
+                {
+                    speedsum += rest.vMax * (rest.pos - pos);
+                    totaldist += (rest.pos - pos);
+                    speed = rest.vMax;
+                }
+                speedsum += speed * (Math.Max(part.begin, part.end) - pos);
+                totaldist += (Math.Max(part.begin, part.end) - pos);
+                
+            }
+            if(totaldist > 0)
+            {
+                return (double)(speedsum / totaldist);
+            }
+            
             return 0;
         }
 

@@ -37,7 +37,12 @@ namespace RailMLNeural.Neural.Data
         PreviousDelaySizeInputRecurrentProvider,
         DelaySizeInputRecurrentProvider,
         ScheduledTimesInputRecurrentProvider,
+        ForecastedTimesInputRecurrentProvider,
         DelaySizeOutputRecurrentProvider,
+        IsDelayedOutputRecurrentProvider,
+        TrainSpeedInputRecurrentProvider,
+        EdgeMaxSpeedInputRecurrentProvider,
+        EdgeSpeedHomogeneityInputRecurrentProvider,
         EdgeHeadwayInputRecurrentProvider,
         EdgeDelaysInputRecurrentProvider,
         VerticesHeadwayInputRecurrentProvider,
@@ -47,6 +52,12 @@ namespace RailMLNeural.Neural.Data
         StationTracksInputRecurrentProvider,
         DoubleTrackInputRecurrentProvider,
         SwitchCountInputRecurrentProvider,
-
+        TrainDirectionInputRecurrentProvider,
+        TotalDelayOutputRecurrentProvider,
+        RelativeTotalDelayOutputRecurrentProvider,
+        InclusiveTotalDelayOutputRecurrentProvider,
+        TotalDelayClassificationProvider,
+        InclusiveTotalDelayClassificationProvider,
+        
     }
 }

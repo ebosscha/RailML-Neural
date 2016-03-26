@@ -328,10 +328,13 @@ namespace RailMLNeural.UI.Neural.ViewModel
 
         public bool HasBias { get; set; }
 
+        public bool IsRecurrent { get; set; }
+
         public LayerSize()
         {
             Size = 0;
             HasBias = true;
+            IsRecurrent = false;
         }
 
         public BasicLayer CreateLayer(int layersize)

@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:xcad="http://schemas.xceed.com/wpf/xaml/avalondock"
+             xmlns:this="clr-namespace:RailMLNeural.UI.Statistics.View"
         xmlns:ignore="http://www.galasoft.ch/ignore"
         mc:Ignorable="d ignore"
         DataContext="{Binding MainStatisticsVM, Source={StaticResource Locator}}">
@@ -20,6 +21,9 @@
                         <xcad:LayoutDocument Title="Delays"
                                              CanClose="False">
                             <ContentControl Content="{Binding DelayStatistics}"/>
+                        </xcad:LayoutDocument>
+                        <xcad:LayoutDocument Title="Edge Statistics">
+                            <this:EdgeStatisticsView/>
                         </xcad:LayoutDocument>
                     </xcad:LayoutDocumentPane>
                 </xcad:LayoutPanel>

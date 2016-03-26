@@ -19,6 +19,7 @@ using RailMLNeural.Neural.PreProcessing.DataProviders;
 using RailMLNeural.Neural.Configurations;
 using RailMLNeural.Neural.Data;
 using RailMLNeural.Neural.Data.RecurrentDataProviders;
+using RailMLNeural.Neural.Algorithms.Propagators;
 
 namespace RailMLNeural.UI.Neural.ViewModel
 {
@@ -68,6 +69,16 @@ namespace RailMLNeural.UI.Neural.ViewModel
                 return Enum.GetValues(typeof(RecurrentDataProviderEnum)).Cast<RecurrentDataProviderEnum>();
             }
         }
+
+        public IEnumerable<PropagatorEnum> PropagatorEnumValues
+        {
+            get
+            {
+                return Enum.GetValues(typeof(PropagatorEnum)).Cast<PropagatorEnum>();
+            }
+        }
+
+        public PropagatorEnum PropagatorType { get; set; }
 
         public RecurrentDataProviderEnum DataProvider { get; set; }
 
@@ -121,6 +132,8 @@ namespace RailMLNeural.UI.Neural.ViewModel
             }
         }
 
+        public bool ElmanPattern { get; set; }
+
         #endregion Parameters
 
         #region Public
@@ -167,12 +180,25 @@ namespace RailMLNeural.UI.Neural.ViewModel
         {
 
             BasicNetwork N = new BasicNetwork();
-            N.AddLayer(new BasicLayer(null, true, Configuration.Data.InputSize));
+            List<BasicLayer> Layers = new List<BasicLayer>();
+            Layers.Add(new BasicLayer(null, true, Configuration.InputDataProviders.Sum(x => x.Size)));
             for (int i = 0; i < HiddenLayerSize.Count; i++ )
             {
-                N.AddLayer(HiddenLayerSize[i].CreateLayer());
+                Layers.Add(HiddenLayerSize[i].CreateLayer());
+                if(HiddenLayerSize[i].IsRecurrent)
+                {
+                    Layers[i].ContextFedBy = Layers[i + 1];
+                }
             }
-            N.AddLayer(OutputLayerSize.CreateLayer(Configuration.Data.IdealSize));
+            Layers.Add(OutputLayerSize.CreateLayer(Configuration.OutputDataProviders.Sum(x => x.Size)));
+            if(ElmanPattern)
+            {
+                Layers[0].ContextFedBy = Layers[1];
+            }
+            for (int i = 0; i < Layers.Count; i++ )
+            {
+                N.AddLayer(Layers[i]);
+            }
             N.Structure.FinalizeStructure();
             Configuration.Network = N;
         }
@@ -211,6 +237,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
         {
             Configuration.InputDataProviders = InputDataProviders.ToList();
             Configuration.OutputDataProviders = OutputDataProviders.ToList();
+            Configuration.Propagator = PropagatorFactory.Create(Configuration, PropagatorType, true);
             BackgroundWorker worker = new BackgroundWorker();
             worker.WorkerReportsProgress = true;
             worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(PreProcessing_Finished);

@@ -28,7 +28,7 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
         {
             double[] result = new double[Size];
             foreach(VertexTrainRepresentation other in new List<SimplifiedGraphVertex>(){rep.Edge.Origin, rep.Edge.Destination}
-                .SelectMany(x => x.Trains).Where(x => x.TrainHeaderCode != rep.TrainHeaderCode))
+                .SelectMany(x => x.Trains).Where(x => x.IsRelevant && x.TrainHeaderCode != rep.TrainHeaderCode))
             {
                 DateTime thisTime;
                 int i = 0;
@@ -36,16 +36,16 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
                     ||(rep.Direction == DirectionEnum.Up && other.Vertex == rep.Edge.Origin))
                 {
                     i = 3;
-                    thisTime = rep.ScheduledArrivalTime;
+                    thisTime = rep.ForecastedArrivalTime;
                 }
                 else
                 {
-                    thisTime = rep.ScheduledDepartureTime;
+                    thisTime = rep.ForecastedDepartureTime;
                 }
 
-                foreach (DateTime othertime in new List<DateTime>() { other.PredictedArrivalTime, other.PredictedDepartureTime })
+                foreach (DateTime othertime in new List<DateTime>() { other.ForecastedArrivalTime, other.ForecastedDepartureTime })
                 {
-                    TimeSpan Diff = thisTime - othertime;
+                    TimeSpan Diff = othertime - thisTime;
                     if (Diff.TotalMinutes < 0)
                     {
                         continue;

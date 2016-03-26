@@ -112,16 +112,31 @@ namespace RailMLNeural.Neural.PreProcessing
             CsvFileReader<HeaderHistory> reader = new CsvFileReader<HeaderHistory>(filename, def);
             string traincode = "";
             int count = 0;
+            Dictionary<string, int> _types = new Dictionary<string,int>();
             foreach (HeaderHistory hh in reader)
             {
+                
                 if (hh.trainDate < new DateTime(2010, 1, 1)) { count++; continue; }
                 if (hh.trainCode != traincode)
                 {
                     worker.ReportProgress(0, "Processing... HeaderCode : " + hh.trainCode + "     Lines Processed : " + count.ToString());
                     HeaderRoutes.Add(hh.trainCode, new Dictionary<DateTime, string>());
+                    if(_types.Count > 0)
+                    {
+                        DataContainer.TrainTypes.Add(traincode, _types.Aggregate((item, agg) => item.Value > agg.Value ? item : agg).Key);
+                    }
                     traincode = hh.trainCode;
+                    _types = new Dictionary<string,int>();
                 }
                 HeaderRoutes[traincode].Add(hh.trainDate, hh.trainRoute);
+                if(!_types.ContainsKey(hh.trainType))
+                {
+                    _types.Add(hh.trainType,1);
+                }
+                else
+                {
+                    _types[hh.trainType]++;
+                }
             }
 
             DataContainer.HeaderRoutes = HeaderRoutes;
@@ -152,6 +167,7 @@ namespace RailMLNeural.Neural.PreProcessing
         public DateTime trainDate { get; set; }
         public string trainOrigin { get; set; }
         public string trainRoute { get; set; }
+        public string trainType { get; set; }
 
 
 

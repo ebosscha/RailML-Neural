@@ -12,7 +12,9 @@ namespace RailMLNeural.Neural
         GraphRecurrent,
         Recursive,
         FeedForward,
-        Convolutional
+        Convolutional,
+        NEAT,
+        LSTM
     }
 
     [Serializable]
@@ -33,7 +35,12 @@ namespace RailMLNeural.Neural
         SoftMax,
         SteepenedSigmoid,
         TANH,
-        Gaussian
+        Gaussian,
+        ReLu,
+        FuzzyReLu,
+        SteepenedFuzzyReLu,
+        SoftPlus,
+        Biological
     }
 
     [Serializable]
@@ -46,6 +53,18 @@ namespace RailMLNeural.Neural
         ScaledConjugateGradient,
         SimulatedAnnealing,
         ParticleSwarmOptimization,
+        MultipleSwarmOptimization,
+        Genetic,
 
+    }
+
+    [Serializable]
+    public enum CalculateScoreEnum
+    {
+        MSE,
+        Threshold,
+        WeightedMSE,
+        DataMSE,
+        WeightedDataMSE,
     }
 }

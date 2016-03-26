@@ -8,8 +8,12 @@
         mc:Ignorable="d ignore"
         DataContext="{Binding NeuralResultsVM, Source={StaticResource Locator}}">
 
-    <Grid>
-        <d3:ChartPlotter>
+    <Grid VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <d3:ChartPlotter Grid.Row="0" Loaded="ChartPlotter_Loaded">
             <d3:HorizontalAxisTitle>
                 Epoch
             </d3:HorizontalAxisTitle>
@@ -28,6 +32,20 @@
 
 
         </d3:ChartPlotter>
-        
+        <Button Command="{Binding WriteOutputCommand}"
+                Height="20"
+                Width="80"
+                Content="Write Output"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Grid.Row="1"/>
+        <Button Command="{Binding RunVerificationCommand}"
+                Margin="0,0,100,0"
+                Height="20"
+                Width="120"
+                Content="Run Verification"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Grid.Row="1"/>
     </Grid>
 </UserControl>

@@ -27,8 +27,8 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
         public double[] Process(EdgeTrainRepresentation rep)
         {
             double[] result = new double[Size];
-            result[1] = (rep.PredictedArrivalTime - rep.ScheduledArrivalTime).TotalMinutes;
-            result[0] = (rep.PredictedDepartureTime - rep.ScheduledDepartureTime).TotalMinutes;
+            result[1] = (rep.PredictedArrivalTime - rep.ScheduledArrivalTime).TotalHours;
+            result[0] = (rep.PredictedDepartureTime - rep.ScheduledDepartureTime).TotalHours;
             return result;
         }
     }

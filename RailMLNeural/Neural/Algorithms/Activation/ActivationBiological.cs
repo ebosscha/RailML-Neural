@@ -1,0 +1,80 @@
+﻿using Encog.Engine.Network.Activation;
+using Encog.MathUtil;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Encog.Engine.Network.Activation
+{
+    [Serializable]
+    class ActivationBiological : IActivationFunction
+    {
+        private readonly double[] _paras;
+
+        public ActivationBiological()
+        {
+            _paras = new double[0];
+        }
+
+        public void ActivationFunction(double[] d, int start, int size)
+        {
+            double sum = 0;
+            for (int i = start; i < start + size; i++)
+            {
+                if (d[i] > 0)
+                {
+                    d[i] = d[i] = 2.0 / (1.0 + BoundMath.Exp(-2.0 * d[i])) - 1.0; ;
+                }
+                else
+                {
+                    d[i] = 0;
+                }
+                sum += d[i];
+            }
+            //for(int i = start; i < start + size; i++)
+            //{
+            //    d[i] = d[i]/sum;  
+            //}
+
+        }
+
+        public double DerivativeFunction(double b, double a)
+        {
+            if(b <= 0)
+            {
+                return 0;
+            }
+            else
+            {
+                return (1.0d - a * a);
+            } 
+        }
+        
+
+        public bool HasDerivative
+        {
+            get { return true; }
+        }
+
+        public string[] ParamNames
+        {
+            get
+            {
+                string[] result = { };
+                return result;
+            }
+        }
+
+        public double[] Params
+        {
+            get { return _paras; }
+        }
+
+        public object Clone()
+        {
+            return new ActivationReLu();
+        }
+    }
+}

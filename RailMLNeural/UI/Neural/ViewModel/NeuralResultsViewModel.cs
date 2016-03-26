@@ -1,5 +1,6 @@
 ﻿using DynamicDataDisplay.Markers.DataSources;
 using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.CommandWpf;
 using GalaSoft.MvvmLight.Messaging;
 using Microsoft.Research.DynamicDataDisplay.DataSources;
 using RailMLNeural.Data;
@@ -7,7 +8,9 @@ using RailMLNeural.Neural;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
+using System.Windows.Input;
 
 namespace RailMLNeural.UI.Neural.ViewModel
 {
@@ -56,6 +59,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
         public NeuralResultsViewModel()
         {
             Messenger.Default.Register<NeuralSelectionChangedMessage>(this, (action) => ChangeSelection(action));
+            InitializeCommands();
         }
 
         private void ChangeSelection(NeuralSelectionChangedMessage msg)
@@ -91,5 +95,58 @@ namespace RailMLNeural.UI.Neural.ViewModel
             }
             VerificationHistory.SetXYMapping(p => p);
         }
+
+        private void WriteErrorHistory(string filename)
+        {
+            File.Delete(filename);
+            var stream = File.CreateText(filename);
+            stream.WriteLine("Epoch Number \t Error");
+            for(int i = 0; i < SelectedNetwork.ErrorHistory.Count; i++)
+            {
+                stream.WriteLine(i + "\t" + SelectedNetwork.ErrorHistory[i]);
+            }
+        }
+
+        #region Commands
+        public ICommand WriteOutputCommand { get; private set; }
+        public ICommand RunVerificationCommand { get; private set; }
+
+        public void InitializeCommands()
+        {
+            WriteOutputCommand = new RelayCommand(ExecuteWriteOutput);
+            RunVerificationCommand = new RelayCommand(ExecuteRunVerification, canExecuteRunVerification);
+        }
+
+        private void ExecuteWriteOutput()
+        {
+             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "Document"; // Default file name
+            dlg.AddExtension = true;
+            dlg.DefaultExt = ".txt";
+            dlg.Filter = "Text Documents (.txt.)|*.txt"; // Filter files by extension
+
+            // Show save file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                // Save document
+                string filename = dlg.FileName;
+                WriteErrorHistory(filename);
+            }
+        }
+
+        private void ExecuteRunVerification()
+        {
+            _selectedNetwork.RunVerification();
+        }
+
+        private bool canExecuteRunVerification()
+        {
+            return _selectedNetwork == null ? false : !_selectedNetwork.IsRunning;
+        }
+
+        #endregion Commands
     }
 }

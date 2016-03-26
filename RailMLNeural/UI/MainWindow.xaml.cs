@@ -16,12 +16,21 @@ namespace RailMLNeural.UI
         {
             InitializeComponent();
             Closing += (s, e) => ViewModelLocator.Cleanup();
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
         }
 
         protected override void OnClosed(System.EventArgs e)
         {
             base.OnClosed(e);
             Environment.Exit(0);
+        }
+
+        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Exception ex = e.ExceptionObject as Exception;
+            MessageBox.Show("Terminating " + e.IsTerminating.ToString() + Environment.NewLine +
+                ex.ToString());
+
         }
     }
 }

@@ -1,4 +1,9 @@
 ﻿using Encog.Engine.Network.Activation;
+using Encog.MathUtil.Randomize;
+using Encog.ML;
+using Encog.Neural.Networks.Structure;
+using Encog.Neural.Networks.Training;
+using RailMLNeural.Neural.Algorithms;
 using RailMLNeural.Neural.Algorithms.Propagators;
 using RailMLNeural.Neural.Data;
 using RailMLNeural.Neural.Data.RecurrentDataProviders;
@@ -50,6 +55,16 @@ namespace RailMLNeural.Neural
                     return new ActivationTANH();
                 case ActivationFunctionEnum.Gaussian:
                     return new ActivationGaussian();
+                case ActivationFunctionEnum.ReLu:
+                    return new ActivationReLu();
+                case ActivationFunctionEnum.SoftPlus:
+                    return new ActivationSoftPlus();
+                case ActivationFunctionEnum.FuzzyReLu:
+                    return new ActivationFuzzyReLu();
+                case ActivationFunctionEnum.SteepenedFuzzyReLu:
+                    return new ActivationSteepFuzzyReLu();
+                case ActivationFunctionEnum.Biological:
+                    return new ActivationBiological();
                 default:
                     return null;
             }
@@ -109,6 +124,28 @@ namespace RailMLNeural.Neural
                     return new ScheduledTimesInputRecurrentProvider();
                 case RecurrentDataProviderEnum.SwitchCountInputRecurrentProvider:
                     return new SwitchCountInputRecurrentProvider();
+                case RecurrentDataProviderEnum.ForecastedTimesInputRecurrentProvider:
+                    return new ForecastedTimesInputRecurrentProvider();
+                case RecurrentDataProviderEnum.IsDelayedOutputRecurrentProvider:
+                    return new IsDelayedOutputRecurrentProvider();
+                case RecurrentDataProviderEnum.TrainDirectionInputRecurrentProvider:
+                    return new TrainDirectionInputRecurrentProvider();
+                case RecurrentDataProviderEnum.TotalDelayOutputRecurrentProvider:
+                    return new TotalDelayOutputRecurrentProvider();
+                case RecurrentDataProviderEnum.RelativeTotalDelayOutputRecurrentProvider:
+                    return new RelativeTotalDelayOutputRecurrentProvider();
+                case RecurrentDataProviderEnum.TrainSpeedInputRecurrentProvider:
+                    return new TrainSpeedInputRecurrentProvider();
+                case RecurrentDataProviderEnum.EdgeMaxSpeedInputRecurrentProvider:
+                    return new EdgeMaxSpeedInputRecurrentProvider();
+                case RecurrentDataProviderEnum.EdgeSpeedHomogeneityInputRecurrentProvider:
+                    return new EdgeSpeedHomogeneityInputRecurrentProvider();
+                case RecurrentDataProviderEnum.InclusiveTotalDelayOutputRecurrentProvider:
+                    return new InclusiveTotalDelayOutputRecurrentProvider();
+                case RecurrentDataProviderEnum.InclusiveTotalDelayClassificationProvider:
+                    return new InclusiveTotalDelayClassificationProvider();
+                case RecurrentDataProviderEnum.TotalDelayClassificationProvider:
+                    return new TotalDelayClassificationProvider();
                 default:
                     return null;
             }
@@ -117,17 +154,69 @@ namespace RailMLNeural.Neural
 
     public static class PropagatorFactory
     {
-        public static IPropagator Create(IContainsGraph Owner, PropagatorEnum Type)
+        public static IPropagator Create(IContainsGraph Owner, PropagatorEnum Type, bool UseSubGraph)
         {
             switch(Type)
             {
                 case PropagatorEnum.Chronological:
-                    return new ChronologicalPropagator(Owner, false);
+                    return new ChronologicalPropagator(Owner, UseSubGraph);
                 case PropagatorEnum.FollowTrain:
-                    return new FollowTrainPropagator(Owner);
+                    return new FollowTrainPropagator(Owner, UseSubGraph);
                 default:
                     return null;
             }
+        }
+    }
+
+    //public static class CalculateScoreFactory
+    //{
+    //    public static ICalculateScore CreateRecurrent(CalculateScoreEnum Type, IContainsGraph Owner, DelayCombinationSet Data)
+    //    {
+    //        switch(Type)
+    //        {
+    //            case CalculateScoreEnum.MSE:
+    //                return new RecurrentCalculateScore(Owner, Data);
+    //            case CalculateScoreEnum.Threshold:
+    //                return new ThresholdCalculateScore(Owner, Data, 3);
+    //            case CalculateScoreEnum.WeightedMSE:
+    //                return new WeightedMSECalculateScore(Owner, Data);
+    //            default:
+    //                return null;                  
+    //        }
+    //    }
+    //}
+
+    public static class ErrorCalculationFactory
+    {
+        public static IErrorCalculation Create(CalculateScoreEnum Type, int OutputSize)
+        {
+            switch(Type)
+            {
+                case CalculateScoreEnum.MSE:
+                    return new MSEErrorCalculation();
+                case CalculateScoreEnum.Threshold:
+                    return new ThresholdErrorCalculation();
+                case CalculateScoreEnum.WeightedMSE:
+                    return new WeightedMSEErrorCalculation(OutputSize);
+                default:
+                    return null; 
+            }
+        }
+    }
+
+    public static class NetworkFactory
+    {
+        public static IMLEncodable CreateEncodable(IMLEncodable N)
+        {
+            IMLEncodable r = (IMLEncodable)((ICloneable)N).Clone();
+            GaussianRandomizer rand = new GaussianRandomizer(0, 2);
+            double[] result = new double[r.EncodedArrayLength()];
+            for(int i = 0; i < result.Length; i++)
+            {
+                result[i] = rand.NextDouble();
+            }
+            NetworkCODEC.ArrayToNetwork(result, r);
+            return r;
         }
     }
 }

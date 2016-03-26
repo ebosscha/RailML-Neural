@@ -44,7 +44,6 @@ namespace RailMLNeural.Neural.Algorithms.Training
         {
             m_neuralPSO.UpdateParticle(m_particleIndex, m_init);
         }
-
     }
 }
 

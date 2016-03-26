@@ -52,6 +52,36 @@
                                        Increment="0.05"/>
                            
                 </Grid>
+                <Grid Visibility="{Binding LearningRateVisible}">
+                    <TextBlock Text="Learning Rate Decay:"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding LearningRateDecay}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       Maximum="1"
+                                       Increment="0.05"/>
+
+                </Grid>
+                <Grid Visibility="{Binding DropoutVisible}">
+                    <TextBlock Text="Dropout:"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding Dropout}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       Maximum="1"
+                                       Increment="0.05"/>
+
+                </Grid>
+                <Grid Visibility="{Binding LearningRateVisible}">
+                    <TextBlock Text="Regularization Ratio:"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding PerformanceRatio}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       Maximum="1"
+                                       Increment="0.05"/>
+
+                </Grid>
                 <Grid Visibility="{Binding MomentumVisible}">
                     <TextBlock Text="Momentum :"
                            Margin="10,5,0,0"/>
@@ -91,6 +121,45 @@
                                        Margin="195,5,0,0"
                                        Minimum="0"/>
                 </Grid>
+                <Grid Visibility="{Binding MSOVisible}">
+                    <TextBlock Text="Neural Population :"
+                           Margin="10,5,0,0"/>
+                    <xctk:IntegerUpDown Value="{Binding NeutralPopulation}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       DefaultValue="0"/>
+                </Grid>
+                <Grid Visibility="{Binding MSOVisible}">
+                    <TextBlock Text="Charged Population :"
+                           Margin="10,5,0,0"/>
+                    <xctk:IntegerUpDown Value="{Binding ChargedPopulation}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       DefaultValue="0"/>
+                </Grid>
+                <Grid Visibility="{Binding MSOVisible}">
+                    <TextBlock Text="Exclusion Range :"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding ExclusionRange}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       DefaultValue="0"/>
+                </Grid>
+                <Grid Visibility="{Binding MSOVisible}">
+                    <TextBlock Text="Quantum Cloud Radius :"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding CloudRadius}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       DefaultValue="0"/>
+                </Grid>
+                <Grid Visibility="{Binding MSOVisible}">
+                    <TextBlock Text="PSO Type :"
+                               Margin="10,5,0,0"/>
+                    <ComboBox SelectedItem="{Binding PSOType}"
+                              ItemsSource="{Binding PSOTypeValues}"
+                              Margin="195,5,0,0"/>
+                </Grid>
                 <Grid Visibility="{Binding PSOVisible}">
                     <TextBlock Text="Max Velocity :"
                            Margin="10,5,0,0"/>
@@ -123,6 +192,30 @@
                                        Minimum="0"
                                        DefaultValue="2.0"/>
                 </Grid>
+                <Grid Visibility="{Binding MSOVisible}">
+                    <TextBlock Text="Number of Swarms :"
+                           Margin="10,5,0,0"/>
+                    <xctk:IntegerUpDown Value="{Binding SwarmCount}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="1"
+                                       DefaultValue="1"/>
+                </Grid>
+                
+                <Grid Visibility="{Binding MaxGradientVisible}">
+                    <TextBlock Text="Maximum Gradient (0 for unlimited) :"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding MaxGradient}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       DefaultValue="0"/>
+                </Grid>
+                <Grid Visibility="{Binding CalculateScoreVisible}">
+                    <TextBlock Text="Score Function :"
+                               Margin="10,5,0,0"/>
+                    <ComboBox SelectedItem="{Binding CalculateScore}"
+                              ItemsSource="{Binding CalculateScoreValues}"
+                              Margin="195,5,0,0"/>
+                </Grid>
                 <Grid>
                     <TextBlock Text="Maximum Epochs :"
                            Margin="10,5,0,0"/>
@@ -136,6 +229,24 @@
                     <xctk:IntegerUpDown Value="{Binding BatchSize}" 
                                        Margin="195,5,0,0"
                                        Minimum="0"/>
+                </Grid>
+                <Grid>
+                    <TextBlock Text="Greedy Strategy? :"
+                               Margin="10,5,0,0"/>
+                    <CheckBox IsChecked="{Binding Greedy}"
+                              Margin="195,5,0,0"/>
+                </Grid>
+                <Grid Visibility="{Binding BackpropVisible}">
+                    <TextBlock Text="Enforced Elman Pattern? :"
+                               Margin="10,5,0,0"/>
+                    <CheckBox IsChecked="{Binding EnforceElman}"
+                              Margin="195,5,0,0"/>
+                </Grid>
+                <Grid Visibility="{Binding BackpropVisible}">
+                    <TextBlock Text="Straight Recurrence? :"
+                               Margin="10,5,0,0"/>
+                    <CheckBox IsChecked="{Binding StraightRecurrent}"
+                              Margin="195,5,0,0"/>
                 </Grid>
                 <Grid>
                     <TextBlock Text="Greedy Strategy? :"

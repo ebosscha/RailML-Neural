@@ -20,6 +20,7 @@ namespace RailMLNeural.Data
         private static Settings _settings = new Settings();
         private static MetaData _metadata = new MetaData();
         private static DelayCombinationCollection _delayCombinations = new DelayCombinationCollection();
+        public static Dictionary<string, string> TrainTypes = new Dictionary<string, string>();
         
        
         public static Dictionary<string, Dictionary<DateTime, string>> HeaderRoutes { get; set; }

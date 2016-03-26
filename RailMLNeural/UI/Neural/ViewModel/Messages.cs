@@ -38,4 +38,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
         }
     }
 
+    public class RefreshCollectionMessage
+    {
+
+    }
+
 }

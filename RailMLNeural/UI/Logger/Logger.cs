@@ -8,8 +8,20 @@ using System.Windows;
 
 namespace RailMLNeural.UI.Logger
 {
-    static class Logger
+    public static class Logger
     {
+        private static bool _isActive = false; 
+        public static bool IsActive 
+        { 
+            get 
+            {
+                View.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    _isActive = View.IsActive;
+                }));
+                return _isActive;
+            } 
+        }
         public static LogViewer View = new LogViewer();
         public static void AddEntry(LogEntry Entry)
         {

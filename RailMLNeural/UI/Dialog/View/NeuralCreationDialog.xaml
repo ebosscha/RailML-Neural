@@ -12,9 +12,12 @@
             <Button Content="Create Recursive Network"
                     Height="20"
                     Click="Recursive_Click"/>
-            <Button Content="Create Convolutional Network"
+            <Button Content="Create NEAT Network"
                     Height="20"
-                    Click="Convolutional_Click"/>
+                    Click="NEAT_Click"/>
+            <Button Content="Create LSTM Network"
+                    Height="20"
+                    Click="LSTM_Click"/>
             <Button Content="Create Normal Network"
                     Height="20"
                     Click="Normal_Click"/>

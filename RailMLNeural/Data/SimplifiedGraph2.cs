@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace RailMLNeural.Data
 {
@@ -92,11 +93,28 @@ namespace RailMLNeural.Data
             {
                 AddDelay(d, !Iterative);
             }
+            if(!Iterative)
+            {
+                Edges.ForEach(x => x.Trains.ForEach(y => y.IsHandled = true));
+            }
             //TODO
             //foreach(var edge in Edges.Where(x => x.IsAltered))
             //{
             //    edge.Sort();
             //}
+        }
+
+        public void SetSubGraph(bool useSubGraph)
+        {
+            if(useSubGraph)
+            {
+
+            }
+            else
+            {
+                Vertices.ForEach(x => x.IsSubGraph = true);
+                Edges.SelectMany(x => x.Trains).ToList().ForEach(x => x.IsRelevant = true);
+            }
         }
 
         public SimplifiedGraph Clone()
@@ -114,14 +132,15 @@ namespace RailMLNeural.Data
             foreach(var edge in Edges)
             {
                 SimplifiedGraphEdge e = new SimplifiedGraphEdge(result.Vertices[edge.Origin.Index], result.Vertices[edge.Destination.Index], false);
-                e.AverageSpeed = edge.AverageSpeed;
+                e.AverageSpeedUp = edge.AverageSpeedUp;
+                e.AverageSpeedDown = edge.AverageSpeedDown;
                 e.Distance = edge.Distance;
                 e.Index = edge.Index;
                 e.PercentageDoubleTrack = edge.PercentageDoubleTrack;
                 e.Route = edge.Route;
                 e.SignalCount = edge.SignalCount;
-                e.SpeedHomogenity = edge.SpeedHomogenity;
                 e.SwitchCount = edge.SwitchCount;
+                e.Graph = result;
                 result.Edges.Add(e);
             }
             return result;
@@ -180,6 +199,7 @@ namespace RailMLNeural.Data
             }
 
             SimplifiedGraphEdge edge = new SimplifiedGraphEdge(Vertices.Single(x => x.OCP.id == OCP1),Vertices.Single(x => x.OCP.id == OCP2) );
+            edge.Graph = this;
             _edges.Add(edge);
             edge.Index = _edges.IndexOf(edge);            
         }
@@ -195,8 +215,9 @@ namespace RailMLNeural.Data
                 EdgeTrainRepresentation Previous = null;
                 for (int i = 0; i < trainpart.ocpsTT.Count - 1; i++)
                 {
-                    var p = AddToEdge(trainpart.trainNumber, trainpart.ocpsTT[i], trainpart.ocpsTT[i + 1], Previous);
+                    var p = AddToEdge(trainpart, trainpart.ocpsTT[i], trainpart.ocpsTT[i + 1], Previous);
                     if (p != null) { Previous = p; }
+                    
                 }
             }
             
@@ -204,6 +225,35 @@ namespace RailMLNeural.Data
             foreach(var edge in Edges)
             {
                 edge.Sort();
+                double vdown = 0;
+                double vup = 0;
+                double svdown = 0;
+                double svup = 0;
+                int down = 0;
+                int up = 0;
+                foreach(var train in edge.Trains)
+                {
+                    if(train.Direction == DirectionEnum.Down)
+                    {
+                        vdown += train.Speed;
+                        svdown += train.Speed * train.Speed;
+                        down++;
+                    }
+                    else
+                    {
+                        vup += train.Speed;
+                        svup += train.Speed * train.Speed;
+                        up++;
+                    }
+                }
+                if (down > 1)
+                {
+                    edge.SpeedHomogenityDown = svdown / (double)down - Math.Pow(vdown / (double)down, 2);
+                }
+                if (up > 1)
+                {
+                    edge.SpeedHomogenityUp = svup / (double)up - Math.Pow(vup / (double)up, 2);
+                }
             }
 
             //foreach(var vertex in Vertices)
@@ -212,7 +262,7 @@ namespace RailMLNeural.Data
             //}
         }
 
-        public EdgeTrainRepresentation AddToEdge(string HeaderCode, eOcpTT ocpTT1, eOcpTT ocpTT2, EdgeTrainRepresentation Previous)
+        public EdgeTrainRepresentation AddToEdge(eTrainPart part, eOcpTT ocpTT1, eOcpTT ocpTT2, EdgeTrainRepresentation Previous)
         {
             if (ocpTT1.ocpRef == ocpTT2.ocpRef || !_vertexDict.ContainsKey(ocpTT1.ocpRef) || !_vertexDict.ContainsKey(ocpTT2.ocpRef))
             {
@@ -222,7 +272,8 @@ namespace RailMLNeural.Data
             SimplifiedGraphEdge Edge = v1.Edges.Single(x => x.Destination.OCP.id == ocpTT2.ocpRef || x.Origin.OCP.id == ocpTT2.ocpRef);
             EdgeTrainRepresentation Rep = new EdgeTrainRepresentation(Edge);
             Rep.Previous = Previous;
-            Rep.TrainHeaderCode = HeaderCode;
+            if (Previous != null) { Previous.Next = Rep; }
+            Rep.TrainHeaderCode = part.trainNumber;
             if (Edge.Origin.OCP.id == ocpTT1.ocpRef) { Rep.Direction = DirectionEnum.Down; }
             else { Rep.Direction = DirectionEnum.Up; }
             Rep.ScheduledDepartureTime = ocpTT1.times[0].departure;
@@ -231,6 +282,8 @@ namespace RailMLNeural.Data
             Rep.ScheduledArrivalTime = ocpTT2.times[0].arrival;
             Rep.PredictedArrivalTime = ocpTT2.times[0].arrival;
             Rep.IdealArrivalTime = ocpTT2.times[0].arrival;
+            Rep.Speed = Rep.Direction == DirectionEnum.Down ? Edge.AverageSpeedDown : Edge.AverageSpeedUp;
+            Rep.Speed = part.formationTT.speed != 0 ? Math.Min((double)part.formationTT.speed, Rep.Speed) : Rep.Speed;
             Edge.Trains.Add(Rep);
             return Rep;
         }
@@ -258,6 +311,7 @@ namespace RailMLNeural.Data
                     rep.IdealDepartureTime = rep.ScheduledDepartureTime;
                     rep.PredictedArrivalTime = rep.ScheduledArrivalTime;
                     rep.PredictedDepartureTime = rep.ScheduledDepartureTime;
+                    rep.IsRelevant = false;
                 }
             }
             foreach(var vertex in Vertices)
@@ -296,18 +350,30 @@ namespace RailMLNeural.Data
                 return;
             }
             var vertex = Vertices.Single(x => x.OCP.code == origin);
+            if(!vertex.Edges.Any(x => x.Origin.OCP.code == destination || x.Destination.OCP.code == destination))
+            {
+                return;
+            }
             var edge = vertex.Edges.Single(x => x.Origin.OCP.code == destination || x.Destination.OCP.code == destination);
             var rep = edge.Trains.First(x => x.TrainHeaderCode == HeaderCode);
             rep.IdealDepartureTime = rep.ScheduledDepartureTime + TimeSpan.FromSeconds(departuredelay);
             rep.IdealArrivalTime = rep.ScheduledArrivalTime + TimeSpan.FromSeconds(arrivaldelay);
+            rep.IsHandled = IsPrimary;
+
             if(IsPrimary)
             {
                 rep.PredictedArrivalTime = rep.ScheduledArrivalTime + TimeSpan.FromSeconds(arrivaldelay);
                 rep.PredictedDepartureTime = rep.ScheduledDepartureTime + TimeSpan.FromSeconds(departuredelay);
             }
                 //edge.IsAltered = true;
-            edge.Destination.IsSubGraph = true;
-            edge.Origin.IsSubGraph = true;
+            if ((rep.IdealDepartureTime - rep.ScheduledDepartureTime).TotalMinutes > 2
+                || (rep.IdealArrivalTime - rep.ScheduledArrivalTime).TotalMinutes > 2)
+            {
+                edge.Destination.IsSubGraph = true;
+                edge.Origin.IsSubGraph = true;
+                SetSubGraph(rep);
+            }
+            rep.IsRelevant = true;
 
         }
         #endregion AddDelay
@@ -319,6 +385,42 @@ namespace RailMLNeural.Data
                 vertex.Update();
             }
         }
+
+        private void SetSubGraph(EdgeTrainRepresentation rep)
+        {
+            rep.Edge.Trains.Where(x => x.ScheduledDepartureTime > rep.IdealDepartureTime.AddMinutes(-30) 
+                && x.ScheduledDepartureTime < rep.IdealArrivalTime.AddMinutes(30)).ToList()
+                .ForEach(x => x.IsRelevant = true);
+            
+            rep.Origin.Edges.Where(x => x.Index != rep.Edge.Index)
+                .SelectMany(x => x.Trains)
+                .Where(x => x.Origin.Index == rep.Origin.Index)
+                .Where(x => x.ScheduledDepartureTime > rep.IdealDepartureTime.AddMinutes(-30)
+                && x.ScheduledDepartureTime < rep.IdealDepartureTime.AddMinutes(30)).ToList()
+                .ForEach(x => x.IsRelevant = true);
+
+            rep.Origin.Edges.Where(x => x.Index != rep.Edge.Index)
+                .SelectMany(x => x.Trains)
+                .Where(x => x.Destination.Index == rep.Origin.Index)
+                .Where(x => x.ScheduledArrivalTime > rep.IdealDepartureTime.AddMinutes(-30)
+                && x.ScheduledArrivalTime < rep.IdealDepartureTime.AddMinutes(30)).ToList()
+                .ForEach(x => x.IsRelevant = true);
+
+            rep.Destination.Edges.Where(x => x.Index != rep.Edge.Index)
+                .SelectMany(x => x.Trains)
+                .Where(x => x.Origin.Index == rep.Destination.Index)
+                .Where(x => x.ScheduledDepartureTime > rep.IdealArrivalTime.AddMinutes(-30)
+                && x.ScheduledDepartureTime < rep.IdealArrivalTime.AddMinutes(30)).ToList()
+                .ForEach(x => x.IsRelevant = true);
+
+            rep.Destination.Edges.Where(x => x.Index != rep.Edge.Index)
+                .SelectMany(x => x.Trains)
+                .Where(x => x.Destination.Index == rep.Destination.Index)
+                .Where(x => x.ScheduledArrivalTime > rep.IdealArrivalTime.AddMinutes(-30)
+                && x.ScheduledArrivalTime < rep.IdealArrivalTime.AddMinutes(30)).ToList()
+                .ForEach(x => x.IsRelevant = true);
+
+        }
         #endregion Private
     }
 
@@ -329,13 +431,16 @@ namespace RailMLNeural.Data
     [Serializable]
     public class SimplifiedGraphEdge
     {
+        public SimplifiedGraph Graph { get; set; }
         public int Index { get; set; }
         public double PercentageDoubleTrack { get; set; }
         public double Distance { get; set; }
         public double SwitchCount { get; set; }
         public double SignalCount { get; set; }
-        public double AverageSpeed { get; set; }
-        public double SpeedHomogenity { get; set; }
+        public double AverageSpeedUp { get; set; }
+        public double AverageSpeedDown { get; set; }
+        public double SpeedHomogenityDown { get; set; }
+        public double SpeedHomogenityUp { get; set; }
         public SimplifiedGraphVertex Origin { get; set; }
         public SimplifiedGraphVertex Destination { get; set; }
         public List<EdgeTrainRepresentation> Trains { get; set; }
@@ -380,12 +485,15 @@ namespace RailMLNeural.Data
                 PercentageDoubleTrack = Route.PercentageDoubleTrack();
                 SwitchCount = Route.SwitchCount();
                 Distance = (double)Route.distance;
-                if(Route.distance > 100)
-                {
-                    int i = 0;
-                }
+                AverageSpeedDown = Route.AverageSpeed(true);
+                AverageSpeedUp = Route.AverageSpeed(false);
             }
-            Logger.AddEntry("Created Edge between " + Origin.OCP.name + " and " + Destination.OCP.name + ".");
+
+            Application.Current.Dispatcher.BeginInvoke((Action)(() =>
+            {
+                Logger.AddEntry("Created Edge between " + Origin.OCP.name + " and " + Destination.OCP.name + ".");
+            }));
+            
             Interlocked.Decrement(ref ThreadRunning);
         }
     }
@@ -436,27 +544,23 @@ namespace RailMLNeural.Data
                     if ((edge.Origin.OCP.id == this.OCP.id && rep.Direction == DirectionEnum.Down) ||
                         (edge.Destination.OCP.id == this.OCP.id && rep.Direction == DirectionEnum.Up))
                     {
-                        VertexTrainRepresentation Vrep = new VertexTrainRepresentation(this) { TrainHeaderCode = rep.TrainHeaderCode };
+                        VertexTrainRepresentation Vrep = new VertexTrainRepresentation(this);
                         if (_trainDict.ContainsKey(rep.TrainHeaderCode))
                         {
                             Vrep = _trainDict[rep.TrainHeaderCode];
                         }
                         else { _trainDict.Add(rep.TrainHeaderCode,Vrep); }
-                        Vrep.ScheduledDepartureTime = rep.ScheduledDepartureTime;
-                        Vrep.IdealDepartureTime = rep.IdealDepartureTime;
-                        Vrep.PredictedDepartureTime = rep.PredictedDepartureTime;
+                        Vrep.Departure = rep;
                     }
                     else
                     {
-                        VertexTrainRepresentation Vrep = new VertexTrainRepresentation(this) { TrainHeaderCode = rep.TrainHeaderCode };
+                        VertexTrainRepresentation Vrep = new VertexTrainRepresentation(this);
                         if (_trainDict.ContainsKey(rep.TrainHeaderCode))
                         {
                             Vrep = _trainDict[rep.TrainHeaderCode];
                         }
                         else { _trainDict.Add(rep.TrainHeaderCode, Vrep); }
-                        Vrep.ScheduledArrivalTime = rep.ScheduledArrivalTime;
-                        Vrep.IdealArrivalTime = rep.IdealArrivalTime;
-                        Vrep.PredictedArrivalTime = rep.PredictedArrivalTime;
+                        Vrep.Arrival = rep;
                     }
                 }
             }
@@ -467,14 +571,19 @@ namespace RailMLNeural.Data
     [Serializable]
     public class VertexTrainRepresentation
     {
-        public string TrainHeaderCode { get; set; }
-        public DateTime ScheduledArrivalTime { get; set; }
-        public DateTime PredictedArrivalTime { get; set; }
-        public DateTime IdealArrivalTime { get; set; }
-        public DateTime ScheduledDepartureTime { get; set; }
-        public DateTime PredictedDepartureTime { get; set; }
-        public DateTime IdealDepartureTime { get; set; }
+        public string TrainHeaderCode { get { return Arrival != null ? Arrival.TrainHeaderCode : Departure.TrainHeaderCode; } }
+        public DateTime ScheduledArrivalTime { get { return Arrival != null ? Arrival.ScheduledArrivalTime : default(DateTime); } }
+        public DateTime PredictedArrivalTime { get { return Arrival != null ? Arrival.PredictedArrivalTime : default(DateTime); } }
+        public DateTime IdealArrivalTime { get { return Arrival != null ? Arrival.IdealArrivalTime : default(DateTime); } }
+        public DateTime ForecastedArrivalTime { get { return Arrival != null ? Arrival.ForecastedArrivalTime : default(DateTime); } }
+        public DateTime ScheduledDepartureTime { get { return Departure != null ? Departure.ScheduledDepartureTime : default(DateTime); } }
+        public DateTime PredictedDepartureTime { get { return Departure != null ? Departure.PredictedDepartureTime : default(DateTime); } }
+        public DateTime IdealDepartureTime { get { return Departure != null ? Departure.IdealDepartureTime : default(DateTime); } }
+        public DateTime ForecastedDepartureTime { get { return Departure != null ? Departure.ForecastedDepartureTime : default(DateTime); } }
         public SimplifiedGraphVertex Vertex { get; private set; }
+        public EdgeTrainRepresentation Arrival { get; set; }
+        public EdgeTrainRepresentation Departure { get; set; }
+        public bool IsRelevant { get { return Arrival == null ? false : Arrival.IsRelevant || Departure == null ? false : Departure.IsRelevant; } }
 
         public VertexTrainRepresentation(SimplifiedGraphVertex Owner)
         {
@@ -493,13 +602,66 @@ namespace RailMLNeural.Data
         public DateTime PredictedDepartureTime { get; set; }
         public DateTime IdealDepartureTime { get; set; }
         public DirectionEnum Direction { get; set; }
+        public double Speed { get; set; }
         public SimplifiedGraphEdge Edge { get; private set; }
         public EdgeTrainRepresentation Previous { get; set; }
+        public EdgeTrainRepresentation Next { get; set; }
+        public bool IsHandled { get; set; }
+        public bool IsRelevant { get; set; }
+
+        public double ForecastedDelay 
+        { 
+            get 
+            { 
+                if(IsHandled)
+                {
+                    return (PredictedArrivalTime - ScheduledArrivalTime).TotalSeconds;
+                }
+                if(Previous == null)
+                {
+                    return 0;
+                }
+                return Previous.ForecastedDelay;
+            } 
+        }
+
+        public DateTime ForecastedArrivalTime 
+        { 
+            get
+            {
+                return ScheduledArrivalTime.AddSeconds(ForecastedDelay);
+            }
+        }
+
+        public DateTime ForecastedDepartureTime
+        {
+            get
+            {
+                return ScheduledDepartureTime.AddSeconds(ForecastedDelay);
+            }
+        }
+
+        public SimplifiedGraphVertex Origin
+        {
+            get
+            {
+                return (Direction == DirectionEnum.Down) ? Edge.Origin : Edge.Destination;
+            }
+        }
+
+        public SimplifiedGraphVertex Destination
+        {
+            get
+            {
+                return (Direction == DirectionEnum.Down) ? Edge.Destination : Edge.Origin;
+            }
+        }
 
 
         public EdgeTrainRepresentation(SimplifiedGraphEdge Owner)
         {
             Edge = Owner;
+            IsRelevant = false;
         }
 
     }

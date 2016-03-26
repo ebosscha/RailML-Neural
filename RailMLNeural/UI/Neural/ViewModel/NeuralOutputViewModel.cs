@@ -84,7 +84,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
 
         public void UpdateOutput()
         {
-            if ((_selectedNetwork is FeedForwardConfiguration || _selectedNetwork is RecursiveConfiguration) && _selectedNetwork != null)
+            if ((_selectedNetwork is FeedForwardConfiguration) && _selectedNetwork != null)
             {
                 OutputCollection = new ObservableCollection<IOdef>();
                 

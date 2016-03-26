@@ -69,6 +69,10 @@ namespace RailMLNeural.Data
                     functionalLocation loc = new functionalLocation();
                     loc.sectorID = line.id;
                     loc.name = line.description;
+                    if(!_model.infrastructure.trackGroups.functionalLocations.Any(x => x.sectorID == line.id))
+                    {
+                        _model.infrastructure.trackGroups.functionalLocations.Add(loc);
+                    }
 
                     datarow.Delete();
                 }
@@ -94,8 +98,8 @@ namespace RailMLNeural.Data
                     }
                     track.trackTopology.trackBegin.pos = (decimal)(((row["StartMiles"] as double?) ?? 0) + ((row["StartYards"] as double?) ?? 0) / 1760);
                     track.trackTopology.trackEnd.pos = (decimal)(((row["EndMiles"] as double?) ?? 0) + ((row["EndYards"] as double?) ?? 0) / 1760);
-                    if ((string)row["Type"] == "UR") { track.mainDir = tExtendedDirection.up; }
-                    else if ((string)row["Type"] == "DR") { track.mainDir = tExtendedDirection.down; }
+                    if ((string)row["Type"] == "UR" || (string)row["Type"] == "US") { track.mainDir = tExtendedDirection.up; }
+                    else if ((string)row["Type"] == "DR" ||(string)row["Type"] == "DS")  { track.mainDir = tExtendedDirection.down; }
                     else { track.mainDir = tExtendedDirection.none; }
 
                     if (row["Road"] is DBNull) { track.type = "connectingTrack"; }
@@ -114,6 +118,25 @@ namespace RailMLNeural.Data
                     {
                         eLine line = _model.infrastructure.trackGroups.line.Find(x => x.id == (string)row["Sector"]);
                         line.trackRef.Add(new tTrackRefInGroup() { @ref = track.id });
+                    }
+
+                    if (row["Sector"] != System.DBNull.Value)
+                    {
+                        tTrackRef tref = new tTrackRef();
+                        tref.@ref = track.id;
+                        if (track.mainDir == tExtendedDirection.up) { tref.dir = tStrictDirection.up; }
+                        if (track.mainDir == tExtendedDirection.down) { tref.dir = tStrictDirection.down; }
+                        if (_model.infrastructure.trackGroups.functionalLocations.Any(x => x.sectorID == row["Sector"]))
+                        {
+                            _model.infrastructure.trackGroups.functionalLocations.First(x => x.sectorID == row["Sector"]).trackrefs.Add(tref);
+                        }
+                        else
+                        {
+                            functionalLocation loc = new functionalLocation();
+                            loc.sectorID = row["Sector"] as string;
+                            loc.trackrefs.Add(tref);
+                            _model.infrastructure.trackGroups.functionalLocations.Add(loc);
+                        }
                     }
 
                     track = GetTrackCoords(track, row["EquipmentID"].ToString());
@@ -511,6 +534,139 @@ namespace RailMLNeural.Data
         public static void AddTunnelsFromExcel(string filepath)
         {
 
+        }
+
+        public static void AddSignalsFromExcel(string filepath)
+        {
+            FileStream stream;
+        Loop:
+            try { stream = File.Open(filepath, FileMode.Open, FileAccess.Read); }
+            catch
+            {
+                MessageBoxResult result = MessageBox.Show("Error. Please close the excel document. Retry?", "Error", MessageBoxButton.OKCancel);
+                if (result == MessageBoxResult.OK) { goto Loop; }
+                else { return; }
+            }
+
+            IExcelDataReader excelreader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+            excelreader.IsFirstRowAsColumnNames = true;
+
+            _dataset = excelreader.AsDataSet();
+            _maintable = _dataset.Tables["Signals"];
+            foreach(DataRow row in _maintable.Rows)
+            {
+                tSignal signal = new tSignal();
+                signal.id = row["SerialNo"] as string;
+                signal.description = row["Description"] as string;
+                double x = (row["INGEasting"] as double?) ?? 0;
+                double y = (row["INGNorthing"] as double?) ?? 0;
+                signal.geoCoord.coord.Add(x);
+                signal.geoCoord.coord.Add(y);
+
+                var tuple = FindHostLines(signal.geoCoord.coord[0], signal.geoCoord.coord[1], 1);
+                signal.pos = (decimal)tuple.Item2[0];
+                tuple.Item1[0].ocsElements.signals.Add(signal);
+                string direction = (row["Direction"] as string) ?? String.Empty;
+                if(direction == "UP")
+                {
+                    signal.dir = tLaxDirection.up;
+                }
+                else if(direction == "DOWN")
+                {
+                    signal.dir = tLaxDirection.down;
+                }
+                else
+                {
+                    signal.dir = tLaxDirection.unknown;
+                }
+            }
+            
+        }
+
+        public static void AddSpeedRestrictionsFromExcel(string filepath)
+        {
+            FileStream stream;
+        Loop:
+            try { stream = File.Open(filepath, FileMode.Open, FileAccess.Read); }
+            catch
+            {
+                MessageBoxResult result = MessageBox.Show("Error. Please close the excel document. Retry?", "Error", MessageBoxButton.OKCancel);
+                if (result == MessageBoxResult.OK) { goto Loop; }
+                else { return; }
+            }
+
+            IExcelDataReader excelreader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+            excelreader.IsFirstRowAsColumnNames = true;
+
+            _dataset = excelreader.AsDataSet();
+            _maintable = _dataset.Tables[0];
+            decimal linespeedup = 0;
+            decimal linespeeddown = 0;
+            foreach(DataRow row in _maintable.Rows)
+            {
+                if(row["Between"] != DBNull.Value && (string)row["Between"] == "Line speed")
+                {
+                    if((string)row["Trains"] == "Down" || (string)row["Trains"] == "Both")
+                    {
+                        linespeeddown = (decimal)((row["Kmph"] as double?) ?? 0);
+                    }
+                    if ((string)row["Trains"] == "Up" || (string)row["Trains"] == "Both")
+                    {
+                        linespeedup = (decimal)((row["Kmph"] as double?) ?? 0);
+                    }
+                }
+                decimal startpos = (decimal)((row["From"] as double?) ?? 0);
+                decimal endpos = (decimal)((row["To"] as double?) ?? 0);
+                decimal vMax = (decimal)((row["Kmph"] as double?) ?? 0);
+                string loc = (row["Functional Location"]) as string;
+
+                Nullable<tStrictDirection> dir = null;
+                if((string)row["Trains"] == "Down")
+                {
+                    dir = tStrictDirection.down;
+                }
+                if ((string)row["Trains"] == "Up")
+                {
+                    dir = tStrictDirection.up;
+                }
+                List<eTrack> tracks = new List<eTrack>();
+                foreach(var tref in DataContainer.model.infrastructure.trackGroups.functionalLocations.Single(x => x.sectorID == loc).trackrefs
+                    .Where(x => row["EquipmentID"] == DBNull.Value || (string)row["EquipmentID"] == x.@ref ))
+                {
+                    eTrack track = DataContainer.GetItem(tref.@ref);
+                    if((startpos > track.trackTopology.trackEnd.pos || endpos < track.trackTopology.trackBegin.pos))
+                    {
+                        continue;
+                    }
+                    decimal trackstartpos = Math.Max(startpos, track.trackTopology.trackBegin.pos);
+                    decimal trackendpos = Math.Min(endpos, track.trackTopology.trackEnd.pos);
+                    if(track.trackElements.speedChanges.Any(x => x.pos == trackstartpos && x.dir == dir))
+                    {
+                        track.trackElements.speedChanges.RemoveAt(track.trackElements.speedChanges.FindIndex(x => x.pos == trackstartpos && x.dir == dir));
+                    }
+                    tSpeedChange begin = new tSpeedChange();
+                    DataContainer.IDGenerator(begin);
+                    tSpeedChange end = new tSpeedChange();
+                    DataContainer.IDGenerator(end);
+                    begin.pos = trackstartpos;
+                    end.pos = trackendpos;
+                    if (dir.HasValue)
+                    {
+                        begin.dir = dir.Value;
+                        end.dir = dir.Value;
+                    }
+                    begin.vMax = vMax;
+                    end.vMax = linespeeddown; //TODO! : Better implementation of returning to proper linespeed
+                    track.trackElements.speedChanges.Add(begin);
+                    track.trackElements.speedChanges.Add(end);
+                    //TODO: Implement train type distinction
+                }
+            }
+
+            foreach(var track in DataContainer.model.infrastructure.tracks)
+            {
+                track.trackElements.speedChanges.OrderBy(x => x.pos);
+            }
         }
 
         /// <summary>

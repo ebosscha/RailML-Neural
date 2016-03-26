@@ -401,8 +401,11 @@ namespace RailMLNeural.UI.ViewModel
         public ICommand ExcelBufferStopsCommand { get; private set; }
         public ICommand ExcelTunnelsCommand { get; private set; }
         public ICommand ExcelLevelCrossingsCommand { get; private set; }
+        public ICommand ExcelSignalsCommand { get; private set; }
+        public ICommand ExcelSpeedRestrictionsCommand { get; private set; }
         public ICommand APIOCPCommand { get; private set; }
         public ICommand ExcelOCPCommand { get; private set; }
+        public ICommand ExcelRollingstockCommand { get; private set; }
         public ICommand TimetableCSVCommand { get; private set; }
         public ICommand ConnectTracksCommand { get; private set; }
         public ICommand DebugDataCommand { get; private set; }
@@ -414,12 +417,15 @@ namespace RailMLNeural.UI.ViewModel
             ExcelBridgesCommand = new RelayCommand(ExecuteExcelBridges);
             ExcelBufferStopsCommand = new RelayCommand(ExecuteExcelBufferStops);
             ExcelTunnelsCommand = new RelayCommand(ExecuteExcelTunnels);
+            ExcelSignalsCommand = new RelayCommand(ExecuteExcelSignals);
+            ExcelSpeedRestrictionsCommand = new RelayCommand(ExecuteExcelSpeedRestrictions);
             ExcelLevelCrossingsCommand = new RelayCommand(ExecuteExcelLevelCrossings);
             APIOCPCommand = new RelayCommand(ExecuteAPIOCP);
             ExcelOCPCommand = new RelayCommand(ExecuteExcelOCP);
             TimetableCSVCommand = new RelayCommand(ExecuteTimetableCSV);
             DebugDataCommand = new RelayCommand(ExecuteDebugData);
             ConnectTracksCommand = new RelayCommand(() => ImportInfrastructure.ConnectTracks());
+            ExcelRollingstockCommand = new RelayCommand(ExecuteExcelRollingstock);
         }
 
         private void ExecuteExcelTracks()
@@ -490,6 +496,34 @@ namespace RailMLNeural.UI.ViewModel
             }
         }
 
+        private void ExecuteExcelSignals()
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.Filter = "Excel Documents (.xlsx)|*.xlsx"; // Filter files by extension
+
+            Nullable<bool> result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                string filename = dlg.FileName;
+                Data.ImportInfrastructure.AddSignalsFromExcel(filename);
+            }
+        }
+
+        private void ExecuteExcelSpeedRestrictions()
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.Filter = "Excel Documents (.xlsx)|*.xlsx"; // Filter files by extension
+
+            Nullable<bool> result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                string filename = dlg.FileName;
+                Data.ImportInfrastructure.AddSpeedRestrictionsFromExcel(filename);
+            }
+        }
+
         private void ExecuteExcelLevelCrossings()
         {
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
@@ -510,6 +544,18 @@ namespace RailMLNeural.UI.ViewModel
         private void ExecuteExcelOCP()
         {
             Data.ImportInfrastructure.OCPfromExcel();
+        }
+
+        private void ExecuteExcelRollingstock()
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.Filter = "Excel Documents (.xlsx)|*.xlsx"; // Filter files by extension
+            Nullable<bool> result = dlg.ShowDialog();
+            if (result == true)
+            {
+                string filename = dlg.FileName;
+                Data.ImportTimetable.ImportTrainTypesExcel(filename);
+            }
         }
 
         private void ExecuteTimetableCSV()
@@ -697,7 +743,7 @@ namespace RailMLNeural.UI.ViewModel
         {
             Thread LogThread = new Thread(() =>
                 {
-                    if (!Logger.Logger.View.IsActive)
+                    if (!Logger.Logger.IsActive)
                     {
                         Logger.Logger.View.Show();
                         Logger.Logger.View.Closed += (sender2, e2) =>

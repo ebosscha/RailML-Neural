@@ -47,13 +47,19 @@ namespace RailMLNeural.UI.Dialog.View
             this.Close();
         }
 
-        private void Convolutional_Click(object sender, RoutedEventArgs e)
+        private void NEAT_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = true;
-            AlgorithmType = AlgorithmEnum.Convolutional;
+            AlgorithmType = AlgorithmEnum.NEAT;
             this.Close();
         }
 
+        private void LSTM_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = true;
+            AlgorithmType = AlgorithmEnum.LSTM;
+            this.Close();
+        }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {

@@ -5,6 +5,7 @@ using ProtoBuf;
 using RailMLNeural.Neural;
 using RailMLNeural.RailML;
 using RailMLNeural.UI.Neural.ViewModel;
+using RailMLNeural.UI.Statistics.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -58,16 +59,20 @@ namespace RailMLNeural.Data
             SaveLoadData data = Serializer.Deserialize<SaveLoadData>(stream);
             XElement elem = XElement.Parse(data.railml);
             DataContainer.model = XML.FromXElement<railml>(elem);
-            DataContainer.NeuralConfigurations = DeserializeNetwork(data.NN);
             DataContainer.Settings = data.settings;
             DataContainer.HeaderRoutes = data.HeaderRoutes;
             DataContainer.DelayCombinations = data.DelayCombinations;
             DataContainer.MetaData = data.metadata;
+            DataContainer.NeuralConfigurations = DeserializeNetwork(data.NN);
+            Messenger.Default.Send<RefreshCollectionMessage>(new RefreshCollectionMessage());
+            
             
             stream.Close();
             data.Dispose();
             data = null;
             GC.Collect();
+
+            Messenger.Default.Send<DelayCombinationsChangedMessage>(new DelayCombinationsChangedMessage());
         }
 
 
@@ -104,10 +109,7 @@ namespace RailMLNeural.Data
                 output = formatter.Deserialize(stream) as List<INeuralConfiguration>;
                 stream.Close();
             }
-            for (int i = 0; i < output.Count; i++ )
-            {
-                Messenger.Default.Send<AddNeuralNetworkMessage>(new AddNeuralNetworkMessage() { NeuralNetwork = output[i] });
-            }
+
             return output;
         }
 

@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.Data.RecurrentDataProviders
 {
+    /// <summary>
+    /// Computes the amount of trains leaving from both ends of the link, after the current train.
+    /// </summary>
     [Serializable]
     class EdgeDepartureCountInputRecurrentProvider : BaseRecurrentDataProvider, IRecurrentDataProvider
     {
@@ -27,7 +30,7 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
         public double[] Process(EdgeTrainRepresentation rep)
         {
             double[] result = new double[Size];
-            foreach(EdgeTrainRepresentation other in rep.Edge.Trains.Where(x => x.TrainHeaderCode != rep.TrainHeaderCode))
+            foreach(EdgeTrainRepresentation other in rep.Edge.Trains.Where(x => x.IsRelevant && x.TrainHeaderCode != rep.TrainHeaderCode))
             {
                 bool append = false;
                 int i = 0;
@@ -35,7 +38,7 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
                 {
                     i = 3;
                 }
-                TimeSpan Diff = rep.PredictedDepartureTime - other.PredictedDepartureTime;
+                TimeSpan Diff = other.ForecastedDepartureTime - rep.ForecastedDepartureTime;
                 if(Diff.TotalMinutes < 0)
                 {
                     append = false;

@@ -18,7 +18,12 @@ namespace RailMLNeural.Neural.Algorithms.Propagators
         void Update(IMLData Data);
         object Current { get; }
         bool IgnoreCurrent { get; }
+        bool UseSubGraph { get; }
         IPropagator OpenAdditional();
+        void PreProcess(ref IMLData Output, ref IMLDataPair Pair);
+        IMLDataPair PreprocessedPair { get; }
+        double[] PreprocessedOutput { get; }
+        bool CurrentCorrupted { get; }
     }
 
     [Serializable]
