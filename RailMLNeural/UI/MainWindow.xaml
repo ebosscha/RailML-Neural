@@ -65,6 +65,11 @@
                         <MenuItem Header="_Import Timetable CSV" Command="{Binding TimetableCSVCommand}"/>
 
                     </MenuItem>
+                    <MenuItem Header="_Create InfrastructureVisualization" Command="{Binding CreateVisualizationCommand}"/>
+                    <MenuItem Header="_Create Lines from FunctionalLocations" Command="{Binding CreateLinesCommand}"/>
+                    <MenuItem Header="_Create Visualization from Portnarock to Border" Command="{Binding CreateVisualizationPortnarockCommand}" />
+                    <MenuItem Header="_Fix Track node ID's" Command="{Binding TrackNodeIDGenerateCommand}"/>
+                    <MenuItem Header="_Remove all but visualization" Command="{Binding RemoveAllButVisualization}"/>
                 </MenuItem>
                 <MenuItem Header="Neural Network">
                     <MenuItem Header="_Data">

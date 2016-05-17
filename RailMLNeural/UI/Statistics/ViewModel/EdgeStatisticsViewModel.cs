@@ -47,9 +47,14 @@ namespace RailMLNeural.UI.Statistics.ViewModel
                 Edges[i].AverageMaxSpeedDown = Graph.Edges[i].AverageSpeedDown;
                 Edges[i].AverageMaxSpeedUp = Graph.Edges[i].AverageSpeedUp;
             }
-            for(int i = 0; i < (DataContainer.Settings.DataEndDate - DataContainer.Settings.DataStartDate).TotalDays; i++)
+            for(int i = 0; i < ((DataContainer.Settings.DataEndDate != default(DateTime) ? DataContainer.Settings.DataEndDate : new DateTime(2015,9,1)) - DataContainer.Settings.DataStartDate).TotalDays; i++)
             {
+                
                 DateTime Date = DataContainer.Settings.DataStartDate.AddDays(i);
+                if(!DataContainer.DelayCombinations.dict.ContainsKey(Date))
+                {
+                    continue;
+                }
                 DelayCombination DC = new DelayCombination();
                 foreach(var dc in DataContainer.DelayCombinations.dict[Date] == null ? new List<DelayCombination>() : DataContainer.DelayCombinations.dict[Date])
                 {

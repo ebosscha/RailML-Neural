@@ -27,7 +27,8 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
         public double[] Process(EdgeTrainRepresentation rep)
         {
             double[] result = new double[Size];
-            result[0] = rep.Edge.SpeedHomogenityDown;
+            double maxspeed = (rep.Direction == DirectionEnum.Up ? rep.Edge.AverageSpeedUp : rep.Edge.AverageSpeedDown);
+            result[0] = maxspeed == 0 ? 0 : (rep.Edge.SpeedHomogenityDown / maxspeed);
             return result;
         }
     }

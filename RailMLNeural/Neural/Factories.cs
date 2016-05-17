@@ -1,9 +1,11 @@
 ﻿using Encog.Engine.Network.Activation;
 using Encog.MathUtil.Randomize;
 using Encog.ML;
+using Encog.Neural.Error;
 using Encog.Neural.Networks.Structure;
 using Encog.Neural.Networks.Training;
 using RailMLNeural.Neural.Algorithms;
+using RailMLNeural.Neural.Algorithms.Error;
 using RailMLNeural.Neural.Algorithms.Propagators;
 using RailMLNeural.Neural.Data;
 using RailMLNeural.Neural.Data.RecurrentDataProviders;
@@ -146,6 +148,10 @@ namespace RailMLNeural.Neural
                     return new InclusiveTotalDelayClassificationProvider();
                 case RecurrentDataProviderEnum.TotalDelayClassificationProvider:
                     return new TotalDelayClassificationProvider();
+                case RecurrentDataProviderEnum.MoreEdgeDepartureCountInputProvider:
+                    return new MoreEdgeDepartureCountInputProvider();
+                case RecurrentDataProviderEnum.MoreVertexDepartureCountInputProvider:
+                    return new MoreVertexDepartureCountInputProvider();
                 default:
                     return null;
             }
@@ -217,6 +223,22 @@ namespace RailMLNeural.Neural
             }
             NetworkCODEC.ArrayToNetwork(result, r);
             return r;
+        }
+    }
+
+    public static class ErrorFunctionFactory
+    {
+        public static IErrorFunction Create(ErrorFunctionEnum E)
+        {
+            switch(E)
+            {
+                case ErrorFunctionEnum.MSE:
+                    return new LinearErrorFunction();
+                case ErrorFunctionEnum.CrossEntropy:
+                    return new CrossEntropyError();
+                default:
+                    return null;
+            }
         }
     }
 }

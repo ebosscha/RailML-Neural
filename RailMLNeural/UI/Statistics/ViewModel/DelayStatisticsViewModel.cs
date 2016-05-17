@@ -1,7 +1,9 @@
 ﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using RailMLNeural.Data;
 using System.Collections.Generic;
+using System.Windows.Input;
 
 namespace RailMLNeural.UI.Statistics.ViewModel
 {
@@ -69,17 +71,66 @@ namespace RailMLNeural.UI.Statistics.ViewModel
                 return DataContainer.DelayCombinations.AverageDestinationDelay;
             }
         }
+
+        public double AverageTotalPrimaryDelays
+        {
+            get
+            {
+                return DataContainer.DelayCombinations.AverageTotalPrimaryDelays;
+            }
+        }
+
+        public double AverageTotalFirstOrderDelays
+        {
+            get
+            {
+                return DataContainer.DelayCombinations.AverageTotalFirstOrderDelays;
+            }
+        }
+
+        public double AverageTotalSecondOrderDelays
+        {
+            get
+            {
+                return DataContainer.DelayCombinations.AverageTotalSecondOrderDelays;
+            }
+        }
+
+        public double IsDelayedPercentage
+        {
+            get
+            {
+                return DataContainer.DelayCombinations.AverageIsDelayedPercentage;
+            }
+        }
+
+        public double IsPrimaryDelayPercentage
+        {
+            get
+            {
+                return DataContainer.DelayCombinations.AverageIsPrimaryDelayedPercentage;
+            }
+        }
+
+        public double HasKnockOnDelayPercentage
+        {
+            get
+            {
+                return DataContainer.DelayCombinations.HasKnockOnDelayedPercentage;
+            }
+        }
         #endregion Members
         /// <summary>
         /// Initializes a new instance of the MvvmViewModel1 class.
         /// </summary>
         public DelayStatisticsViewModel()
         {
-            Messenger.Default.Register<DelayCombinationsChangedMessage>(this, (msg) => OnDelaysChanged(msg));
-            OnDelaysChanged(new DelayCombinationsChangedMessage());             
+            //Messenger.Default.Register<DelayCombinationsChangedMessage>(this, (msg) => OnDelaysChanged(msg));
+            //OnDelaysChanged(new DelayCombinationsChangedMessage());   
+            RefreshCommand = new RelayCommand(OnDelaysChanged);
         }
 
-        private void OnDelaysChanged(DelayCombinationsChangedMessage msg)
+        private void OnDelaysChanged()
         {
             RaisePropertyChanged("DelayCombinationsDefined");
             RaisePropertyChanged("DelayCombinationCount");
@@ -88,6 +139,15 @@ namespace RailMLNeural.UI.Statistics.ViewModel
             RaisePropertyChanged("SecondaryDelayCountHistogram");
             RaisePropertyChanged("AverageCombinationsPerDay");
             RaisePropertyChanged("AverageDestinationDelay");
+            RaisePropertyChanged("AverageTotalPrimaryDelays");
+            RaisePropertyChanged("AverageTotalFirstOrderDelays");
+            RaisePropertyChanged("AverageTotalSecondOrderDelays");
+            RaisePropertyChanged("IsDelayedPercentage");
+            RaisePropertyChanged("IsPrimaryDelayPercentage");
+            RaisePropertyChanged("HasKnockOnDelayPercentage");
         }
+
+        public ICommand RefreshCommand { get; private set; }
     }
+
 }

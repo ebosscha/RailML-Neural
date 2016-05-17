@@ -1,9 +1,9 @@
-﻿using Encog.ML.Data;
-using Encog.Neural.Networks;
-using Encog.Neural.Networks.Training;
+﻿using Encog.Neural.Networks.Training;
 using Encog.Neural.Networks.Training.Propagation;
 using Encog.Neural.Networks.Training.Propagation.Resilient;
 using Encog.Util;
+using RailMLNeural.Neural.Configurations;
+using RailMLNeural.Neural.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +12,32 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.Algorithms.Training
 {
-    class RPropTT : PropagationThroughTime
+    /// <summary>
+    /// One problem with the backpropagation algorithm is that the magnitude of the
+    /// partial derivative is usually too large or too small. Further, the learning
+    /// rate is a single value for the entire neural network. The resilient
+    /// propagation learning algorithm uses a special update value(similar to the
+    /// learning rate) for every neuron connection. Further these update values are
+    /// automatically determined, unlike the learning rate of the backpropagation
+    /// algorithm.
+    /// For most training situations, we suggest that the resilient propagation
+    /// algorithm (this class) be used for training.
+    /// There are a total of three parameters that must be provided to the resilient
+    /// training algorithm. Defaults are provided for each, and in nearly all cases,
+    /// these defaults are acceptable. This makes the resilient propagation algorithm
+    /// one of the easiest and most efficient training algorithms available.
+    /// The optional parameters are:
+    /// zeroTolerance - How close to zero can a number be to be considered zero. The
+    /// default is 0.00000000000000001.
+    /// initialUpdate - What are the initial update values for each matrix value. The
+    /// default is 0.1.
+    /// maxStep - What is the largest amount that the update values can step. The
+    /// default is 50.
+    /// Usually you will not need to use these, and you should use the constructor
+    /// that does not require them.
+    /// </summary>
+    ///
+    public class GNResilientPropagation : GraphNeuralPropagation
     {
         /// <summary>
         /// Continuation tag for the last gradients.
@@ -69,8 +94,8 @@ namespace RailMLNeural.Neural.Algorithms.Training
         ///
         /// <param name="network">The network to train.</param>
         /// <param name="training">The training data to use.</param>
-        public RPropTT(BasicNetwork network, IList<IMLDataSet> training)
-            : this(network, training, RPROPConst.DefaultInitialUpdate, RPROPConst.DefaultMaxStep)
+        public GNResilientPropagation(GRNNConfiguration owner, FlatGRNN network, DelayCombinationSet training)
+            : this(owner, network, training, RPROPConst.DefaultInitialUpdate, RPROPConst.DefaultMaxStep)
         {
         }
 
@@ -85,8 +110,8 @@ namespace RailMLNeural.Neural.Algorithms.Training
         /// <param name="training">The training set to use.</param>
         /// <param name="initialUpdate"></param>
         /// <param name="maxStep">The maximum that a delta can reach.</param>
-        public RPropTT(BasicNetwork network, IList<IMLDataSet> training, double initialUpdate,
-                                    double maxStep) : base(network, training)
+        public GNResilientPropagation(GRNNConfiguration owner, FlatGRNN network, DelayCombinationSet training, double initialUpdate,
+                                    double maxStep) : base(owner, network, training)
         {
             _updateValues = new double[network.EncodedArrayLength()];
             _zeroTolerance = RPROPConst.DefaultZeroTolerance;
@@ -130,7 +155,7 @@ namespace RailMLNeural.Neural.Algorithms.Training
             }
 
             var d = (double[]) state.Get(LastGradientsConst);
-            return d.Length == Network.Flat.EncodeLength;
+            return d.Length == Network.EncodedArrayLength();
         }
 
         /// <summary>
@@ -413,3 +438,4 @@ namespace RailMLNeural.Neural.Algorithms.Training
         }
     }
 }
+

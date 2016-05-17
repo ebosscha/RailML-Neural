@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -98,8 +99,70 @@ namespace RailMLNeural.Data
 
         public static void WriteToFile(string filename)
         {
+            RoundDecimals();
             XDocument doc = new XDocument(ToXElement<railml>(Data.DataContainer.model));
             doc.Save(filename);
+        }
+
+        private static void RoundDecimals()
+        {
+            RecurrentPrepareData(DataContainer.model);
+        }
+
+        private static void RecurrentPrepareData(dynamic item)
+        {
+            PropertyInfo[] properties = item.GetType().GetProperties();
+            foreach (PropertyInfo prop in properties)
+            {
+                if (prop.Name == "refConnection")
+                {
+                    continue;
+                }
+                if (prop.PropertyType == typeof(decimal) && prop.GetValue(item) != null)
+                {
+
+                    prop.SetValue(item, decimal.Round(prop.GetValue(item), 6));
+                }
+                if (prop.PropertyType.Namespace == "RailMLNeural.RailML" && prop.GetValue(item) != null && !prop.PropertyType.IsEnum)
+                {
+                    dynamic property = prop.GetValue(item);
+                    RecurrentPrepareData(property);
+                }
+                if (prop.PropertyType.Namespace == "System.Collections.Generic")
+                {
+                    foreach (dynamic listitem in prop.GetValue(item))
+                    {
+                        if (listitem.GetType().Namespace == "RailMLNeural.RailML")
+                        {
+                            RecurrentPrepareData(listitem);
+                        }
+                    }
+                }
+                if (prop.PropertyType == typeof(object) && prop.GetValue(item) != null)
+                {
+                    if (prop.GetValue(item).GetType() == typeof(tConnectionData))
+                    {
+                        var obj = (tConnectionData)prop.GetValue(item);
+                        RecurrentPrepareData(obj);
+                    }
+
+                    if (prop.GetValue(item).GetType() == typeof(tBufferStop))
+                    {
+                        var obj = (tBufferStop)prop.GetValue(item);
+                        RecurrentPrepareData(obj);
+                    }
+                    if (prop.GetValue(item).GetType() == typeof(tOpenEnd))
+                    {
+                        var obj = (tOpenEnd)prop.GetValue(item);
+                        RecurrentPrepareData(obj);
+                    }
+                    if (prop.GetValue(item).GetType() == typeof(tMacroscopicNode))
+                    {
+                        var obj = (tMacroscopicNode)prop.GetValue(item);
+                        RecurrentPrepareData(obj);
+                    }
+                }
+            }
         }
     }
 }

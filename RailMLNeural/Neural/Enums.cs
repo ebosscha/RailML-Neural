@@ -67,4 +67,10 @@ namespace RailMLNeural.Neural
         DataMSE,
         WeightedDataMSE,
     }
+
+    public enum ErrorFunctionEnum
+    {
+        MSE,
+        CrossEntropy,
+    }
 }

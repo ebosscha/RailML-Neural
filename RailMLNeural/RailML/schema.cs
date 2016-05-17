@@ -64315,6 +64315,8 @@ namespace RailMLNeural.RailML
             System.IO.MemoryStream memoryStream = null;
             try
             {
+                Decimal.Round(pos,6);
+                Decimal.Round(absPos,6);
                 memoryStream = new System.IO.MemoryStream();
                 System.Xml.XmlWriterSettings xmlWriterSettings = new System.Xml.XmlWriterSettings();
                 xmlWriterSettings.Indent = false;
@@ -65252,6 +65254,8 @@ namespace RailMLNeural.RailML
             System.IO.MemoryStream memoryStream = null;
             try
             {
+                Decimal.Round(pos, 6);
+                Decimal.Round(absPos, 6);
                 memoryStream = new System.IO.MemoryStream();
                 System.Xml.XmlWriterSettings xmlWriterSettings = new System.Xml.XmlWriterSettings();
                 xmlWriterSettings.Indent = false;
@@ -82513,6 +82517,8 @@ namespace RailMLNeural.RailML
             System.IO.MemoryStream memoryStream = null;
             try
             {
+                Decimal.Round(pos, 6);
+                Decimal.Round(absPos, 6);
                 memoryStream = new System.IO.MemoryStream();
                 System.Xml.XmlWriterSettings xmlWriterSettings = new System.Xml.XmlWriterSettings();
                 xmlWriterSettings.Indent = false;
@@ -85144,6 +85150,8 @@ namespace RailMLNeural.RailML
             System.IO.MemoryStream memoryStream = null;
             try
             {
+                Decimal.Round(pos, 6);
+                Decimal.Round(absPos, 6);
                 memoryStream = new System.IO.MemoryStream();
                 System.Xml.XmlWriterSettings xmlWriterSettings = new System.Xml.XmlWriterSettings();
                 xmlWriterSettings.Indent = false;

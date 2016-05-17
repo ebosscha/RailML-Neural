@@ -161,6 +161,7 @@
     <Compile Include="Neural\Algorithms\Activation\ActivationSoftPlus.cs" />
     <Compile Include="Neural\Algorithms\DataSetCollectionCalculateScore.cs" />
     <Compile Include="Neural\Algorithms\DetermineWorkLoad.cs" />
+    <Compile Include="Neural\Algorithms\Error\CrossEntropyError.cs" />
     <Compile Include="Neural\Algorithms\GraphCalculateScore .cs" />
     <Compile Include="Neural\Algorithms\IErrorCalculation.cs" />
     <Compile Include="Neural\Algorithms\RNNSharp\LSTM.cs" />
@@ -173,7 +174,7 @@
     <Compile Include="Neural\Algorithms\Training\GNScaledConjugateGradient.cs" />
     <Compile Include="Neural\Algorithms\Training\GraphNeuralMSO.cs" />
     <Compile Include="Neural\Algorithms\Training\PropagationThroughTime.cs" />
-    <Compile Include="Neural\Algorithms\Training\RPropTT.cs" />
+    <Compile Include="Neural\Algorithms\Training\RMSPropTT.cs" />
     <Compile Include="Neural\Algorithms\Training\Strategies.cs" />
     <Compile Include="Neural\Algorithms\WeightedMSECalculateScore.cs" />
     <Compile Include="Neural\Algorithms\ThresholdCalculateScore.cs" />
@@ -209,6 +210,7 @@
     <Compile Include="Neural\Data\GRNNDataPair.cs" />
     <Compile Include="Neural\Data\NormBuffMLDataSet.cs" />
     <Compile Include="Neural\Data\IRecurrentDataProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\MoreEdgeDepartureCountInputProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\EdgeSpeedHomogeneityInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\EdgeMaxSpeedInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\TotalDelayClassificationProvider.cs" />
@@ -223,6 +225,7 @@
     <Compile Include="Neural\Data\RecurrentDataProviders\ForecastedTimesInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\SwitchCountInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\StationTracksInputRecurrentProvider.cs" />
+    <Compile Include="Neural\Data\RecurrentDataProviders\MoreVertexDepartureCountInputProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\VertexDepartureCountInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\EdgeDepartureCountInputRecurrentProvider.cs" />
     <Compile Include="Neural\Data\RecurrentDataProviders\RouteLengthInputRecurrentProvider.cs" />
@@ -250,6 +253,7 @@
     <Compile Include="Neural\PreProcessing\Import.cs" />
     <Compile Include="Neural\PreProcessing\PreProcesser - Copy.cs" />
     <Compile Include="Neural\PreProcessing\PreProcesser.cs" />
+    <Compile Include="RailML\RailMLExtentions.cs" />
     <Compile Include="RailML\schema.cs" />
     <Compile Include="UI\Design\DesignDataService.cs" />
     <Compile Include="UI\Dialog\ViewModel\DebugViewModel.cs" />

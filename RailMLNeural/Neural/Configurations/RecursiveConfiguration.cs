@@ -214,9 +214,10 @@ namespace RailMLNeural.Neural.Configurations
             }
             catch(Exception ex){}
             
+            
         }
 
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        public new void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
             MemoryStream stream = new MemoryStream();
@@ -229,10 +230,9 @@ namespace RailMLNeural.Neural.Configurations
 
         public override double RunVerification()
         {
-            var msecalc = new MSEErrorCalculation();
-            var nmsecalc = new WeightedMSEErrorCalculation(OutputDataProviders.Sum(x => x.Size));
             SimplifiedGraph _graph = Graph.Clone();
             IPropagator prop = Propagator.OpenAdditional();
+            ValidationHelper valHelp = new ValidationHelper(OutputDataProviders.Sum(x => x.Size));
             foreach(var DC in DataSet.VerificationCollection)
             {
                 //_graph.GenerateGraph(DC, true);
@@ -244,16 +244,16 @@ namespace RailMLNeural.Neural.Configurations
                     if(!prop.IgnoreCurrent)
                     {
                         prop.Update(output);
-                        msecalc.UpdateError(output, pair.Ideal, pair.Significance);
-                        nmsecalc.UpdateError(output, pair.Ideal, pair.Significance);
+                        valHelp.Add(output, pair.Ideal);
                     }
                 }
             }
-            string msg = "Verification DelayCombination Count : " + DataSet.VerificationCount + 
-                "\n MSE : " + msecalc.CalculateError() + "\n NMSE : " + nmsecalc.CalculateError() +
-                "\n Rsquared : " + (1 - nmsecalc.CalculateError());
-            MessageBox.Show(msg);
-            return msecalc.CalculateError();
+            var result = MessageBox.Show(valHelp.PublishMSE(), "Validation Output", MessageBoxButton.YesNo);
+            if(result == MessageBoxResult.Yes)
+            {
+                valHelp.SaveHistogram();
+            }
+            return 0.0;
 
         }
     }

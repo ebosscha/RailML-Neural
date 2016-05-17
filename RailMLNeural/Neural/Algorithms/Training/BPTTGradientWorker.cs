@@ -32,6 +32,11 @@ namespace RailMLNeural.Neural.Algorithms.Training
         ///
         private readonly ErrorCalculation _errorCalculation;
 
+        private double[] _dropoutMask;
+
+        private double _dropoutPercentage;
+
+
         /// <summary>
         /// The gradients.
         /// </summary>
@@ -153,7 +158,7 @@ namespace RailMLNeural.Neural.Algorithms.Training
         /// <param name="theFlatSpots">Holds an array of flat spot constants.</param>
         public BPTTGradientWorker(FlatNetwork theNetwork,
                                     PropagationThroughTime theOwner, IList<IMLDataSet> theTraining,
-                                    int theLow, int theHigh, double[] theFlatSpots, IErrorFunction ef)
+                                    int theLow, int theHigh, double[] theFlatSpots, IErrorFunction ef, double dropoutPercentage)
         {
             _errorCalculation = new ErrorCalculation();
             _network = theNetwork;
@@ -178,6 +183,12 @@ namespace RailMLNeural.Neural.Algorithms.Training
             _layerOutput = _network.LayerOutput;
             _layerSums = _network.LayerSums;
             _layerFeedCounts = _network.LayerFeedCounts;
+            _dropoutPercentage = dropoutPercentage;
+            _dropoutMask = new double[_layerOutput.Length];
+            for (int i = 0; i < _dropoutMask.Length; i++ )
+            {
+                _dropoutMask[i] = 1;
+            }
             _ef = ef;
             m_va = new VectorAlgebra();
         }
@@ -229,13 +240,16 @@ namespace RailMLNeural.Neural.Algorithms.Training
             _gradientChangeCount = new int[_network.Weights.Length];
             layerOutputList = new List<double[]>();
             layerSumList = new List<double[]>();
-            _network.ClearContext();
+            //_network.ClearContext();
+            ClearContexts();
+            SetDropoutMask();
             for(int i = 0; i < seq.Count; i++)
             {
                 IMLDataPair pair = seq[i];
-                _network.Compute(pair.Input, _actual);
-                layerOutputList.Add(_network.LayerOutput);
-                layerSumList.Add(_network.LayerSums);
+                //_network.Compute(pair.Input, _actual);
+                Compute(pair.Input, _actual);
+                layerOutputList.Add(EngineArray.ArrayCopy(_network.LayerOutput));
+                layerSumList.Add(EngineArray.ArrayCopy(_network.LayerSums));
                 if (i == seq.Count - 1)
                 {
                     EngineArray.Fill(_layerDelta, 0);
@@ -323,12 +337,20 @@ namespace RailMLNeural.Neural.Algorithms.Training
 
         public void Run(int low, int high)
         {
-            for(int i = low; i < high; i++)
+            for(int i = low; i <= high; i++)
             {
                 Process(_training[i]);
+                n++;
             }
             _owner.Report(_gradients, 0, null);
             EngineArray.Fill(_gradients, 0);
+        }
+
+        public int n = 0;
+        public void Reset()
+        {
+            _errorCalculation.Reset();
+            n = 0;
         }
 
         /// <summary>
@@ -374,7 +396,7 @@ namespace RailMLNeural.Neural.Algorithms.Training
         {
             double[] Gradients = new double[_weights.Length];
             int j = 0;
-            for (int i = layerOutputList.Count - 1; i > -1 && j < 20; i--)
+            for (int i = layerOutputList.Count - 2; i > -1; i--)
             {
                 EngineArray.Fill(_nextLayerDelta, 0);
                 foreach (int l in _recurrentLayers)
@@ -388,6 +410,112 @@ namespace RailMLNeural.Neural.Algorithms.Training
                 j++;
             }
         }
+
+        #region Dropout Computation
+        private void Compute(IMLData input, double[] output)
+        {
+            int sourceIndex = _layerOutput.Length
+                              - _layerCounts[_layerCounts.Length - 1];
+
+            input.CopyTo(_layerOutput, sourceIndex, input.Count);
+
+            InnerCompute(output);
+        }
+
+        private void InnerCompute(double[] output)
+        {
+            for (int i = _layerIndex.Length - 1; i > 0; i--)
+            {
+                ComputeLayer(i);
+            }
+
+            // update context values
+            int offset = _network.ContextTargetOffset[0];
+
+            for (int x = 0; x < _network.ContextTargetSize[0]; x++)
+            {
+                _layerOutput[offset + x] = _layerOutput[x];
+            }
+
+            EngineArray.ArrayCopy(_layerOutput, 0, output, 0, _network.OutputCount);
+        }
+
+        private void ComputeLayer(int currentLayer)
+        {
+            int inputIndex = _layerIndex[currentLayer];
+            int outputIndex = _layerIndex[currentLayer - 1];
+            int inputSize = _layerCounts[currentLayer];
+            int outputSize = _layerFeedCounts[currentLayer - 1];
+
+            int index = _weightIndex[currentLayer - 1];
+
+            int limitX = outputIndex + outputSize;
+            int limitY = inputIndex + inputSize;
+
+            // weight values
+            for (int x = outputIndex; x < limitX; x++)
+            {
+                double sum = 0;
+                for (int y = inputIndex; y < limitY; y++)
+                {
+                    sum += _weights[index++] * _network.LayerOutput[y];
+                }
+                _network.LayerOutput[x] = sum * _dropoutMask[x];
+                _network.LayerSums[x] = sum * _dropoutMask[x];
+            }
+
+            _network.ActivationFunctions[currentLayer - 1].ActivationFunction(
+                _network.LayerOutput, outputIndex, outputSize);
+
+            // update context values
+            int offset = _network.ContextTargetOffset[currentLayer];
+
+            for (int x = 0; x < _network.ContextTargetSize[currentLayer]; x++)
+            {
+                _network.LayerOutput[offset + x] = _network.LayerOutput[outputIndex + x];
+            }
+        }
+
+        private void ClearContexts()
+        {
+            int index = 0;
+
+            for (int i = 0; i < _layerIndex.Length; i++)
+            {
+                bool hasBias = (_network.LayerContextCount[i] + _layerFeedCounts[i]) != _layerCounts[i];
+
+                // fill in regular neurons
+                for (int j = 0; j < _layerFeedCounts[i]; j++)
+                {
+                    _network.LayerOutput[index++] = 0;
+                }
+
+                // fill in the bias
+                if (hasBias)
+                {
+                    _network.LayerOutput[index++] = _network.BiasActivation[i];
+                }
+
+                // fill in context
+                for (int j = 0; j < _network.LayerContextCount[i]; j++)
+                {
+                    _network.LayerOutput[index++] = 0;
+                }
+            }
+        }
+
+        private Random rand = new Random();
+        private void SetDropoutMask()
+        {
+            for(int i = 1; i < _layerIndex.Length - 1; i++)
+            {
+                for(int j = _layerIndex[i]; j < _layerIndex[i] + _layerFeedCounts[i]; j++)
+                {
+                    _dropoutMask[j] = rand.NextDouble() < _dropoutPercentage ? 0 : 1;
+                }
+            }
+        }
+        #endregion Dropout Computation
     }
 }
 

@@ -9,42 +9,53 @@
         Loaded="UserControl_Loaded">
 
     <Grid>
-        <StackPanel Orientation="Horizontal">
-            <GroupBox Header="Track Stats"
+        <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Horizontal">
+                <GroupBox Header="Track Stats"
                       Margin="10,10,0,10"
                       Height="Auto"
                       Width="Auto">
-                  
-                <StackPanel>
-                    <TextBlock Text="{Binding Path=TotalTrackLength, 
+
+                    <StackPanel>
+                        <TextBlock Text="{Binding Path=TotalTrackLength, 
                         StringFormat=Total Track Length : {0} Miles}"/>
-                    <TextBlock Text="{Binding Path=MainSingleTrackLength,
+                        <TextBlock Text="{Binding Path=MainSingleTrackLength,
                         StringFormat=Total Single Track Length : {0} Miles}"/>
-                    <TextBlock Text="{Binding Path=MainDoubleTrackLength,
+                        <TextBlock Text="{Binding Path=MainDoubleTrackLength,
                         StringFormat=Total Double Track Length : {0} Miles}"/>
-                    <TextBlock Text="{Binding Path=OtherTrackLength,
+                        <TextBlock Text="{Binding Path=OtherTrackLength,
                         StringFormat=Total Other Track Length : {0} Miles}"/>
-                    
-                
-                </StackPanel>
-            </GroupBox>
-            <GroupBox Header="Station Stats"
+
+
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Header="Station Stats"
                       Margin="0,10,10,10">
-                <StackPanel>
-                    <TextBlock Text="{Binding Path=StationCount,
+                    <StackPanel>
+                        <TextBlock Text="{Binding Path=StationCount,
                         StringFormat=Number of stations : {0}}"/>
-                </StackPanel>
+                    </StackPanel>
 
 
-            </GroupBox>
-            <GroupBox Header="Switch Stats"
+                </GroupBox>
+                <GroupBox Header="Switch Stats"
                       Margin="0,10,10,10">
-                <StackPanel>
-                    <TextBlock Text="{Binding Path=SwitchCount, 
+                    <StackPanel>
+                        <TextBlock Text="{Binding Path=SwitchCount, 
                         StringFormat=Number of switches : {0}}"/>
+                    </StackPanel>
+                </GroupBox>
+
+            </StackPanel>
+            <GroupBox Header="Timetable Stats"
+                      Margin="10,10,10,10">
+                <StackPanel>
+                    <TextBlock Text="{Binding Path=AverageTrainsPerDay, 
+                        StringFormat=Average number of trains per day : {0}}"/>
+                    <TextBlock Text="{Binding Path=AverageTripDuration, 
+                        StringFormat=Average trip duration : {0}}"/>
                 </StackPanel>
             </GroupBox>
-        
         </StackPanel>
     </Grid>
 </UserControl>

@@ -9,6 +9,8 @@
 
     <Grid>
         <StackPanel>
+            <Button Content="Refresh" 
+                    Command="{Binding RefreshCommand}"/>
             <TextBlock Text="{Binding DelayCombinationCount,
                     StringFormat=Delay Combination Count : {0:N2}}"/>
             <TextBlock Text="{Binding TotalDelayCount,
@@ -19,6 +21,18 @@
                     StringFormat=Average Combination Count Per Day : {0:N2}}"/>
             <TextBlock Text="{Binding AverageDestinationDelay, 
                     StringFormat=Average Destination Delay : {0:N2} s }"/>
+            <TextBlock Text="{Binding AverageTotalPrimaryDelays, 
+                    StringFormat=Average Total Primary Destination Delays Per Day : {0:N2} s }"/>
+            <TextBlock Text="{Binding AverageTotalFirstOrderDelays, 
+                    StringFormat=Average Total First Order Knock-on Delays Per Day : {0:N2} s }"/>
+            <TextBlock Text="{Binding AverageTotalSecondOrderDelays, 
+                    StringFormat=Average Total Second-order Knock-on Delays Per Day : {0:N2} s }"/>
+            <TextBlock Text="{Binding IsDelayedPercentage, 
+                    StringFormat=Percentage of trains delayed : {0:N2} }"/>
+            <TextBlock Text="{Binding IsPrimaryDelayPercentage, 
+                    StringFormat=Percentage of trains that is primary delay : {0:N2} }"/>
+            <TextBlock Text="{Binding HasKnockOnDelayPercentage, 
+                    StringFormat=Percentage of primary delays that induces knock-on delays : {0:N2} }"/>
         </StackPanel>
     </Grid>
 </UserControl>

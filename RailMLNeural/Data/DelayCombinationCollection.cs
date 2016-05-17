@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RailMLNeural.Data
@@ -97,6 +98,123 @@ namespace RailMLNeural.Data
                 return 0;
             }
         }
+
+        public double AverageTotalPrimaryDelays
+        {
+            get
+            {
+                if(dict.Values.Count > 0)
+                {
+                    return dict.Values.Where(x => x != null)
+                        .Average(x => x.Sum(y => y.primarydelays
+                            .Sum(z => z.destinationdelay )));
+                }
+                return 0;
+            }
+        }
+
+        public double AverageTotalFirstOrderDelays
+        {
+            get
+            {
+                if (dict.Values.Count > 0)
+                {
+                    return dict.Values.Where(x => x != null)
+                        .Average(x => x.Sum(y => y.secondarydelays
+                            .Where(z => y.primarydelays.Any(q => q.traincode == z.WLCheader))
+                            .Sum(z => z.destinationdelay)));
+                }
+                return 0;
+            }
+        }
+
+        public double AverageTotalSecondOrderDelays
+        {
+            get
+            {
+                if (dict.Values.Count > 0)
+                {
+                    return dict.Values.Where(x => x != null)
+                        .Average(x => x.Sum(y => y.secondarydelays
+                            .Where(z => !y.primarydelays.Any(q => q.traincode == z.WLCheader))
+                            .Sum(z => z.destinationdelay)));
+                }
+                return 0;
+            }
+        }
+
+        public double AverageIsDelayedPercentage
+        {
+            get
+            {
+                if(dict.Values.Count > 0)
+                {
+                    return dict.Values.Where(x => x != null)
+                        .SelectMany(x => x)
+                        .SelectMany(x => x.primarydelays.Concat(x.secondarydelays))
+                        .Count()
+                        / (double)TrainCount;
+
+                }
+                return 0;
+            }
+        }
+
+        public double AverageIsPrimaryDelayedPercentage
+        {
+            get
+            {
+                if (dict.Values.Count > 0)
+                {
+                    return dict.Values.Where(x => x != null)
+                        .SelectMany(x => x)
+                        .SelectMany(x => x.primarydelays)
+                        .Count()
+                        / (double)TrainCount;
+
+                }
+                return 0;
+            }
+        }
+
+        public double HasKnockOnDelayedPercentage
+        {
+            get
+            {
+                if (dict.Values.Count > 0)
+                {
+                    return dict.Values.Where(x => x != null)
+                        .SelectMany(x => x)
+                        .Where(x => x.secondarydelays.Count > 0)
+                        .Count()
+                        /
+                        (double)dict.Values.Where(x => x != null)
+                        .SelectMany(x => x)
+                        .Count();
+                }
+                return 0;
+            }
+        }
+
+        public int TrainCount
+        {
+            get
+            {
+                if(DataContainer.model.timetable != null)
+                {
+                    int traincount = 0;
+                    var dates = DataContainer.model.timetable.GetDates();
+                    Parallel.ForEach(dates, (date) =>
+                    {
+                        var trains = DataContainer.model.timetable.GetTrainsByDay(date);
+                        Interlocked.Add(ref traincount, trains.Count);
+                    });
+                    return traincount;
+                }
+                return 0;
+            }
+        }
+
 
 
 

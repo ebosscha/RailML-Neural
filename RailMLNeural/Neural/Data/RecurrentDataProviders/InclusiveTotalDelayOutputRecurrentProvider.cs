@@ -31,7 +31,7 @@ namespace RailMLNeural.Neural.Data.RecurrentDataProviders
                 .SelectMany(x => x.Trains)
                 .Where(x => x.IsRelevant && x.Next == null)
                 .Select(x => (x.IdealArrivalTime - x.ScheduledArrivalTime).TotalHours).ToList();
-            result[0] = list.Sum();
+            result[0] = list.Sum() > 0 ? list.Sum() : 0;
             return result;
         }
 

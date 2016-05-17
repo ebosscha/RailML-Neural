@@ -409,6 +409,11 @@ namespace RailMLNeural.UI.ViewModel
         public ICommand TimetableCSVCommand { get; private set; }
         public ICommand ConnectTracksCommand { get; private set; }
         public ICommand DebugDataCommand { get; private set; }
+        public ICommand CreateVisualizationCommand { get; private set; }
+        public ICommand CreateLinesCommand { get; private set; }
+        public ICommand CreateVisualizationPortnarockCommand { get; private set; }
+        public ICommand TrackNodeIDGenerateCommand { get; private set; }
+        public ICommand RemoveAllButVisualization { get; private set; }
 
         private void InitializeDataMenuCommands()
         {
@@ -426,6 +431,11 @@ namespace RailMLNeural.UI.ViewModel
             DebugDataCommand = new RelayCommand(ExecuteDebugData);
             ConnectTracksCommand = new RelayCommand(() => ImportInfrastructure.ConnectTracks());
             ExcelRollingstockCommand = new RelayCommand(ExecuteExcelRollingstock);
+            CreateVisualizationCommand = new RelayCommand(() => RailMLExtentions.CreateVisualizationBranch());
+            CreateLinesCommand = new RelayCommand(() => RailMLExtentions.CreateLines());
+            CreateVisualizationPortnarockCommand = new RelayCommand(() => RailMLExtentions.CreateVisualizationFromPortnarock());
+            TrackNodeIDGenerateCommand = new RelayCommand(() => RailMLExtentions.CreateTrackNodeID());
+            RemoveAllButVisualization = new RelayCommand(() => RailMLExtentions.ExcludeExceptVisualization());
         }
 
         private void ExecuteExcelTracks()

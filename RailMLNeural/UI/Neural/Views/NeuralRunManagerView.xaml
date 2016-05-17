@@ -160,6 +160,13 @@
                               ItemsSource="{Binding PSOTypeValues}"
                               Margin="195,5,0,0"/>
                 </Grid>
+                <Grid Visibility="{Binding ErrorFuctionVisible}">
+                    <TextBlock Text="Error Function :"
+                               Margin="10,5,0,0"/>
+                    <ComboBox SelectedItem="{Binding ErrorFunction}"
+                              ItemsSource="{Binding ErrorFunctionValues}"
+                              Margin="195,5,0,0"/>
+                </Grid>
                 <Grid Visibility="{Binding PSOVisible}">
                     <TextBlock Text="Max Velocity :"
                            Margin="10,5,0,0"/>

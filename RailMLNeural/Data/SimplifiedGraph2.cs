@@ -345,36 +345,42 @@ namespace RailMLNeural.Data
 
         private void AddDelayEdge(string HeaderCode, string origin, double departuredelay, string destination, double arrivaldelay, bool IsPrimary)
         {
-            if(!Vertices.Any(x => x.OCP.code == origin) || !Vertices.Any(x => x.OCP.code == destination))
+            try
             {
-                return;
-            }
-            var vertex = Vertices.Single(x => x.OCP.code == origin);
-            if(!vertex.Edges.Any(x => x.Origin.OCP.code == destination || x.Destination.OCP.code == destination))
-            {
-                return;
-            }
-            var edge = vertex.Edges.Single(x => x.Origin.OCP.code == destination || x.Destination.OCP.code == destination);
-            var rep = edge.Trains.First(x => x.TrainHeaderCode == HeaderCode);
-            rep.IdealDepartureTime = rep.ScheduledDepartureTime + TimeSpan.FromSeconds(departuredelay);
-            rep.IdealArrivalTime = rep.ScheduledArrivalTime + TimeSpan.FromSeconds(arrivaldelay);
-            rep.IsHandled = IsPrimary;
+                if (!Vertices.Any(x => x.OCP.code == origin) || !Vertices.Any(x => x.OCP.code == destination))
+                {
+                    return;
+                }
+                var vertex = Vertices.Single(x => x.OCP.code == origin);
+                if (!vertex.Edges.Any(x => x.Origin.OCP.code == destination || x.Destination.OCP.code == destination))
+                {
+                    return;
+                }
+                var edge = vertex.Edges.Single(x => x.Origin.OCP.code == destination || x.Destination.OCP.code == destination);
+                var rep = edge.Trains.First(x => x.TrainHeaderCode == HeaderCode);
+                rep.IdealDepartureTime = rep.ScheduledDepartureTime + TimeSpan.FromSeconds(departuredelay);
+                rep.IdealArrivalTime = rep.ScheduledArrivalTime + TimeSpan.FromSeconds(arrivaldelay);
+                rep.IsHandled = IsPrimary;
 
-            if(IsPrimary)
-            {
-                rep.PredictedArrivalTime = rep.ScheduledArrivalTime + TimeSpan.FromSeconds(arrivaldelay);
-                rep.PredictedDepartureTime = rep.ScheduledDepartureTime + TimeSpan.FromSeconds(departuredelay);
-            }
+                if (IsPrimary)
+                {
+                    rep.PredictedArrivalTime = rep.ScheduledArrivalTime + TimeSpan.FromSeconds(arrivaldelay);
+                    rep.PredictedDepartureTime = rep.ScheduledDepartureTime + TimeSpan.FromSeconds(departuredelay);
+                }
                 //edge.IsAltered = true;
-            if ((rep.IdealDepartureTime - rep.ScheduledDepartureTime).TotalMinutes > 2
-                || (rep.IdealArrivalTime - rep.ScheduledArrivalTime).TotalMinutes > 2)
-            {
-                edge.Destination.IsSubGraph = true;
-                edge.Origin.IsSubGraph = true;
-                SetSubGraph(rep);
+                if ((rep.IdealDepartureTime - rep.ScheduledDepartureTime).TotalMinutes > 2
+                    || (rep.IdealArrivalTime - rep.ScheduledArrivalTime).TotalMinutes > 2)
+                {
+                    edge.Destination.IsSubGraph = true;
+                    edge.Origin.IsSubGraph = true;
+                    SetSubGraph(rep);
+                }
+                rep.IsRelevant = true;
             }
-            rep.IsRelevant = true;
+            catch(Exception ex)
+            {
 
+            }
         }
         #endregion AddDelay
 
@@ -485,8 +491,8 @@ namespace RailMLNeural.Data
                 PercentageDoubleTrack = Route.PercentageDoubleTrack();
                 SwitchCount = Route.SwitchCount();
                 Distance = (double)Route.distance;
-                AverageSpeedDown = Route.AverageSpeed(true);
-                AverageSpeedUp = Route.AverageSpeed(false);
+                AverageSpeedDown = Route.AverageSpeed(true) == 0 ? 100 : Route.AverageSpeed(true);
+                AverageSpeedUp = Route.AverageSpeed(false) == 0 ? 100 : Route.AverageSpeed(false);
             }
 
             Application.Current.Dispatcher.BeginInvoke((Action)(() =>

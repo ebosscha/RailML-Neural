@@ -69,6 +69,28 @@ namespace RailMLNeural.UI.Statistics.ViewModel
                 return _switchCount.ToString();
             }
         }
+
+
+        private int _averageTrainsPerDay;
+
+        public string AverageTrainsPerDay
+        {
+            get
+            {
+                return _averageTrainsPerDay.ToString();
+            }
+        }
+
+        private double _averageTripDuration;
+
+        public string AverageTripDuration
+        {
+            get
+            {
+                return _averageTripDuration.ToString();
+            }
+        }
+
         #endregion Parameters
 
         #region Public
@@ -95,16 +117,16 @@ namespace RailMLNeural.UI.Statistics.ViewModel
             _otherTrackLength = 0;
             _switchCount = 0;
             _stationCount = 0;
-            if(DataContainer.model != null)
+            if (DataContainer.model != null)
             {
-                foreach(eTrack track in DataContainer.model.infrastructure.tracks)
+                foreach (eTrack track in DataContainer.model.infrastructure.tracks)
                 {
                     _totalTrackLength += track.trackTopology.trackEnd.pos - track.trackTopology.trackBegin.pos;
-                    if(track.type == "mainTrack")
+                    if (track.type == "mainTrack")
                     {
-                        if(track.mainDir == tExtendedDirection.down || track.mainDir == tExtendedDirection.up)
+                        if (track.mainDir == tExtendedDirection.down || track.mainDir == tExtendedDirection.up)
                         {
-                            _mainDoubleTrackLength += (track.trackTopology.trackEnd.pos - track.trackTopology.trackBegin.pos)/2;
+                            _mainDoubleTrackLength += (track.trackTopology.trackEnd.pos - track.trackTopology.trackBegin.pos) / 2;
                         }
                         else
                         {
@@ -115,23 +137,42 @@ namespace RailMLNeural.UI.Statistics.ViewModel
                     {
                         _otherTrackLength += track.trackTopology.trackEnd.pos - track.trackTopology.trackBegin.pos;
                     }
-                    foreach(eSwitch sw in track.trackTopology.connections.Where(x => x is eSwitch))
+                    foreach (eSwitch sw in track.trackTopology.connections.Where(x => x is eSwitch))
                     {
                         _switchCount++;
                     }
                 }
-                foreach(eOcp ocp in DataContainer.model.infrastructure.operationControlPoints.Where(x => x.geoCoord.coord.Count == 2))
+                foreach (eOcp ocp in DataContainer.model.infrastructure.operationControlPoints.Where(x => x.geoCoord.coord.Count == 2))
                 {
                     _stationCount++;
                 }
-            }
-            RaisePropertyChanged("TotalTrackLength");
-            RaisePropertyChanged("MainSingleTrackLength");
-            RaisePropertyChanged("MainDoubleTrackLength");
-            RaisePropertyChanged("OtherTrackLength");
-            RaisePropertyChanged("StationCount");
-            RaisePropertyChanged("SwitchCount");
 
+                RaisePropertyChanged("TotalTrackLength");
+                RaisePropertyChanged("MainSingleTrackLength");
+                RaisePropertyChanged("MainDoubleTrackLength");
+                RaisePropertyChanged("OtherTrackLength");
+                RaisePropertyChanged("StationCount");
+                RaisePropertyChanged("SwitchCount");
+
+                #region Timetable Statistics
+                int traincount = 0;
+                double totaltripduration = 0;
+                var dates = DataContainer.model.timetable.GetDates();
+                foreach (DateTime date in dates)
+                {
+                    var trains = DataContainer.model.timetable.GetTrainsByDay(date);
+                    traincount += trains.Count;
+                    foreach (var train in trains)
+                    {
+                        totaltripduration += (train.ocpsTT.Last().times[0].arrival - train.ocpsTT.First().times[0].departure).TotalHours;
+                    }
+                }
+                _averageTrainsPerDay = dates.Count > 0 ? traincount / dates.Count : 0;
+                _averageTripDuration = totaltripduration / traincount;
+                RaisePropertyChanged("AverageTrainsPerDay");
+                RaisePropertyChanged("AverageTripDuration");
+                #endregion Timetable Statistics
+            }
         }
         #endregion Private
     }

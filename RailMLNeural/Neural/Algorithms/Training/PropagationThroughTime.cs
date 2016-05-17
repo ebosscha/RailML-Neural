@@ -344,7 +344,7 @@ namespace RailMLNeural.Neural.Algorithms.Training
             {
                 _workers[index++] = new BPTTGradientWorker(((FlatNetwork)_network.Flat.Clone()),
                                                             this, _indexable, r.Low,
-                                                            r.High, _flatSpot, ErrorFunction);
+                                                            r.High, _flatSpot, ErrorFunction, DropoutPercentage);
             }
 
             InitOthers();
@@ -534,13 +534,13 @@ namespace RailMLNeural.Neural.Algorithms.Training
                 _workers[0].Network.ClearContext();
             }
 
-            _workers[0].CalculateError.Reset();
+            Parallel.ForEach(_workers, x =>  x.Reset() );
 
             int lastLearn = 0;
 
             for (int i = 0; i < _training.Count - 1; i += BatchSize)
             {
-                Parallel.For(0, ranges.Count - 1, (j) =>
+                Parallel.For(0, ranges.Count, (j) =>
                 {
                     _workers[j].Run(ranges[j].Low + i< _training.Count - 1 ? ranges[j].Low + i : _training.Count - 1,
                         ranges[j].High + i < _training.Count - 1 ? ranges[j].High + i : _training.Count - 1);
@@ -565,7 +565,7 @@ namespace RailMLNeural.Neural.Algorithms.Training
                 Learn();
             }
 
-            this.Error = _workers[0].CalculateError.Calculate();
+            this.Error = _workers.Sum(x => x.CalculateError.CalculateMSE() * x.n) / _workers.Sum(x => x.n);
 
         }
 
@@ -576,6 +576,8 @@ namespace RailMLNeural.Neural.Algorithms.Training
         /// the batch size for batch training.
         /// </summary>
         public int BatchSize { get; set; }
+
+        public double DropoutPercentage { get; set; }
     }
 }
 

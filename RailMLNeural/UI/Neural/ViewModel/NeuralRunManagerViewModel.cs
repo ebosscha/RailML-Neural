@@ -100,6 +100,8 @@ namespace RailMLNeural.UI.Neural.ViewModel
                 RaisePropertyChanged("MaxGradientVisible");
                 RaisePropertyChanged("MSOVisible");
                 RaisePropertyChanged("BackpropVisible");
+                RaisePropertyChanged("DropoutVisible");
+                RaisePropertyChanged("ErrorFunctionVisible");
 
             }
         }
@@ -202,8 +204,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
                     case LearningAlgorithmEnum.ResilientPropagation:
                         if (tempconf.Network.Flat.ContextTargetSize.Max() > 0)
                         {
-                            RPropTT propTT = new RPropTT(tempconf.Network, tempconf.DataSetList);
+                            RMSPropTT propTT = new RMSPropTT(tempconf.Network, tempconf.DataSetList);
                             propTT.RType = ResilientPropType;
+                            propTT.Momentum = Momentum;
                             return propTT;
                         }
                         ResilientPropagation prop = new ResilientPropagation(tempconf.Network, tempconf.Data);
@@ -366,11 +369,17 @@ namespace RailMLNeural.UI.Neural.ViewModel
         public bool StraightRecurrent { get; set; }
         public bool EnforceElman { get; set; }
         public double Dropout { get; set; }
+        public ErrorFunctionEnum ErrorFunction { get; set; }
+        public IEnumerable<ErrorFunctionEnum> ErrorFunctionValues
+        {
+            get
+            { return Enum.GetValues(typeof(ErrorFunctionEnum)).Cast<ErrorFunctionEnum>(); }
+        }
 
 
         private static Dictionary<bool, Visibility> BoolToVis = new Dictionary<bool,Visibility>(){{true, Visibility.Visible}, {false, Visibility.Collapsed}};
-        private static List<LearningAlgorithmEnum> HasLearningRate = new List<LearningAlgorithmEnum> { LearningAlgorithmEnum.BackPropagation, LearningAlgorithmEnum.ManhattanPropagation, LearningAlgorithmEnum.QuickPropagation };
-        private static List<LearningAlgorithmEnum> HasMomentum = new List<LearningAlgorithmEnum> { LearningAlgorithmEnum.BackPropagation};
+        private static List<LearningAlgorithmEnum> HasLearningRate = new List<LearningAlgorithmEnum> { LearningAlgorithmEnum.BackPropagation, LearningAlgorithmEnum.ResilientPropagation, LearningAlgorithmEnum.ManhattanPropagation, LearningAlgorithmEnum.QuickPropagation };
+        private static List<LearningAlgorithmEnum> HasMomentum = new List<LearningAlgorithmEnum> { LearningAlgorithmEnum.BackPropagation, LearningAlgorithmEnum.ResilientPropagation};
         private static List<LearningAlgorithmEnum> HasStartTemp = new List<LearningAlgorithmEnum> { LearningAlgorithmEnum.SimulatedAnnealing };
         private static List<LearningAlgorithmEnum> HasEndTemp = new List<LearningAlgorithmEnum> { LearningAlgorithmEnum.SimulatedAnnealing };
         private static List<LearningAlgorithmEnum> HasCycles = new List<LearningAlgorithmEnum> { LearningAlgorithmEnum.SimulatedAnnealing, LearningAlgorithmEnum.ParticleSwarmOptimization, LearningAlgorithmEnum.Genetic };
@@ -388,8 +397,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
         public Visibility CalculateScoreVisible { get { return BoolToVis[HasCalculateScore.Contains(LearningAlgorithm)]; } }
         public Visibility MaxGradientVisible { get { return BoolToVis[(_network is IContainsGraph) && HasMaxGradient.Contains(LearningAlgorithm)]; } }
         public Visibility MSOVisible { get { return BoolToVis[LearningAlgorithm == LearningAlgorithmEnum.MultipleSwarmOptimization]; } }
-        public Visibility BackpropVisible { get { return BoolToVis[LearningAlgorithm == LearningAlgorithmEnum.BackPropagation]; } }
-        public Visibility DropoutVisible { get { return BoolToVis[Network is LSTMConfiguration]; } }
+        public Visibility BackpropVisible { get { return BoolToVis[LearningAlgorithm == LearningAlgorithmEnum.BackPropagation || LearningAlgorithm == LearningAlgorithmEnum.ResilientPropagation]; } }
+        public Visibility DropoutVisible { get { return BoolToVis[Network is LSTMConfiguration  || Network is RecursiveConfiguration]; } }
+        public Visibility ErrorFunctionVisible { get { return BoolToVis[Network is RecursiveConfiguration && HasLearningRate.Contains(LearningAlgorithm)]; } }
         
         #endregion TrainingParameters
         #region Commands
@@ -452,6 +462,10 @@ namespace RailMLNeural.UI.Neural.ViewModel
             {
                 ((IBatchSize)_network.Training).BatchSize = BatchSize;
             }
+            if (Network.Training is PropagationThroughTime)
+            {
+                ((PropagationThroughTime)_network.Training).DropoutPercentage = Dropout;
+            }
             if(Greedy)
             {
                 Network.Training.AddStrategy(new Greedy());
@@ -466,6 +480,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
             }
             if(Network.Training is ILearningRate)
             {
+                ((ILearningRate)_network.Training).LearningRate = LearningRate;
                 _network.Training.AddStrategy(new LearningRateDecayStrategy(LearningRateDecay));
             }
             if(EnforceElman)
@@ -475,6 +490,10 @@ namespace RailMLNeural.UI.Neural.ViewModel
             if(StraightRecurrent)
             {
                 _network.Training.AddStrategy(new PureRecurrence());
+            }
+            if(Network is RecursiveConfiguration && Network.Training is PropagationThroughTime)
+            {
+                ((PropagationThroughTime)Network.Training).ErrorFunction = ErrorFunctionFactory.Create(ErrorFunction);
             }
         }
 

@@ -189,7 +189,7 @@ namespace RailMLNeural.Neural.Configurations
 
             conf.Network = new LSTM();
             conf.Network.L0 = conf.InputDataProviders.Sum(x => x.Size);
-            conf.Network.L1 = 50;
+            conf.Network.L1 = 400;
             conf.Network.L2 = conf.OutputDataProviders.Sum(x => x.Size);
             conf.Network.IsCRFTraining = false;
             conf.Network.Dropout = 0F;

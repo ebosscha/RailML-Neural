@@ -49,6 +49,8 @@ namespace RailMLNeural.Neural.Data
         RouteLengthInputRecurrentProvider,
         EdgeDepartureCountInputRecurrentProvider,
         VertexDepartureCountInputRecurrentProvider,
+        MoreEdgeDepartureCountInputProvider,
+        MoreVertexDepartureCountInputProvider,
         StationTracksInputRecurrentProvider,
         DoubleTrackInputRecurrentProvider,
         SwitchCountInputRecurrentProvider,
