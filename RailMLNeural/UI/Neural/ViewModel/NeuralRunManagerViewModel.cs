@@ -102,6 +102,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
                 RaisePropertyChanged("BackpropVisible");
                 RaisePropertyChanged("DropoutVisible");
                 RaisePropertyChanged("ErrorFunctionVisible");
+                RaisePropertyChanged("MaxWeightNormVisible");
 
             }
         }
@@ -198,7 +199,9 @@ namespace RailMLNeural.UI.Neural.ViewModel
                     case LearningAlgorithmEnum.BackPropagation:
                         if(tempconf.Network.Flat.ContextTargetSize.Max() > 0)
                         {
-                            return new BackpropagationTT(tempconf.Network, tempconf.DataSetList, LearningRate, Momentum, PerformanceRatio);
+                            var temp3 = new BackpropagationTT(tempconf.Network, tempconf.DataSetList, LearningRate, Momentum, PerformanceRatio);
+                            temp3.MaxWeightNorm = MaxWeightNorm;
+                            return temp3;
                         }
                         return new Backpropagation(tempconf.Network, tempconf.Data, LearningRate, Momentum);
                     case LearningAlgorithmEnum.ResilientPropagation:
@@ -207,6 +210,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
                             RMSPropTT propTT = new RMSPropTT(tempconf.Network, tempconf.DataSetList);
                             propTT.RType = ResilientPropType;
                             propTT.Momentum = Momentum;
+                            propTT.MaxWeightNorm = MaxWeightNorm;
                             return propTT;
                         }
                         ResilientPropagation prop = new ResilientPropagation(tempconf.Network, tempconf.Data);
@@ -375,6 +379,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
             get
             { return Enum.GetValues(typeof(ErrorFunctionEnum)).Cast<ErrorFunctionEnum>(); }
         }
+        public double MaxWeightNorm { get; set; }
 
 
         private static Dictionary<bool, Visibility> BoolToVis = new Dictionary<bool,Visibility>(){{true, Visibility.Visible}, {false, Visibility.Collapsed}};
@@ -400,6 +405,7 @@ namespace RailMLNeural.UI.Neural.ViewModel
         public Visibility BackpropVisible { get { return BoolToVis[LearningAlgorithm == LearningAlgorithmEnum.BackPropagation || LearningAlgorithm == LearningAlgorithmEnum.ResilientPropagation]; } }
         public Visibility DropoutVisible { get { return BoolToVis[Network is LSTMConfiguration  || Network is RecursiveConfiguration]; } }
         public Visibility ErrorFunctionVisible { get { return BoolToVis[Network is RecursiveConfiguration && HasLearningRate.Contains(LearningAlgorithm)]; } }
+        public Visibility MaxWeightNormVisible { get { return BoolToVis[Network is RecursiveConfiguration && HasLearningRate.Contains(LearningAlgorithm)]; } }
         
         #endregion TrainingParameters
         #region Commands

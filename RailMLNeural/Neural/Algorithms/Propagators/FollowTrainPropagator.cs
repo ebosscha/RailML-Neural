@@ -88,6 +88,34 @@ namespace RailMLNeural.Neural.Algorithms.Propagators
             }
             _EdgeTrainRepresentations = _EdgeTrainRepresentations.Where(x => PrimaryHeaderCodes.Contains(x.TrainHeaderCode)).ToList();
             _EdgeTrainRepresentations = new List<EdgeTrainRepresentation>(_EdgeTrainRepresentations.OrderBy(x => x.ForecastedDepartureTime));
+            
+            // Remove non-delayed parts of train sequence
+            if (UseSubGraph)
+            {
+                while (_EdgeTrainRepresentations.Count > 1
+                    && Math.Abs((_EdgeTrainRepresentations[0].IdealDepartureTime - _EdgeTrainRepresentations[1].ScheduledDepartureTime).TotalMinutes) < 3
+                    && Math.Abs((_EdgeTrainRepresentations[0].IdealArrivalTime - _EdgeTrainRepresentations[1].ScheduledArrivalTime).TotalMinutes) < 3
+                    && Math.Abs((_EdgeTrainRepresentations[1].IdealDepartureTime - _EdgeTrainRepresentations[1].ScheduledDepartureTime).TotalMinutes) < 3
+                    && Math.Abs((_EdgeTrainRepresentations[1].IdealArrivalTime - _EdgeTrainRepresentations[1].ScheduledArrivalTime).TotalMinutes) < 3)
+                {
+                    _EdgeTrainRepresentations.RemoveAt(0);
+                }
+                while (_EdgeTrainRepresentations.Count > 1
+                    && Math.Abs((_EdgeTrainRepresentations[_EdgeTrainRepresentations.Count - 2].IdealDepartureTime - _EdgeTrainRepresentations[_EdgeTrainRepresentations.Count - 2].ScheduledDepartureTime).TotalMinutes) < 3
+                    && Math.Abs((_EdgeTrainRepresentations[_EdgeTrainRepresentations.Count - 2].IdealArrivalTime - _EdgeTrainRepresentations[_EdgeTrainRepresentations.Count - 2].ScheduledArrivalTime).TotalMinutes) < 3
+                    && Math.Abs((_EdgeTrainRepresentations[_EdgeTrainRepresentations.Count - 1].IdealDepartureTime - _EdgeTrainRepresentations[_EdgeTrainRepresentations.Count - 1].ScheduledDepartureTime).TotalMinutes) < 3
+                    && Math.Abs((_EdgeTrainRepresentations[_EdgeTrainRepresentations.Count - 1].IdealArrivalTime - _EdgeTrainRepresentations[_EdgeTrainRepresentations.Count - 1].ScheduledArrivalTime).TotalMinutes) < 3)
+                {
+                    _EdgeTrainRepresentations.RemoveAt(_EdgeTrainRepresentations.Count - 1);
+                }
+                if (_EdgeTrainRepresentations.Count == 1
+                    && Math.Abs((_EdgeTrainRepresentations[0].IdealDepartureTime - _EdgeTrainRepresentations[0].ScheduledDepartureTime).TotalMinutes) < 3
+                    && Math.Abs((_EdgeTrainRepresentations[0].IdealArrivalTime - _EdgeTrainRepresentations[0].ScheduledArrivalTime).TotalMinutes) < 3)
+                {
+                    _EdgeTrainRepresentations.RemoveAt(0);
+                }
+            }
+
         }
 
         public IMLDataPair MoveNext()

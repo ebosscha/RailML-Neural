@@ -10,6 +10,11 @@ using System.Threading.Tasks;
 
 namespace RailMLNeural.Neural.Algorithms.Training
 {
+    public interface IWeightNormalized
+    {
+        double MaxWeightNorm { get; set; }
+    }
+
     class LearningRateDecayStrategy : IStrategy
     {
         double _rate;

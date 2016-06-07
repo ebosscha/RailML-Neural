@@ -371,24 +371,27 @@ namespace RailMLNeural.Neural.Algorithms.Training
 
             // handle weights
             int yi = fromLayerIndex;
-            for (int y = 0; y < fromLayerSize; y++)
+            unchecked
             {
-                double output = _layerOutput[yi];
-                double sum = 0;
-                int xi = toLayerIndex;
-                int wi = index + y;
-                for (int x = 0; x < toLayerSize; x++)
+                for (int y = 0; y < fromLayerSize; y++)
                 {
-                    _tempGradients[wi] += output * _layerDelta[xi];
-                    _gradientChangeCount[wi]++;
-                    sum += _weights[wi] * _layerDelta[xi];
-                    wi += fromLayerSize;
-                    xi++;
-                }
+                    double output = _layerOutput[yi];
+                    double sum = 0;
+                    int xi = toLayerIndex;
+                    int wi = index + y;
+                    for (int x = 0; x < toLayerSize; x++)
+                    {
+                        _tempGradients[wi] += unchecked(output * _layerDelta[xi]);
+                        _gradientChangeCount[wi]++;
+                        sum += unchecked(_weights[wi] * _layerDelta[xi]);
+                        wi += fromLayerSize;
+                        xi++;
+                    }
 
-                _layerDelta[yi] += sum
-                                    * (activation.DerivativeFunction(_layerSums[yi], _layerOutput[yi]) + currentFlatSpot);
-                yi++;
+                    _layerDelta[yi] += sum
+                                        * (activation.DerivativeFunction(_layerSums[yi], _layerOutput[yi]) + currentFlatSpot);
+                    yi++;
+                }
             }
         }
 
@@ -440,39 +443,43 @@ namespace RailMLNeural.Neural.Algorithms.Training
             EngineArray.ArrayCopy(_layerOutput, 0, output, 0, _network.OutputCount);
         }
 
+
         private void ComputeLayer(int currentLayer)
         {
-            int inputIndex = _layerIndex[currentLayer];
-            int outputIndex = _layerIndex[currentLayer - 1];
-            int inputSize = _layerCounts[currentLayer];
-            int outputSize = _layerFeedCounts[currentLayer - 1];
-
-            int index = _weightIndex[currentLayer - 1];
-
-            int limitX = outputIndex + outputSize;
-            int limitY = inputIndex + inputSize;
-
-            // weight values
-            for (int x = outputIndex; x < limitX; x++)
+            unchecked
             {
-                double sum = 0;
-                for (int y = inputIndex; y < limitY; y++)
+                int inputIndex = _layerIndex[currentLayer];
+                int outputIndex = _layerIndex[currentLayer - 1];
+                int inputSize = _layerCounts[currentLayer];
+                int outputSize = _layerFeedCounts[currentLayer - 1];
+
+                int index = _weightIndex[currentLayer - 1];
+
+                int limitX = outputIndex + outputSize;
+                int limitY = inputIndex + inputSize;
+
+                // weight values
+                for (int x = outputIndex; x < limitX; x++)
                 {
-                    sum += _weights[index++] * _network.LayerOutput[y];
+                    double sum = 0;
+                    for (int y = inputIndex; y < limitY; y++)
+                    {
+                        sum += unchecked(_weights[index++] * _network.LayerOutput[y]);
+                    }
+                    _network.LayerOutput[x] = sum * _dropoutMask[x];
+                    _network.LayerSums[x] = sum * _dropoutMask[x];
                 }
-                _network.LayerOutput[x] = sum * _dropoutMask[x];
-                _network.LayerSums[x] = sum * _dropoutMask[x];
-            }
 
-            _network.ActivationFunctions[currentLayer - 1].ActivationFunction(
-                _network.LayerOutput, outputIndex, outputSize);
+                _network.ActivationFunctions[currentLayer - 1].ActivationFunction(
+                    _network.LayerOutput, outputIndex, outputSize);
 
-            // update context values
-            int offset = _network.ContextTargetOffset[currentLayer];
+                // update context values
+                int offset = _network.ContextTargetOffset[currentLayer];
 
-            for (int x = 0; x < _network.ContextTargetSize[currentLayer]; x++)
-            {
-                _network.LayerOutput[offset + x] = _network.LayerOutput[outputIndex + x];
+                for (int x = 0; x < _network.ContextTargetSize[currentLayer]; x++)
+                {
+                    _network.LayerOutput[offset + x] = _network.LayerOutput[outputIndex + x];
+                }
             }
         }
 

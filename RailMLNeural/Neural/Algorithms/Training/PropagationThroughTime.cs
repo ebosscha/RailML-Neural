@@ -26,7 +26,7 @@ namespace RailMLNeural.Neural.Algorithms.Training
     /// inside of the PropagationMethod interface implementors.
     /// </summary>
     ///
-    public abstract class PropagationThroughTime : BasicTraining, ITrain, IMultiThreadable, IBatchSize
+    public abstract class PropagationThroughTime : BasicTraining, ITrain, IMultiThreadable, IBatchSize, IWeightNormalized
     {
         /// <summary>
         /// The network in indexable form.
@@ -367,6 +367,7 @@ namespace RailMLNeural.Neural.Algorithms.Training
                 Gradients[i] = 0;
             }
             //HandleReLu();
+            NormalizeWeights();
         }
 
 
@@ -396,6 +397,47 @@ namespace RailMLNeural.Neural.Algorithms.Training
                 Gradients[i] = 0;
             }
             //HandleReLu();
+            NormalizeWeights();
+        }
+
+        private void NormalizeWeights()
+        {
+            if(MaxWeightNorm == 0)
+            {
+                return;
+            }
+            for(int i = 1; i < _flat.LayerCounts.Length - 1; i++)
+            {
+                int inputIndex = _flat.LayerIndex[i+1];
+                int outputIndex = _flat.LayerIndex[i];
+                int inputSize = _flat.LayerCounts[i+1];
+                int outputSize = _flat.LayerFeedCounts[i];
+
+                int index = _flat.WeightIndex[i];
+
+                int limitX = outputIndex + outputSize;
+                int limitY = inputIndex + inputSize;
+
+                // weight values
+                for (int x = outputIndex; x < limitX; x++)
+                {
+                    double sum = 0;
+                    int j = index;
+                    for (int y = inputIndex; y < limitY; y++)
+                    {
+                        sum += Math.Abs(_flat.Weights[j++]);
+                    }
+                    if (sum > MaxWeightNorm)
+                    {
+                        j = index;
+                        for (int y = inputIndex; y < limitY; y++)
+                        {
+                            _flat.Weights[j++] *= MaxWeightNorm / sum;
+                        }
+                        index += inputSize;
+                    }
+                }
+            }
         }
 
         private void HandleReLu()
@@ -578,6 +620,8 @@ namespace RailMLNeural.Neural.Algorithms.Training
         public int BatchSize { get; set; }
 
         public double DropoutPercentage { get; set; }
+
+        public double MaxWeightNorm { get; set; }
     }
 }
 

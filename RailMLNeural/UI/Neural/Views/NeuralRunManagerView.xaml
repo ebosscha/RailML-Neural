@@ -91,6 +91,14 @@
                                        Maximum="1"
                                        Increment="0.05"/>
                 </Grid>
+                <Grid Visibility="{Binding MaxWeightNormVisible}">
+                    <TextBlock Text="Maximum Weight Norm :"
+                           Margin="10,5,0,0"/>
+                    <xctk:DoubleUpDown Value="{Binding MaxWeightNorm}" 
+                                       Margin="195,5,0,0"
+                                       Minimum="0"
+                                       Increment="1"/>
+                </Grid>
                 <Grid Visibility="{Binding RPropTypeVisible}">
                     <TextBlock Text="RProp Type :"
                                Margin="10,5,0,0"/>

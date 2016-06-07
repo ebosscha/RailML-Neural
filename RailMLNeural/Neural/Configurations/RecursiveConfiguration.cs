@@ -1,4 +1,5 @@
 ﻿using Encog.Engine.Network.Activation;
+using Encog.MathUtil.Randomize;
 using Encog.ML.Data;
 using Encog.ML.Data.Basic;
 using Encog.ML.EA.Train;
@@ -52,7 +53,8 @@ namespace RailMLNeural.Neural.Configurations
         {
             if (!IsRunning)
             {
-                Network.Flat.Randomize(0.1, -0.1);
+                var rand = new GaussianRandomizer(0,0.01);
+                rand.Randomize(Network.Flat.Weights);
                 ErrorHistory.Clear();
                 VerificationHistory.Clear();
             }
@@ -161,7 +163,7 @@ namespace RailMLNeural.Neural.Configurations
                         flag = false;
                     }
                 }
-                if (flag)
+                if (flag && set.Count > 0)
                 {
                     result.Add(set);
                 }
